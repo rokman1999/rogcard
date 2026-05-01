@@ -230,11 +230,11 @@ const Toast = ({ message, type = 'info', onClose }) => {
   };
 
   return (
-    <div className={`fixed bottom-8 right-8 px-6 py-4 border bg-black/60 backdrop-blur-3xl shadow-2xl z-50 flex items-center gap-3 animate-slide-up font-mono text-sm tracking-wider ${bgColors[type]}`}>
-      {type === 'success' && <div className="w-1.5 h-1.5 bg-emerald-400"></div>}
-      {type === 'error' && <div className="w-1.5 h-1.5 bg-red-500"></div>}
-      {type === 'warning' && <div className="w-1.5 h-1.5 bg-amber-500"></div>}
-      {type === 'info' && <div className="w-1.5 h-1.5 bg-white/50"></div>}
+    <div className={`fixed bottom-8 right-8 px-6 py-4 border bg-black/60 backdrop-blur-3xl shadow-2xl z-50 flex items-center gap-3 animate-slide-up font-mono text-base tracking-wider ${bgColors[type]}`}>
+      {type === 'success' && <div className="w-2 h-2 bg-emerald-400"></div>}
+      {type === 'error' && <div className="w-2 h-2 bg-red-500"></div>}
+      {type === 'warning' && <div className="w-2 h-2 bg-amber-500"></div>}
+      {type === 'info' && <div className="w-2 h-2 bg-white/50"></div>}
       <span className="font-light">{message}</span>
     </div>
   );
@@ -320,7 +320,7 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
     >
       <div className="w-full h-full relative z-10 rounded-[8px] overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
         <img src={card.imageUrl} alt={card.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
-        <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay noise-overlay"></div>
+        <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
         
         {renderFrameOverlay(card.equippedFrame)}
@@ -329,35 +329,35 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
         {card.level >= 15 && <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>}
 
         <div className="relative z-30 flex flex-col h-full p-3 transition-transform duration-500">
-          <div className="flex justify-between items-start w-full drop-shadow-lg relative">
-            <div className="font-sans font-black text-[1em] sm:text-xl tracking-wider text-white truncate max-w-[120px] uppercase leading-none mt-1 group-hover:text-emerald-300 transition-colors duration-300">
+          <div className="flex justify-between items-start w-full drop-shadow-lg relative min-h-[30px]">
+            <div className="font-sans font-black text-[1em] sm:text-[1.1em] tracking-wider text-white break-words text-left leading-tight mt-1 group-hover:text-emerald-300 transition-colors duration-300 w-[70%]">
               {card.name}
             </div>
             {card.uniqueTrait && (
-              <div className="absolute right-0 top-0 px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/50 rounded text-[0.45em] text-emerald-400 font-bold mix-blend-normal drop-shadow-md z-40">
+              <div className="absolute right-0 top-0 px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/50 rounded text-[0.45em] sm:text-[0.5em] text-emerald-400 font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap">
                 {card.uniqueTrait.name}
               </div>
             )}
           </div>
 
           <div className="mt-auto flex flex-col gap-2 w-full">
-            <div className="text-[0.65em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1 rounded-sm border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
+            <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-sm border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
               "{card.description}"
             </div>
             <div className="flex flex-wrap gap-1 w-full">
               {card.unlockedSkills.map((s, i) => (
                 <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-sm border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
-                  <span className="text-[0.6em] font-bold text-white tracking-widest">{s}</span>
+                  <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between items-end gap-2 w-full mt-1">
               <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-sm transition-all duration-300 group-hover:bg-black/80">
-                <div className="flex flex-col items-center"><span className="text-[0.45em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.7em] font-bold text-white">{card.stats.atk}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.45em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.7em] font-bold text-white">{card.stats.def}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.45em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.7em] font-bold text-white">{card.stats.spd}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.45em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.7em] font-bold text-white">{card.stats.crit}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.7em] font-bold text-white">{card.stats.atk}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.7em] font-bold text-white">{card.stats.def}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.7em] font-bold text-white">{card.stats.spd}</span></div>
+                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.7em] font-bold text-white">{card.stats.crit}</span></div>
               </div>
               
               <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>
@@ -387,7 +387,7 @@ export default function RogCard() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [rankingTab, setRankingTab] = useState('money');
+  const [rankingTab, setRankingTab] = useState('win'); // 기본 탭을 '승리'로 변경
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   const [previewCard, setPreviewCard] = useState(null); 
@@ -514,17 +514,18 @@ export default function RogCard() {
     e.preventDefault();
     sfx.init(); playSfx('click');
     if (!loginNickname.trim() || !loginPassword.trim()) { showToast("닉네임과 비밀번호를 입력하세요", "warning"); return; }
-    if (loginPassword.length < 6) { showToast("비밀번호는 6자리 이상이어야 합니다", "warning"); return; }
+    if (loginPassword.length < 4) { showToast("비밀번호는 4자리 이상이어야 합니다", "warning"); return; }
     setIsProcessing(true);
     try {
       const dummyEmail = `${loginNickname.toLowerCase()}@rogcard.app`;
+      const firebasePassword = loginPassword + "_ROG"; // Firebase 6자리 제한 우회용 패딩
       let currentUser;
       try {
-        const cred = await signInWithEmailAndPassword(auth, dummyEmail, loginPassword);
+        const cred = await signInWithEmailAndPassword(auth, dummyEmail, firebasePassword);
         currentUser = cred.user;
       } catch (err) {
         try {
-          const cred = await createUserWithEmailAndPassword(auth, dummyEmail, loginPassword);
+          const cred = await createUserWithEmailAndPassword(auth, dummyEmail, firebasePassword);
           currentUser = cred.user;
         } catch (createErr) {
           if (createErr.code === 'auth/email-already-in-use') showToast("비밀번호가 일치하지 않습니다.", "error");
@@ -630,7 +631,7 @@ export default function RogCard() {
   const handleSellCard = (card) => {
     const sellPrice = getSellPrice(card.level);
     setConfirmModal({
-      title: "카드 판매", message: `[${card.name}] 카드를 판매하시겠습니까?`, confirmText: "판매 확정", cancelText: "취소",
+      title: "카드 판매", message: `[${card.name}] 카드를 판매하시겠습니까?\n\n판매 획득 골드: ${formatMoney(sellPrice)} GOLD\n(낮은 레벨의 카드는 판매 금액이 매우 적을 수 있습니다.)\n이 작업은 되돌릴 수 없습니다.`, confirmText: "판매 확정", cancelText: "취소",
       onConfirm: async () => {
         setIsProcessing(true);
         try {
@@ -769,7 +770,10 @@ export default function RogCard() {
         let dodgeChance = defender.skills.includes('닌자 무빙') ? 15 : 0;
         if (defender.trait?.name === '바람돌이') dodgeChance += 10;
 
-        if(Math.random() * 100 < dodgeChance) { log.push({ type: 'dodge', text: `슈슉! [${defender.name}]의 신들린 닌자 무빙!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: defender.key }); continue; }
+        let oldP1Hp = p1.hp;
+        let oldP2Hp = p2.hp;
+
+        if(Math.random() * 100 < dodgeChance) { log.push({ type: 'dodge', text: `슈슉! [${defender.name}]의 신들린 닌자 무빙!`, state: { p1Hp: oldP1Hp, p2Hp: oldP2Hp }, actor: defender.key }); continue; }
 
         let damage = attacker.atk; let isCrit = false; let skillUsed = null;
         if (attacker.trait?.name === '광전사' && (attacker.hp / attacker.originalHp) <= 0.5) damage *= 1.3;
@@ -786,7 +790,7 @@ export default function RogCard() {
 
         let healAmount = (attacker.skills.includes('뱀파이어 흡혈') ? damage * 0.15 : 0) + (attacker.trait?.name === '흡혈귀' ? damage * 0.20 : 0);
         if (healAmount > 0) { attacker.hp = Math.min(attacker.originalHp, attacker.hp + Math.floor(healAmount)); if(attacker.skills.includes('뱀파이어 흡혈')) skillUsed = skillUsed || '뱀파이어 흡혈'; }
-        if(skillUsed) log.push({ type: 'skill', text: `✨ [${attacker.name}]의 특수 프로토콜 <${skillUsed}> 발동!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: attacker.key, skill: skillUsed });
+        if(skillUsed) log.push({ type: 'skill', text: `✨ [${attacker.name}]의 특수 프로토콜 <${skillUsed}> 발동!`, state: { p1Hp: oldP1Hp, p2Hp: oldP2Hp }, actor: attacker.key, skill: skillUsed });
 
         log.push({ type: isCrit ? 'critical' : 'attack', text: `[${attacker.name}] ${isCrit ? "뼈와 살이 분리되는 일격!!" : "퍼억! 데미지가 들어갑니다."} (-${Math.floor(damage)})`, state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) }, damage: Math.floor(damage), attacker: attacker.key, defender: defender.key });
 
@@ -802,8 +806,8 @@ export default function RogCard() {
   };
 
   const executeAIBattle = async () => {
-    setBattleLog(simulateBattleLog(selectedCard, aiOpponent));
-    setLiveState({ p1Hp: selectedCard.stats.hp, p2Hp: aiOpponent.stats.hp, p1Max: selectedCard.stats.hp, p2Max: aiOpponent.stats.hp, currentAction: null });
+    const simLog = simulateBattleLog(selectedCard, aiOpponent);
+    setBattleLog(simLog); setLiveState({ p1Hp: selectedCard.stats.hp, p2Hp: aiOpponent.stats.hp, p1Max: selectedCard.stats.hp, p2Max: aiOpponent.stats.hp, currentAction: null });
     setBattleStep(0); setBattleResult(null); setCurrentView('battle');
   };
 
@@ -815,27 +819,48 @@ export default function RogCard() {
       else if (stepData.type === 'critical') delay = 1400;
       else if (stepData.type === 'skill') delay = 1200;
       else if (stepData.type === 'dodge' || stepData.type === 'attack') delay = 800;
+      else if (stepData.type === 'end') delay = 1000;
       
-      const timer = setTimeout(() => {
-        setLiveState(prev => ({ ...prev, p1Hp: stepData.state.p1Hp, p2Hp: stepData.state.p2Hp, currentAction: stepData }));
-        if (stepData.type === 'critical') playSfx('crit'); else if (stepData.type === 'skill') playSfx('skill'); else if (stepData.type === 'dodge') playSfx('dodge'); else if (stepData.type === 'attack') playSfx('hit');
-        else if (stepData.type === 'end') { playSfx(stepData.winner === 'p1' ? 'success' : 'error'); handleBattleEnd(stepData.winner === 'p1'); }
-        if (stepData.type !== 'end') setBattleStep(s => s + 1);
+      setLiveState(prev => ({ ...prev, currentAction: stepData }));
+
+      if (stepData.type === 'critical') playSfx('crit'); 
+      else if (stepData.type === 'skill') playSfx('skill'); 
+      else if (stepData.type === 'dodge') playSfx('dodge'); 
+      else if (stepData.type === 'attack') playSfx('hit');
+
+      // 체력바 감소를 타격 효과 뒤로 딜레이
+      const hpDelay = ['attack', 'critical', 'skill', 'revive'].includes(stepData.type) ? 300 : 0;
+      const hpTimer = setTimeout(() => {
+          setLiveState(prev => ({ ...prev, p1Hp: stepData.state.p1Hp, p2Hp: stepData.state.p2Hp }));
+      }, hpDelay);
+
+      const nextTimer = setTimeout(() => {
+        if (stepData.type === 'end') { 
+          const isHost = battleType !== 'PvP' || pvpRoomData?.host?.uid === user?.uid;
+          const amIWinner = stepData.winner === (isHost ? 'p1' : 'p2');
+          playSfx(amIWinner ? 'success' : 'error'); 
+          handleBattleEnd(amIWinner); 
+        }
+        else { setBattleStep(s => s + 1); }
       }, delay);
-      return () => clearTimeout(timer);
+
+      return () => { clearTimeout(hpTimer); clearTimeout(nextTimer); };
     }
-  }, [currentView, battleStep, battleLog]);
+  }, [currentView, battleStep, battleLog, battleType, pvpRoomData, user]);
 
   const handleBattleEnd = async (isWin) => {
     setBattleResult(isWin ? 'win' : 'lose');
+    if (!user || !userData) return;
     const userRef = doc(db, USERS_PATH, user.uid);
-    if (battleType === 'AI') {
-      if (isWin) await updateDoc(userRef, { money: userData.money + battleReward, wins: userData.wins + 1, aiWins: (userData.aiWins || 0) + 1 });
-      else await updateDoc(userRef, { losses: userData.losses + 1 });
-    } else {
-      if (isWin) await updateDoc(userRef, { money: userData.money + battleBet * 2, wins: userData.wins + 1 });
-      else await updateDoc(userRef, { losses: userData.losses + 1 });
-    }
+    try {
+      if (battleType === 'AI') {
+        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleReward, wins: (userData.wins || 0) + 1, aiWins: (userData.aiWins || 0) + 1 });
+        else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
+      } else {
+        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleBet * 2, wins: (userData.wins || 0) + 1 });
+        else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
+      }
+    } catch(e) { console.error(e); }
   };
 
   const generateRoomCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -893,12 +918,12 @@ export default function RogCard() {
       </video>
       <div className="text-center mb-24 animate-fade-in flex flex-col items-center relative z-10">
         <h1 className="text-6xl md:text-8xl font-black text-white font-logo tracking-[0.1em] drop-shadow-[0_0_20px_rgba(0,0,0,1)] hover:scale-105 transition-transform duration-700">ROG CARD</h1>
-        <p className="font-mono text-sm tracking-[0.4em] text-white/90 drop-shadow-[0_0_10px_rgba(0,0,0,1)] mt-10">직접 만든 카드를 강화하세요.</p>
+        <p className="font-mono text-base tracking-[0.4em] text-white/90 drop-shadow-[0_0_10px_rgba(0,0,0,1)] mt-10">직접 만든 카드를 강화하세요.</p>
       </div>
       <form onSubmit={handleLogin} className="w-full max-w-sm flex flex-col gap-6 z-10 animate-slide-up bg-black/60 backdrop-blur-2xl border border-white/20 p-8 relative transition-all duration-300 hover:border-white/40">
         <HUDCorner />
         <div>
-          <label className="block font-mono text-xs text-white/50 mb-3 tracking-widest font-light">아바타 선택</label>
+          <label className="block font-mono text-sm text-white/50 mb-3 tracking-widest font-light">아바타 선택</label>
           <div className="flex justify-between border-b border-white/10 pb-4">
             {ICONS_KEYS.map(iconName => (
               <div key={iconName} onClick={wrapClick(() => setSelectedIconName(iconName))} onMouseEnter={handleHover} className={`p-2 cursor-pointer transition-all duration-300 ${selectedIconName === iconName ? 'text-white border-b border-white scale-110' : 'text-white/30 hover:text-white/70 hover:scale-105'}`}>{getIcon(iconName)}</div>
@@ -906,12 +931,12 @@ export default function RogCard() {
           </div>
         </div>
         <div>
-          <label className="block font-mono text-xs text-white/50 mb-2 tracking-widest font-light">닉네임</label>
+          <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">닉네임</label>
           <input type="text" value={loginNickname} onChange={(e) => setLoginNickname(e.target.value.toUpperCase())} placeholder="닉네임 입력" maxLength={10} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all uppercase placeholder-white/20" required />
         </div>
         <div>
-          <label className="block font-mono text-xs text-white/50 mb-2 tracking-widest font-light">비밀번호</label>
-          <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="비밀번호 (6자리 이상)" minLength={6} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all placeholder-white/20" required />
+          <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">비밀번호</label>
+          <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="비밀번호 (4자리 이상)" minLength={4} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all placeholder-white/20" required />
         </div>
         <button type="submit" disabled={isProcessing} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 text-white font-light font-mono text-sm hover:bg-white hover:text-black disabled:opacity-50 transition-all uppercase tracking-widest mt-4">{isProcessing ? '초기화 중...' : '시스템 접속'}</button>
       </form>
@@ -921,7 +946,7 @@ export default function RogCard() {
   const renderHeader = () => (
     <header className="sticky top-0 z-40 bg-white/[0.01] backdrop-blur-3xl border-b border-white/10 p-5 px-8 flex justify-between items-center transition-all hover:bg-white/[0.03]">
       <h2 onClick={wrapClick(() => setCurrentView('lobby'))} onMouseEnter={handleHover} className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]">ROG CARD</h2>
-      <div className="flex items-center gap-8 font-mono text-xs tracking-widest font-light">
+      <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"><ShoppingCart size={16}/> 상점</button>
         <button onClick={wrapClick(() => setSoundEnabled(!soundEnabled))} className="text-white/50 hover:text-white transition-colors">{soundEnabled ? <span className="flex items-center gap-1"><Volume2 size={14}/> SOUND ON</span> : <span className="flex items-center gap-1"><VolumeX size={14}/> SOUND OFF</span>}</button>
         {userData && (<div className="flex items-center gap-6"><div className="flex items-center gap-2 text-white/70">{getIcon(userData.icon)} <span>{userData.nickname}</span></div><div className="text-white opacity-90 font-bold text-sm">{formatMoney(userData.money)} GOLD</div></div>)}
@@ -945,20 +970,20 @@ export default function RogCard() {
                 <div className="mb-4 flex gap-5 items-center bg-white/5 p-4 rounded-xl border border-amber-500/30 shadow-lg cursor-pointer" onClick={wrapClick(() => setPreviewCard(topUserCard))}>
                   <MiniCard card={topUserCard} />
                   <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-[10px] text-amber-400 font-mono tracking-widest mb-2 flex items-center gap-1"><Trophy size={12}/> RANK 1 ASSET</span>
+                    <span className="text-xs text-amber-400 font-mono tracking-widest mb-2 flex items-center gap-1"><Trophy size={12}/> RANK 1 ASSET</span>
                     <span className="text-lg font-bold text-white truncate">{topUserCard.name}</span>
-                    <span className="text-xs text-white/50 font-mono mt-1">by {topUser.nickname}</span>
+                    <span className="text-sm text-white/50 font-mono mt-1">by {topUser.nickname}</span>
                   </div>
                 </div>
               )}
-              <div className="flex gap-4 mb-4 font-mono text-[10px] tracking-widest">
-                <button onClick={wrapClick(()=>setRankingTab('money'))} className={`pb-1 ${rankingTab==='money' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>자산</button>
+              <div className="flex gap-4 mb-4 font-mono text-xs tracking-widest">
                 <button onClick={wrapClick(()=>setRankingTab('win'))} className={`pb-1 ${rankingTab==='win' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>승리</button>
+                <button onClick={wrapClick(()=>setRankingTab('money'))} className={`pb-1 ${rankingTab==='money' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>자산</button>
               </div>
-              <div className="font-mono text-xs tracking-wide overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
+              <div className="font-mono text-sm tracking-wide overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
                 {(rankingTab === 'money' ? richUsers : topWins).map((u, i) => (
                   <div key={u.userId} className={`flex justify-between items-center pb-2 border-b border-white/5 ${u.userId === user?.uid ? 'text-white font-bold' : 'text-white/60'}`}>
-                    <div className="flex items-center gap-3"><span className="w-6 opacity-30 text-[10px]">{String(i+1).padStart(2,'0')}</span> <span className="truncate w-24">{u.nickname}</span></div>
+                    <div className="flex items-center gap-3"><span className="w-6 opacity-30 text-xs">{String(i+1).padStart(2,'0')}</span> <span className="truncate w-24">{u.nickname}</span></div>
                     <span>{rankingTab === 'money' ? formatMoney(u.money) : `${u.wins} W`}</span>
                   </div>
                 ))}
@@ -966,35 +991,35 @@ export default function RogCard() {
            </div>
            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-5 flex flex-col h-[50%] relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04]">
               <HUDCorner /><h3 className="font-mono font-light text-sm text-white/70 tracking-widest mb-3 uppercase flex items-center gap-2">전체 채팅</h3>
-              <div className="flex-1 overflow-y-auto flex flex-col gap-3 font-mono text-[11px] mb-3 pr-2 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto flex flex-col gap-3 font-mono text-xs mb-3 pr-2 custom-scrollbar">
                 {globalChats.map((msg, i) => (
                   <div key={i} className="flex flex-col animate-slide-up">
-                    {msg.sender !== 'SYSTEM' && <span className="mb-0.5 text-[9px] text-white/30">{msg.sender}</span>}
+                    {msg.sender !== 'SYSTEM' && <span className="mb-0.5 text-[10px] text-white/30">{msg.sender}</span>}
                     <span className={`break-words ${msg.sender === 'SYSTEM' ? 'text-amber-300 font-bold' : msg.sender === userData?.nickname ? 'text-emerald-300' : 'text-white/80'}`}>{msg.text}</span>
                   </div>
                 ))}
                 <div ref={el => el && el.scrollIntoView()} />
               </div>
               <form onSubmit={handleSendGlobalChat} className="flex gap-2 border-t border-white/10 pt-3">
-                <input type="text" value={globalChatInput} onChange={e=>setGlobalChatInput(e.target.value)} className="flex-1 bg-transparent border-b border-white/20 px-2 py-1 text-white font-mono text-xs focus:outline-none focus:border-white placeholder-white/20" placeholder="메시지 입력..." />
-                <button type="submit" className="text-white/50 hover:text-white font-mono text-[10px]">전송</button>
+                <input type="text" value={globalChatInput} onChange={e=>setGlobalChatInput(e.target.value)} className="flex-1 bg-transparent border-b border-white/20 px-2 py-1 text-white font-mono text-sm focus:outline-none focus:border-white placeholder-white/20" placeholder="메시지 입력..." />
+                <button type="submit" className="text-white/50 hover:text-white font-mono text-xs">전송</button>
               </form>
            </div>
         </div>
         <div className="flex-1 flex flex-col gap-6 relative">
           <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 flex justify-between items-center relative transition-all hover:border-white/20 hover:bg-white/[0.04]">
             <HUDCorner />
-            <div><h3 className="font-mono font-light text-sm text-white/70 tracking-widest mb-2 uppercase">일일 출석체크</h3><p className="font-sans text-sm text-white/40 font-light">매일 출석해 골드를 수령하세요.</p></div>
-            <button onClick={wrapClick(handleAttendance)} disabled={isAttended} className={`px-8 py-3 font-mono text-xs tracking-widest uppercase ${isAttended ? 'text-white/20 border border-white/10' : 'bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black'}`}>{isAttended ? '수령 완료' : '수령'}</button>
+            <div><h3 className="font-mono font-light text-base text-white/70 tracking-widest mb-2 uppercase">일일 출석체크</h3><p className="font-sans text-base text-white/40 font-light">매일 출석해 골드를 수령하세요.</p></div>
+            <button onClick={wrapClick(handleAttendance)} disabled={isAttended} className={`px-8 py-3 font-mono text-sm tracking-widest uppercase ${isAttended ? 'text-white/20 border border-white/10' : 'bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black'}`}>{isAttended ? '수령 완료' : '수령'}</button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 relative">
             <div onClick={wrapClick(() => setCurrentView('deck'))} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04]">
               <HUDCorner /><Hexagon size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
-              <div className="relative z-10"><h3 className="font-mono font-light text-xl text-white tracking-widest mb-3 uppercase">카드 관리</h3><p className="font-sans text-sm text-white/40 font-light">디지털 카드를 생성하고 한계를 돌파하세요.</p></div>
+              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">카드 관리</h3><p className="font-sans text-base text-white/40 font-light">디지털 카드를 생성하고 한계를 돌파하세요.</p></div>
             </div>
             <div onClick={wrapClick(() => setCurrentView('battle_select'))} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04]">
               <HUDCorner /><Swords size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
-              <div className="relative z-10"><h3 className="font-mono font-light text-xl text-white tracking-widest mb-3 uppercase">1:1 전투</h3><p className="font-sans text-sm text-white/40 font-light">AI 및 타 유저와 대결하고 배팅하세요.</p></div>
+              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">1:1 전투</h3><p className="font-sans text-base text-white/40 font-light">AI 및 타 유저와 대결하고 배팅하세요.</p></div>
             </div>
           </div>
         </div>
@@ -1006,33 +1031,33 @@ export default function RogCard() {
     <div className="p-4 md:p-10 max-w-6xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-12 pb-6 border-b border-white/20">
         <h2 className="text-3xl font-mono font-light text-white tracking-[0.2em] uppercase">시스템 상점</h2>
-        <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase flex items-center gap-2"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
+        <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/50 hover:text-white font-mono text-sm tracking-widest uppercase flex items-center gap-2"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05]">
           <HUDCorner /><ArrowUpCircle size={36} className="text-emerald-400 mb-6" strokeWidth={1} />
           <h3 className="font-mono font-light text-xl text-white mb-2">강화 확률 부스트</h3>
-          <p className="text-sm font-sans text-white/50 mb-6 flex-1">다음 강화 시 성공 확률을 10% 증가시킵니다.</p>
+          <p className="text-base font-sans text-white/50 mb-6 flex-1">다음 강화 시 성공 확률을 10% 증가시킵니다.</p>
           <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-xs">보유: {userData?.items?.boost || 0}</span>
+            <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.boost || 0}</span>
             <button onClick={wrapClick(()=>handleBuyItem('boost', 10000, '확률 부스트'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black">10,000 G</button>
           </div>
         </div>
         <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05]">
           <HUDCorner /><Shield size={36} className="text-blue-400 mb-6" strokeWidth={1} />
           <h3 className="font-mono font-light text-xl text-white mb-2">하락/파괴 보호권</h3>
-          <p className="text-sm font-sans text-white/50 mb-6 flex-1">강화 실패 시 등급 하락 및 파괴를 1회 막아줍니다.</p>
+          <p className="text-base font-sans text-white/50 mb-6 flex-1">강화 실패 시 등급 하락 및 파괴를 1회 막아줍니다.</p>
           <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-xs">보유: {userData?.items?.protect || 0}</span>
+            <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.protect || 0}</span>
             <button onClick={wrapClick(()=>handleBuyItem('protect', 50000, '하락/파괴 보호권'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black">50,000 G</button>
           </div>
         </div>
         <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05]">
           <HUDCorner /><Plus size={36} className="text-amber-400 mb-6" strokeWidth={1} />
           <h3 className="font-mono font-light text-xl text-white mb-2">카드 슬롯 확장</h3>
-          <p className="text-sm font-sans text-white/50 mb-6 flex-1">보유 가능한 카드의 최대 개수를 1칸 늘립니다.</p>
+          <p className="text-base font-sans text-white/50 mb-6 flex-1">보유 가능한 카드의 최대 개수를 1칸 늘립니다.</p>
           <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-xs">현재: {userData?.maxSlots || 3} / 10</span>
+            <span className="font-mono text-white/40 text-sm">현재: {userData?.maxSlots || 3} / 10</span>
             <button onClick={wrapClick(()=>handleBuyItem('slot', 20000, '카드 슬롯 확장'))} disabled={isProcessing || (userData?.maxSlots >= 10)} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black disabled:opacity-30">20,000 G</button>
           </div>
         </div>
@@ -1048,7 +1073,7 @@ export default function RogCard() {
           {id: 'frame_neon', name: '네온 사이버', desc: '시안/핑크 사이버펑크 네온', price: 1000000, color: 'text-pink-400'}
         ].map(f => (
           <div key={f.id} className="bg-white/[0.02] border border-white/10 p-5 flex items-center justify-between transition-colors hover:bg-white/[0.05]">
-            <div><div className={`${f.color} font-mono mb-1 text-sm font-bold`}>{f.name}</div><div className="text-[10px] text-white/50">{f.desc}</div></div>
+            <div><div className={`${f.color} font-mono mb-1 text-sm font-bold`}>{f.name}</div><div className="text-xs text-white/50">{f.desc}</div></div>
             {userData?.frames?.includes(f.id) ? <button disabled className="px-4 py-2 bg-white/20 text-white/50 font-mono text-[10px] whitespace-nowrap">보유 중</button> : <button onClick={()=>handleBuyItem(f.id, f.price, f.name)} className="px-4 py-2 bg-white/10 hover:bg-white hover:text-black font-mono text-[10px] whitespace-nowrap">{formatMoney(f.price)} G</button>}
           </div>
         ))}
@@ -1063,25 +1088,25 @@ export default function RogCard() {
     return (
       <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in min-h-[80vh] relative z-10 flex flex-col">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 pb-6 border-b border-white/20">
-          <div className="flex items-center gap-4"><h2 className="text-2xl font-mono font-light text-white tracking-[0.2em] uppercase">카드 관리</h2><span className="font-mono text-xs text-white/40 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">보유량: {myCards.length}/{maxSlots}</span></div>
-          <div className="relative"><button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-xs transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black"><Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]</button></div>
+          <div className="flex items-center gap-4"><h2 className="text-2xl font-mono font-light text-white tracking-[0.2em] uppercase">카드 관리</h2><span className="font-mono text-sm text-white/40 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">보유량: {myCards.length}/{maxSlots}</span></div>
+          <div className="relative"><button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black"><Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]</button></div>
         </div>
 
         {myCards.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-lg text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md"><span className="mb-2">보유 중인 카드가 없습니다.</span><span>신규 카드를 생성하여 시작하세요.</span></div>
+          <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-xl text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md"><span className="mb-2">보유 중인 카드가 없습니다.</span><span>신규 카드를 생성하여 시작하세요.</span></div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
             {renderSlots.map((_, i) => {
               const card = myCards[i];
-              if (!card) return (<div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] rounded-[10px] flex flex-col items-center justify-center text-white/20 font-mono text-xs"><Plus size={24} className="mb-2 opacity-50"/><span>EMPTY SLOT</span></div>);
+              if (!card) return (<div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] rounded-[10px] flex flex-col items-center justify-center text-white/20 font-mono text-sm"><Plus size={24} className="mb-2 opacity-50"/><span>EMPTY SLOT</span></div>);
               return (
                 <div key={card.id} className="relative group">
                   <CardItem card={card} />
                   <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5 rounded-[12px]">
-                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105"><Info size={12} className="inline mr-1"/> 상세 정보</button>
-                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">카드 강화</button>
-                    <button onClick={wrapClick(() => startAIBattleSetup(card))} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">전투 참가</button>
-                    <button onClick={wrapClick(() => handleSellCard(card))} className="w-full py-2 mt-2 text-white/50 bg-transparent font-mono text-[10px] underline hover:text-white hover:scale-105">카드 판매</button>
+                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105"><Info size={14} className="inline mr-1"/> 상세 정보</button>
+                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105">카드 강화</button>
+                    <button onClick={wrapClick(() => startAIBattleSetup(card))} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105">전투 참가</button>
+                    <button onClick={wrapClick(() => handleSellCard(card))} className="w-full py-2 mt-2 text-white/50 bg-transparent font-mono text-xs underline hover:text-white hover:scale-105">카드 판매</button>
                   </div>
                 </div>
               );
@@ -1094,7 +1119,7 @@ export default function RogCard() {
             <form onSubmit={handleCreateCard} className="bg-white/[0.02] border border-white/10 p-6 sm:p-10 w-full max-w-md relative animate-slide-up bg-black/40">
               <HUDCorner /><h3 className="font-mono font-light text-xl text-white mb-8 tracking-widest uppercase">신규 카드 생성</h3>
               {!cropImage ? (
-                <div className="mb-8 w-full"><input type="file" accept="image/*" onChange={handleFileChange} className="w-full font-mono text-xs text-white/70 file:mr-4 file:py-2 file:px-4 file:bg-transparent file:text-white cursor-pointer p-2 border-b border-white/20" required /></div>
+                <div className="mb-8 w-full"><input type="file" accept="image/*" onChange={handleFileChange} className="w-full font-mono text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:bg-transparent file:text-white cursor-pointer p-2 border-b border-white/20" required /></div>
               ) : (
                 <div className="mb-8 w-full flex flex-col items-center gap-4">
                   <div className="relative w-[200px] h-[310px] bg-black border border-white/20 overflow-hidden cursor-move touch-none shrink-0" onMouseDown={handleCropPointerDown} onMouseMove={handleCropPointerMove} onMouseUp={handleCropPointerUp} onMouseLeave={handleCropPointerUp} onTouchStart={handleCropPointerDown} onTouchMove={handleCropPointerMove} onTouchEnd={handleCropPointerUp}>
@@ -1105,8 +1130,8 @@ export default function RogCard() {
                 </div>
               )}
               <div className="mb-6"><label className="block font-mono text-[10px] text-white/50 mb-3 tracking-widest uppercase">이름 (최대 10자)</label><input type="text" name="cardName" maxLength="10" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-sans text-lg focus:border-white uppercase" required /></div>
-              <div className="mb-10"><label className="block font-mono text-[10px] text-white/50 mb-3 tracking-widest uppercase">설명 (최대 60자)</label><textarea name="cardDescription" maxLength="60" rows="3" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-sans text-sm focus:border-white resize-none" placeholder="카드의 기원 기록"></textarea></div>
-              <div className="flex gap-4"><button type="button" onClick={wrapClick(() => setShowCreateModal(false))} className="flex-1 py-4 border border-white/20 text-white/50 font-mono text-xs uppercase hover:text-white">취소</button><button type="submit" disabled={isProcessing} className="flex-1 py-4 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black disabled:opacity-30">{isProcessing ? '처리 중...' : '확인 및 생성'}</button></div>
+              <div className="mb-10"><label className="block font-mono text-[10px] text-white/50 mb-3 tracking-widest uppercase">설명 (최대 60자)</label><textarea name="cardDescription" maxLength="60" rows="3" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-sans text-base focus:border-white resize-none" placeholder="카드의 기원 기록"></textarea></div>
+              <div className="flex gap-4"><button type="button" onClick={wrapClick(() => setShowCreateModal(false))} className="flex-1 py-4 border border-white/20 text-white/50 font-mono text-sm uppercase hover:text-white">취소</button><button type="submit" disabled={isProcessing} className="flex-1 py-4 bg-white/10 text-white border border-white/20 font-mono text-sm uppercase hover:bg-white hover:text-black disabled:opacity-30">{isProcessing ? '처리 중...' : '확인 및 생성'}</button></div>
             </form>
           </div>
         )}
@@ -1123,33 +1148,33 @@ export default function RogCard() {
 
     return (
       <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
-        <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-xs uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
+        <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
         <div className="flex flex-col lg:flex-row items-start justify-center gap-16 w-full">
           <div className="w-64 md:w-80 lg:w-[360px]"><CardItem card={selectedCard} className="pointer-events-none" /></div>
           <div className="flex-1 w-full flex flex-col gap-8">
             <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative">
-              <HUDCorner /><h4 className="font-mono text-sm text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">카드 상세 정보</h4>
+              <HUDCorner /><h4 className="font-mono text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">카드 상세 정보</h4>
               <div className="flex flex-col gap-6">
-                <div><span className="font-mono text-[10px] text-white/40 block mb-1">DESIGNATION</span><div className="flex items-center gap-4"><span className="font-sans font-bold text-3xl text-white">{selectedCard.name}</span>{selectedCard.uniqueTrait && <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded text-xs font-mono font-bold">{selectedCard.uniqueTrait.name}</span>}</div></div>
-                <div><span className="font-mono text-[10px] text-white/40 block mb-1">DESCRIPTION</span><span className="font-sans text-sm text-white/80 block bg-black/20 p-3 rounded">"{selectedCard.description}"</span></div>
-                {selectedCard.uniqueTrait && <div><span className="font-mono text-[10px] text-white/40 block mb-1">UNIQUE TRAIT</span><span className="font-sans text-sm text-emerald-300 block bg-emerald-900/20 p-3 rounded">{selectedCard.uniqueTrait.desc}</span></div>}
+                <div><span className="font-mono text-xs text-white/40 block mb-1">DESIGNATION</span><div className="flex items-center gap-4"><span className="font-sans font-bold text-3xl text-white">{selectedCard.name}</span>{selectedCard.uniqueTrait && <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded text-sm font-mono font-bold">{selectedCard.uniqueTrait.name}</span>}</div></div>
+                <div><span className="font-mono text-xs text-white/40 block mb-1">DESCRIPTION</span><span className="font-sans text-base text-white/80 block bg-black/20 p-3 rounded">"{selectedCard.description}"</span></div>
+                {selectedCard.uniqueTrait && <div><span className="font-mono text-xs text-white/40 block mb-1">UNIQUE TRAIT</span><span className="font-sans text-base text-emerald-300 block bg-emerald-900/20 p-3 rounded">{selectedCard.uniqueTrait.desc}</span></div>}
                 <div>
-                  <span className="font-mono text-[10px] text-white/40 block mb-3">ACQUIRED SKILLS (클릭하여 설명 확인)</span>
-                  <div className="flex flex-wrap gap-2">{selectedCard.unlockedSkills.length > 0 ? selectedCard.unlockedSkills.map(s => (<button key={s} onClick={wrapClick(() => setSelectedSkillDesc(s))} className={`px-3 py-1.5 font-mono text-xs rounded border border-white/10 ${selectedSkillDesc === s ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white hover:bg-white/20'}`}>{s}</button>)) : <span className="text-white/30 font-mono text-xs">보유 스킬 없음</span>}</div>
-                  {selectedSkillDesc && (<div className="mt-4 p-4 bg-black/40 border border-emerald-500/30 rounded animate-fade-in"><span className="text-emerald-400 font-bold font-mono text-sm block mb-1">{selectedSkillDesc}</span><span className="text-white/80 font-sans text-sm">{SKILLS_DATA[selectedSkillDesc]}</span></div>)}
+                  <span className="font-mono text-xs text-white/40 block mb-3">ACQUIRED SKILLS (클릭하여 설명 확인)</span>
+                  <div className="flex flex-wrap gap-2">{selectedCard.unlockedSkills.length > 0 ? selectedCard.unlockedSkills.map(s => (<button key={s} onClick={wrapClick(() => setSelectedSkillDesc(s))} className={`px-3 py-1.5 font-mono text-sm rounded border border-white/10 ${selectedSkillDesc === s ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white hover:bg-white/20'}`}>{s}</button>)) : <span className="text-white/30 font-mono text-sm">보유 스킬 없음</span>}</div>
+                  {selectedSkillDesc && (<div className="mt-4 p-4 bg-black/40 border border-emerald-500/30 rounded animate-fade-in"><span className="text-emerald-400 font-bold font-mono text-base block mb-1">{selectedSkillDesc}</span><span className="text-white/80 font-sans text-base">{SKILLS_DATA[selectedSkillDesc]}</span></div>)}
                 </div>
               </div>
             </div>
             <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative">
-              <HUDCorner /><h4 className="font-mono text-sm text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">프레임 장착</h4>
-              <div className="flex flex-col gap-3 font-mono text-xs h-64 overflow-y-auto custom-scrollbar pr-2">
+              <HUDCorner /><h4 className="font-mono text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">프레임 장착</h4>
+              <div className="flex flex-col gap-3 font-mono text-sm h-64 overflow-y-auto custom-scrollbar pr-2">
                 {framesList.map(frame => {
                   const isOwned = userData?.frames?.includes(frame.id);
                   const isEquipped = selectedCard.equippedFrame === frame.id;
                   return (
                     <div key={frame.id} className={`flex items-center justify-between p-4 border border-white/10 ${isEquipped ? 'border-emerald-500/50 bg-emerald-500/10' : 'bg-black/40'}`}>
-                      <div className="flex flex-col gap-1"><span className={`font-bold text-sm ${isEquipped ? 'text-emerald-400' : 'text-white'}`}>{frame.name}</span><span className="text-white/40 text-[10px]">{frame.desc}</span></div>
-                      <div>{!isOwned ? <span className="text-white/30 text-[10px] bg-white/5 px-3 py-1.5 rounded">미보유</span> : isEquipped ? <button onClick={wrapClick(() => handleEquipCardFrame(null))} disabled={isProcessing} className="px-5 py-2.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500 hover:text-white">해제</button> : <button onClick={wrapClick(() => handleEquipCardFrame(frame.id))} disabled={isProcessing} className="px-5 py-2.5 bg-white/10 text-white rounded hover:bg-white hover:text-black">장착</button>}</div>
+                      <div className="flex flex-col gap-1"><span className={`font-bold text-base ${isEquipped ? 'text-emerald-400' : 'text-white'}`}>{frame.name}</span><span className="text-white/40 text-xs">{frame.desc}</span></div>
+                      <div>{!isOwned ? <span className="text-white/30 text-xs bg-white/5 px-3 py-1.5 rounded">미보유</span> : isEquipped ? <button onClick={wrapClick(() => handleEquipCardFrame(null))} disabled={isProcessing} className="px-5 py-2.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500 hover:text-white">해제</button> : <button onClick={wrapClick(() => handleEquipCardFrame(frame.id))} disabled={isProcessing} className="px-5 py-2.5 bg-white/10 text-white rounded hover:bg-white hover:text-black">장착</button>}</div>
                     </div>
                   );
                 })}
@@ -1177,11 +1202,11 @@ export default function RogCard() {
     return (
       <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
         {enhanceVisualState.startsWith('success') && parseInt(enhanceVisualState.split('_')[1]) >= 8 && <div className="absolute inset-0 bg-white/20 animate-flash-white pointer-events-none z-0"></div>}
-        <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-xs uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
+        <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
         <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full">
           <div className="w-full lg:w-1/3 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative order-2 lg:order-1">
-            <HUDCorner /><h4 className="font-mono font-light text-sm text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">카드 능력치</h4>
-            <div className="space-y-4 font-mono text-sm tracking-widest font-light">
+            <HUDCorner /><h4 className="font-mono font-light text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">카드 능력치</h4>
+            <div className="space-y-4 font-mono text-base tracking-widest font-light">
               <div className="flex justify-between"><span>HP</span> <span className="text-white font-bold">{selectedCard.stats.hp}</span></div>
               <div className="flex justify-between"><span>ATK</span> <span className="text-white font-bold">{selectedCard.stats.atk}</span></div>
               <div className="flex justify-between"><span>DEF</span> <span className="text-white font-bold">{selectedCard.stats.def}%</span></div>
@@ -1191,28 +1216,28 @@ export default function RogCard() {
             </div>
           </div>
           <div className="w-64 md:w-80 lg:w-[360px] order-1 lg:order-2 flex flex-col items-center relative">
-            <div className={`transition-all duration-300 w-full ${effectClass}`}>{enhanceVisualState !== 'destroyed' && <CardItem card={selectedCard} className="pointer-events-none" />}{enhanceVisualState.startsWith('success') && <div className="absolute inset-0 bg-white/50 mix-blend-overlay animate-flash-bang pointer-events-none rounded-lg"></div>}</div>
+            <div className={`transition-all duration-300 w-full ${effectClass}`}>{enhanceVisualState !== 'destroyed' && <CardItem card={selectedCard} className="pointer-events-none" />}</div>
           </div>
           <div className="w-full lg:w-1/3 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative order-3 flex flex-col justify-center min-h-[300px]">
             <HUDCorner />
-            {isMax ? (<div className="text-center text-white font-mono text-2xl tracking-[0.2em] uppercase">최대 성능 도달</div>) : (
+            {isMax ? (<div className="text-center text-white font-mono font-light text-2xl tracking-[0.2em] uppercase">최대 성능 도달</div>) : (
               <>
                 <div className="text-center mb-6 flex items-center justify-center gap-6 font-mono tracking-widest"><span className="text-white/30 text-xl font-light">LV.{selectedCard.level}</span><ArrowRight className="text-white/20" size={20}/><span className="text-3xl font-bold text-white drop-shadow-md">LV.{selectedCard.level + 1}</span></div>
-                <div className="w-full mb-6 font-mono text-[10px] tracking-widest">
+                <div className="w-full mb-6 font-mono text-xs tracking-widest">
                   <div className="flex items-center gap-2 mb-2"><input type="checkbox" checked={useBoost} onChange={()=>setUseBoost(!useBoost)} disabled={!(userData?.items?.boost > 0)} className="accent-white cursor-pointer"/><span className={userData?.items?.boost > 0 ? "text-white" : "text-white/30"}>부스트 사용 (보유: {userData?.items?.boost || 0})</span></div>
                   <div className="flex items-center gap-2"><input type="checkbox" checked={useProtect} onChange={()=>setUseProtect(!useProtect)} disabled={!(userData?.items?.protect > 0) || nextRule.onFail === 'keep'} className="accent-white cursor-pointer"/><span className={userData?.items?.protect > 0 && nextRule.onFail !== 'keep' ? "text-white" : "text-white/30"}>보호권 사용 (보유: {userData?.items?.protect || 0})</span></div>
                 </div>
-                <div className="w-full mb-8 font-mono text-xs tracking-widest font-light">
+                <div className="w-full mb-8 font-mono text-sm tracking-widest font-light">
                   <div className="flex justify-between mb-4 text-white/50"><span>기본 확률</span><span>{nextRule.successRate}%</span></div>
                   <div className="flex justify-between text-white border-t border-white/10 pt-4"><span>현재 확률</span><span className={useBoost ? "text-emerald-400 font-bold" : ""}>{Math.min(99, (nextRule.successRate + selectedCard.stats.luck * 0.3 + (useBoost?10:0))).toFixed(1)}%</span></div>
                 </div>
-                <div className="w-full mb-10 font-mono text-[10px] tracking-widest p-4 border border-white/5 bg-black/20">
+                <div className="w-full mb-10 font-mono text-xs tracking-widest p-4 border border-white/5 bg-black/20">
                   <span className="text-white/40 block mb-3 uppercase">실패 시:</span>
                   {(nextRule.onFail === 'keep' || useProtect) && <span className="text-white/80">안전 (등급 유지) {useProtect && <span className="text-emerald-400 font-bold">[보호됨]</span>}</span>}
                   {(nextRule.onFail === 'down' && !useProtect) && <span className="text-white/80">등급 하락 -{nextRule.levelDownOnFail}</span>}
                   {(nextRule.onFail === 'mixed' && !useProtect) && (<div className="space-y-2"><span className="text-white/80 block">등급 하락 -{nextRule.levelDownOnFail} ({100-nextRule.destroyChance}%)</span><span className="text-red-500 font-bold block animate-pulse">카드 영구 파괴 ({nextRule.destroyChance}%)</span></div>)}
                 </div>
-                <button onClick={wrapClick(() => handleEnhance(selectedCard))} disabled={isProcessing || enhanceVisualState !== 'idle'} className="w-full py-4 bg-white/10 border border-white/20 text-white font-mono text-xs uppercase hover:bg-white hover:text-black disabled:opacity-30">카드 강화 [ -{formatMoney(cost)} GOLD ]</button>
+                <button onClick={wrapClick(() => handleEnhance(selectedCard))} disabled={isProcessing || enhanceVisualState !== 'idle'} className="w-full py-4 bg-white/10 border border-white/20 text-white font-mono text-sm uppercase hover:bg-white hover:text-black disabled:opacity-30">카드 강화 [ -{formatMoney(cost)} GOLD ]</button>
               </>
             )}
           </div>
@@ -1223,58 +1248,58 @@ export default function RogCard() {
 
   const renderBattleSelect = () => (
     <div className="p-4 md:p-10 max-w-5xl mx-auto animate-fade-in relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
-      <h2 className="text-2xl font-mono font-light text-white mb-16 tracking-[0.2em] uppercase drop-shadow-md">전투 모드 선택</h2>
+      <h2 className="text-3xl font-mono font-light text-white mb-16 tracking-[0.2em] uppercase drop-shadow-md">전투 모드 선택</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
         <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } startAIBattleSetup(myCards[0]); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all">
           <HUDCorner /><Cpu size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-lg font-mono font-light text-white mb-3 tracking-widest uppercase">AI와 대전하기</h3>
-          <p className="text-white/40 text-sm font-sans font-light">가상 적들과 대결하여 골드를 벌어보세요.</p>
+          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">AI와 대전하기</h3>
+          <p className="text-white/40 text-base font-sans font-light">가상 적들과 대결하여 골드를 벌어보세요.</p>
         </div>
         <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } if(!selectedCard) setSelectedCard(myCards[0]); setCurrentView('pvp_setup'); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all">
           <HUDCorner /><User size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-lg font-mono font-light text-white mb-3 tracking-widest uppercase">유저와 대결하기</h3>
-          <p className="text-white/40 text-sm font-sans font-light">방을 개설하고 실시간으로 대결하세요.</p>
+          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">유저와 대결하기</h3>
+          <p className="text-white/40 text-base font-sans font-light">방을 개설하고 실시간으로 대결하세요.</p>
         </div>
       </div>
-      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-xs tracking-widest uppercase transition-colors">뒤로 가기</button>
+      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
     </div>
   );
 
   const renderPvPSetup = () => (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
-      <h2 className="text-2xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
+      <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
       <div className="w-full max-w-6xl mb-12">
-        <h3 className="text-white/50 font-mono text-[10px] tracking-widest mb-6 text-center uppercase">출전 카드 선택</h3>
-        <div className="flex overflow-x-auto gap-6 pb-6 px-2 custom-scrollbar">
+        <h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 text-center uppercase">출전 카드 선택</h3>
+        <div className="flex overflow-x-auto gap-4 pb-6 px-2 custom-scrollbar">
           {myCards.map(card => (
-            <div key={card.id} className="min-w-[200px] cursor-pointer" onClick={wrapClick(() => setSelectedCard(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>
+            <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => setSelectedCard(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>
           ))}
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
         <div className="flex-[2] bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col min-h-[300px]">
-          <HUDCorner /><h3 className="text-sm font-mono font-light text-white mb-6 tracking-widest uppercase">활성화된 대기방</h3>
+          <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-6 tracking-widest uppercase">활성화된 대기방</h3>
           <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
-            {activeRooms.length === 0 ? (<div className="text-center text-white/30 font-mono text-xs mt-10">생성된 방이 없습니다.</div>) : (
+            {activeRooms.length === 0 ? (<div className="text-center text-white/30 font-mono text-sm mt-10">생성된 방이 없습니다.</div>) : (
               activeRooms.map(room => (
                 <div key={room.id} className="p-4 bg-white/5 border border-white/10 flex justify-between items-center">
-                  <div className="flex flex-col flex-1 min-w-0 pr-4"><span className="font-mono text-white text-sm truncate">{room.roomName}</span><span className="font-mono text-[10px] text-white/50 truncate">Host: {room.host.nickname}</span></div>
-                  <div className="flex items-center gap-4 whitespace-nowrap"><span className="font-mono text-amber-400 text-xs">{formatMoney(room.bet)} G</span><button onClick={wrapClick(() => handleJoinPvPRoom(room.id))} disabled={!selectedCard} className="px-4 py-2 bg-white/10 text-white font-mono text-[10px] uppercase hover:bg-white hover:text-black transition-colors disabled:opacity-30">참가</button></div>
+                  <div className="flex flex-col flex-1 min-w-0 pr-4"><span className="font-mono text-white text-base truncate">{room.roomName}</span><span className="font-mono text-xs text-white/50 truncate">Host: {room.host.nickname}</span></div>
+                  <div className="flex items-center gap-4 whitespace-nowrap"><span className="font-mono text-amber-400 text-sm">{formatMoney(room.bet)} G</span><button onClick={wrapClick(() => handleJoinPvPRoom(room.id))} disabled={!selectedCard} className="px-4 py-2 bg-white/10 text-white font-mono text-xs uppercase hover:bg-white hover:text-black transition-colors disabled:opacity-30">참가</button></div>
                 </div>
               ))
             )}
           </div>
         </div>
         <div className="flex-1 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col">
-          <HUDCorner /><h3 className="text-sm font-mono font-light text-white mb-8 tracking-widest uppercase">새로운 방 개설</h3>
-          <label className="text-white/40 text-[10px] font-mono mb-2 tracking-widest uppercase">방 이름</label>
-          <input type="text" value={pvpRoomName} onChange={(e) => setPvpRoomName(e.target.value)} placeholder={`${userData.nickname}의 방`} maxLength={15} className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-sm focus:border-white focus:outline-none mb-8 placeholder-white/20 transition-colors" />
-          <label className="text-white/40 text-[10px] font-mono mb-2 tracking-widest uppercase">배팅 금액 (GOLD)</label>
-          <input type="number" value={battleBet} onChange={(e) => setBattleBet(Number(e.target.value))} min="1000" max={userData.money} step="1000" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-lg focus:border-white focus:outline-none mb-10 transition-colors" />
-          <button onClick={wrapClick(handleCreatePvPRoom)} disabled={isProcessing || !selectedCard} className="mt-auto py-4 bg-white/10 text-white font-mono text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30">개설 및 대기</button>
+          <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-8 tracking-widest uppercase">새로운 방 개설</h3>
+          <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">방 이름</label>
+          <input type="text" value={pvpRoomName} onChange={(e) => setPvpRoomName(e.target.value)} placeholder={`${userData.nickname}의 방`} maxLength={15} className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-base focus:border-white focus:outline-none mb-8 placeholder-white/20 transition-colors" />
+          <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">배팅 금액 (GOLD)</label>
+          <input type="number" value={battleBet} onChange={(e) => setBattleBet(Number(e.target.value))} min="1000" max={userData.money} step="1000" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-xl focus:border-white focus:outline-none mb-10 transition-colors" />
+          <button onClick={wrapClick(handleCreatePvPRoom)} disabled={isProcessing || !selectedCard} className="mt-auto py-4 bg-white/10 text-white font-mono text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30">개설 및 대기</button>
         </div>
       </div>
-      <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-16 text-white/30 hover:text-white font-mono text-xs tracking-widest uppercase transition-colors">뒤로 가기</button>
+      <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
     </div>
   );
 
@@ -1290,22 +1315,22 @@ export default function RogCard() {
       <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
         <div className="flex flex-col lg:flex-row w-full max-w-7xl gap-8">
           <div className="flex-[2] bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-10 relative flex flex-col items-center transition-all duration-500 hover:border-white/20">
-            <HUDCorner /><h2 className="text-sm font-mono text-white/50 mb-12 uppercase">{pvpRoomData.roomName} <span className="text-[10px]">({pvpRoomId})</span></h2>
+            <HUDCorner /><h2 className="text-base font-mono text-white/50 mb-12 uppercase">{pvpRoomData.roomName} <span className="text-xs">({pvpRoomId})</span></h2>
             <div className="flex flex-col md:flex-row items-center gap-10 w-full justify-center mb-16">
-              <div className="flex flex-col items-center w-56"><span className="text-white/70 font-mono text-xs mb-4">{userData.nickname}</span><CardItem card={myMatchCard} /></div>
-              <div className="flex flex-col items-center gap-4"><div className="text-white/40 text-[10px] tracking-[0.2em] font-mono">TOTAL WAGER</div><div className="text-amber-400 font-mono font-bold text-2xl bg-white/5 px-6 py-3 rounded-md border border-amber-500/30 whitespace-nowrap">{formatMoney(pvpRoomData.bet * 2)} GOLD</div></div>
-              <div className="flex flex-col items-center w-56"><span className="text-white/70 font-mono text-xs mb-4">{opponent ? opponent.nickname : '대기 중...'}</span><CardItem card={oppMatchCard} className={!oppMatchCard ? 'opacity-30 grayscale' : ''} /></div>
+              <div className="flex flex-col items-center w-56"><span className="text-white/70 font-mono text-sm mb-4">{userData.nickname}</span><CardItem card={myMatchCard} /></div>
+              <div className="flex flex-col items-center gap-4"><div className="text-white/40 text-xs tracking-[0.2em] font-mono">TOTAL WAGER</div><div className="text-amber-400 font-mono font-bold text-3xl bg-white/5 px-6 py-3 rounded-md border border-amber-500/30 whitespace-nowrap">{formatMoney(pvpRoomData.bet * 2)} GOLD</div></div>
+              <div className="flex flex-col items-center w-56"><span className="text-white/70 font-mono text-sm mb-4">{opponent ? opponent.nickname : '대기 중...'}</span><CardItem card={oppMatchCard} className={!oppMatchCard ? 'opacity-30 grayscale' : ''} /></div>
             </div>
-            {isHost ? (<button onClick={wrapClick(handleStartPvPBattle)} disabled={!isReady} className="w-full max-w-md py-4 bg-white text-black font-mono text-sm hover:bg-white/80 disabled:opacity-30 font-bold uppercase tracking-[0.2em]">{isReady ? '전투 시작' : '상대 대기 중...'}</button>) : (<div className="w-full max-w-md py-4 border border-white/20 text-white/40 text-center font-mono text-xs uppercase tracking-[0.2em]">호스트의 시작 대기 중...</div>)}
-            <button onClick={wrapClick(() => { setPvpRoomId(null); setCurrentView('pvp_setup'); })} className="mt-8 text-white/30 hover:text-white text-[10px] font-mono tracking-widest uppercase transition-colors">방 나가기</button>
+            {isHost ? (<button onClick={wrapClick(handleStartPvPBattle)} disabled={!isReady} className="w-full max-w-md py-4 bg-white text-black font-mono text-base hover:bg-white/80 disabled:opacity-30 font-bold uppercase tracking-[0.2em]">{isReady ? '전투 시작' : '상대 대기 중...'}</button>) : (<div className="w-full max-w-md py-4 border border-white/20 text-white/40 text-center font-mono text-sm uppercase tracking-[0.2em]">호스트의 시작 대기 중...</div>)}
+            <button onClick={wrapClick(async () => { if (isHost) { try { await deleteDoc(doc(db, MATCHES_PATH, pvpRoomId)); } catch(e){} } setPvpRoomId(null); setCurrentView('lobby'); })} className="mt-8 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">방 나가기</button>
           </div>
           <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden min-h-[400px]">
             <HUDCorner />
-            <div className="p-5 border-b border-white/10 font-mono font-light text-xs text-white/50 tracking-widest uppercase flex justify-center gap-2"><MessageSquare size={14} /> 통신 채널</div>
-            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 font-mono text-[11px] custom-scrollbar">
-              {pvpRoomData.chat.map((msg, i) => (<div key={i} className={`flex flex-col ${msg.sender === userData.nickname ? 'items-end' : 'items-start'} animate-slide-up`}><span className="text-[9px] text-white/30 mb-1">{msg.sender}</span><div className={`px-4 py-2 ${msg.sender === userData.nickname ? 'bg-white/10 text-white' : 'border border-white/10 text-white/70'} max-w-[90%] break-words rounded-md`}>{msg.text}</div></div>))}
+            <div className="p-5 border-b border-white/10 font-mono font-light text-sm text-white/50 tracking-widest uppercase flex justify-center gap-2"><MessageSquare size={16} /> 통신 채널</div>
+            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 font-mono text-xs custom-scrollbar">
+              {pvpRoomData.chat.map((msg, i) => (<div key={i} className={`flex flex-col ${msg.sender === userData.nickname ? 'items-end' : 'items-start'} animate-slide-up`}><span className="text-[10px] text-white/30 mb-1">{msg.sender}</span><div className={`px-4 py-2 ${msg.sender === userData.nickname ? 'bg-white/10 text-white' : 'border border-white/10 text-white/70'} max-w-[90%] break-words rounded-md`}>{msg.text}</div></div>))}
             </div>
-            <form onSubmit={handleSendChat} className="p-4 border-t border-white/10 flex gap-3"><input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} className="flex-1 bg-transparent border-b border-white/20 px-2 py-2 text-white font-mono text-xs focus:outline-none focus:border-white transition-colors placeholder-white/20" placeholder="메시지 입력" /><button type="submit" className="text-white/50 hover:text-white font-mono text-[10px] tracking-widest uppercase">전송</button></form>
+            <form onSubmit={handleSendChat} className="p-4 border-t border-white/10 flex gap-3"><input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} className="flex-1 bg-transparent border-b border-white/20 px-2 py-2 text-white font-mono text-sm focus:outline-none focus:border-white transition-colors placeholder-white/20" placeholder="메시지 입력" /><button type="submit" className="text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase">전송</button></form>
           </div>
         </div>
       </div>
@@ -1316,23 +1341,23 @@ export default function RogCard() {
     if (!selectedCard || !aiOpponent) { if(myCards.length > 0) startAIBattleSetup(myCards[0]); return null; }
     return (
       <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
-        <h2 className="text-2xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">AI 교전 준비</h2>
+        <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">AI 교전 준비</h2>
         <div className="w-full max-w-5xl mb-8">
-          <h3 className="text-white/50 font-mono text-[10px] tracking-widest mb-4 text-center uppercase">출전 카드 변경</h3>
-          <div className="flex overflow-x-auto gap-6 pb-4 px-2 custom-scrollbar">
-            {myCards.map(card => (<div key={card.id} className="min-w-[180px] cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>))}
+          <h3 className="text-white/50 font-mono text-xs tracking-widest mb-4 text-center uppercase">출전 카드 변경</h3>
+          <div className="flex overflow-x-auto gap-4 pb-4 px-2 custom-scrollbar">
+            {myCards.map(card => (<div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>))}
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full max-w-5xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 relative transition-all">
           <HUDCorner />
-          <div className="flex flex-col items-center flex-1"><h3 className="text-white/50 font-mono text-[10px] tracking-widest mb-6 uppercase">아군 자산</h3><div className="w-56"><CardItem card={selectedCard} /></div></div>
+          <div className="flex flex-col items-center flex-1"><h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 uppercase">아군 자산</h3><div className="w-56"><CardItem card={selectedCard} /></div></div>
           <div className="flex flex-col items-center flex-1 w-full min-w-[300px]">
-            <div className="text-white/40 text-[10px] tracking-[0.2em] font-mono mb-2">EXPECTED REWARD</div>
-            <div className="text-amber-400 font-mono font-bold text-2xl bg-white/5 px-6 py-3 rounded-md border border-amber-500/30 mb-8 whitespace-nowrap">{formatMoney(battleReward)} GOLD</div>
-            <div className="w-full text-center"><button onClick={wrapClick(executeAIBattle)} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 border border-white/20 text-white font-mono text-xs hover:bg-white hover:text-black transition-all uppercase font-bold">교전 시작</button></div>
-            <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-10 text-white/30 hover:text-white text-[10px] font-mono tracking-widest uppercase transition-colors">뒤로 가기</button>
+            <div className="text-white/40 text-xs tracking-[0.2em] font-mono mb-2">EXPECTED REWARD</div>
+            <div className="text-amber-400 font-mono font-bold text-3xl bg-white/5 px-6 py-3 rounded-md border border-amber-500/30 mb-8 whitespace-nowrap">{formatMoney(battleReward)} GOLD</div>
+            <div className="w-full text-center"><button onClick={wrapClick(executeAIBattle)} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 border border-white/20 text-white font-mono text-sm hover:bg-white hover:text-black transition-all uppercase font-bold">교전 시작</button></div>
+            <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-10 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">뒤로 가기</button>
           </div>
-          <div className="flex flex-col items-center flex-1"><h3 className="text-white/50 font-mono text-[10px] tracking-widest mb-6 uppercase flex items-center gap-2"><Crosshair size={12} strokeWidth={1}/> 적대 자산 (AI)</h3><div className="w-56"><CardItem card={aiOpponent} /></div></div>
+          <div className="flex flex-col items-center flex-1"><h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 uppercase flex items-center gap-2"><Crosshair size={14} strokeWidth={1}/> 적대 자산 (AI)</h3><div className="w-56"><CardItem card={aiOpponent} /></div></div>
         </div>
       </div>
     );
@@ -1373,13 +1398,13 @@ export default function RogCard() {
         
         <div className="flex justify-between items-center gap-8 mb-16 mt-6 font-mono border-b border-white/10 pb-8 z-10">
           <div className="flex-1 max-w-md">
-            <div className="flex justify-between text-xs tracking-widest mb-2 font-bold uppercase text-white/80"><span>{battleType === 'PvP' ? pvpRoomData?.hostCard.name : selectedCard.name}</span><span className="text-white drop-shadow-[0_0_5px_#fff]">{Math.ceil(liveState.p1Hp)} <span className="text-[10px] text-white/50">/ {liveState.p1Max}</span></span></div>
-            <div className="h-5 bg-white/5 relative overflow-hidden border border-white/20 p-0.5" style={{ clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)' }}><div className={`h-full transition-all duration-300 ease-out ${p1HpPercent > 50 ? 'bg-emerald-400' : p1HpPercent > 20 ? 'bg-amber-400' : 'bg-red-500 animate-pulse'}`} style={{width: `${p1HpPercent}%`}}></div></div>
+            <div className="flex justify-between text-sm tracking-widest mb-2 font-bold uppercase text-white/80"><span>{battleType === 'PvP' ? pvpRoomData?.hostCard.name : selectedCard.name}</span><span className="text-white drop-shadow-[0_0_5px_#fff]">{Math.ceil(liveState.p1Hp)} <span className="text-xs text-white/50">/ {liveState.p1Max}</span></span></div>
+            <div className="h-6 bg-white/5 relative overflow-hidden border border-white/20 p-0.5" style={{ clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)' }}><div className={`h-full transition-all duration-300 ease-out ${p1HpPercent > 50 ? 'bg-emerald-400' : p1HpPercent > 20 ? 'bg-amber-400' : 'bg-red-500 animate-pulse'}`} style={{width: `${p1HpPercent}%`}}></div></div>
           </div>
-          <div className="text-xl font-light text-white/20 tracking-[0.2em] font-mono">VS</div>
+          <div className="text-2xl font-light text-white/20 tracking-[0.2em] font-mono">VS</div>
           <div className="flex-1 max-w-md">
-            <div className="flex justify-between text-xs tracking-widest mb-2 font-bold uppercase text-white/80"><span className="text-white drop-shadow-[0_0_5px_#fff]">{Math.ceil(liveState.p2Hp)} <span className="text-[10px] text-white/50">/ {liveState.p2Max}</span></span><span>{battleType === 'PvP' ? pvpRoomData?.guestCard.name : aiOpponent.name}</span></div>
-            <div className="h-5 bg-white/5 relative overflow-hidden flex justify-end border border-white/20 p-0.5" style={{ clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)' }}><div className={`h-full transition-all duration-300 ease-out ${p2HpPercent > 50 ? 'bg-emerald-400' : p2HpPercent > 20 ? 'bg-amber-400' : 'bg-red-500 animate-pulse'}`} style={{width: `${p2HpPercent}%`}}></div></div>
+            <div className="flex justify-between text-sm tracking-widest mb-2 font-bold uppercase text-white/80"><span className="text-white drop-shadow-[0_0_5px_#fff]">{Math.ceil(liveState.p2Hp)} <span className="text-xs text-white/50">/ {liveState.p2Max}</span></span><span>{battleType === 'PvP' ? pvpRoomData?.guestCard.name : aiOpponent.name}</span></div>
+            <div className="h-6 bg-white/5 relative overflow-hidden flex justify-end border border-white/20 p-0.5" style={{ clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)' }}><div className={`h-full transition-all duration-300 ease-out ${p2HpPercent > 50 ? 'bg-emerald-400' : p2HpPercent > 20 ? 'bg-amber-400' : 'bg-red-500 animate-pulse'}`} style={{width: `${p2HpPercent}%`}}></div></div>
           </div>
         </div>
 
@@ -1392,9 +1417,7 @@ export default function RogCard() {
           <div className={`transition-all duration-100 ${p2Anim} ${liveState.p2Hp <= 0 ? 'opacity-20 grayscale blur-[2px]' : ''} relative`}>
              <div className="w-48 md:w-64 shadow-[0_0_30px_rgba(0,0,0,1)]"><CardItem card={battleType === 'PvP' ? pvpRoomData?.guestCard : aiOpponent} /></div>
              {isP2Hit && action?.damage > 0 && (<div key={`dmg-p2-${battleStep}`} className={`absolute top-1/2 left-1/2 pointer-events-none z-50 whitespace-nowrap ${action?.type === 'critical' ? 'animate-floating-crit-dmg text-7xl font-black text-red-500' : 'animate-floating-dmg text-5xl font-bold text-white'}`}>-{action.damage}</div>)}
-             {isP2Hit && action?.damage > 0 && (<div key={`slash-p2-${battleStep}`} className={`absolute inset-0 pointer-events-none z-40 flex items-center justify-center ${action?.type === 'critical' ? 'animate-crit-slash-mark' : 'animate-slash-mark'}`}><div className="w-[150%] h-2 bg-white"></div>{action?.type === 'critical' && <div className="absolute w-[150%] h-2 bg-white rotate-90"></div>}</div>)}
              {action?.type === 'dodge' && action?.actor === 'p2' && <div key={`dodge-p2-${battleStep}`} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-bold italic text-cyan-400 animate-float-up pointer-events-none z-50">EVADED!</div>}
-             {action?.type === 'skill' && action?.actor === 'p2' && <div key={`skill-p2-${battleStep}`} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-skill-text text-4xl font-black text-red-400 whitespace-nowrap">{action.skill}</div>}
           </div>
         </div>
 
@@ -1403,15 +1426,15 @@ export default function RogCard() {
             <div className="bg-transparent border border-white/20 p-12 text-center max-w-lg w-full relative">
               <HUDCorner />
               <h2 className={`font-sans font-black text-5xl tracking-[0.2em] mb-8 uppercase ${battleResult==='win'?'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]':'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]'}`}>{battleResult === 'win' ? 'VICTORY' : 'DEFEAT'}</h2>
-              <div className="text-sm mb-12 font-mono tracking-widest text-white/50 uppercase bg-white/5 p-4 rounded border border-white/10"><p className={battleResult==='win' ? 'text-emerald-400 font-bold' : ''}>{battleResult==='win' ? `자금 획득: +${formatMoney(battleType === 'AI' ? battleReward : battleBet * 2)} GOLD` : `자금 손실: -${formatMoney(battleType === 'AI' ? 0 : battleBet)} GOLD`}</p></div>
-              <button onClick={wrapClick(() => { setPvpRoomId(null); setCurrentView('lobby'); })} className="w-full py-4 bg-white/10 text-white hover:bg-white hover:text-black transition-all font-mono text-xs uppercase font-bold">시스템 복귀</button>
+              <div className="text-base mb-12 font-mono tracking-widest text-white/50 uppercase bg-white/5 p-4 rounded border border-white/10"><p className={battleResult==='win' ? 'text-emerald-400 font-bold' : ''}>{battleResult==='win' ? `자금 획득: +${formatMoney(battleType === 'AI' ? battleReward : battleBet * 2)} GOLD` : `자금 손실: -${formatMoney(battleType === 'AI' ? 0 : battleBet)} GOLD`}</p></div>
+              <button onClick={wrapClick(() => { setPvpRoomId(null); setCurrentView('lobby'); })} className="w-full py-4 bg-white/10 text-white hover:bg-white hover:text-black transition-all font-mono text-sm uppercase font-bold">시스템 복귀</button>
             </div>
           </div>
         )}
 
-        <div className="h-40 mt-10 overflow-y-auto flex flex-col justify-end font-mono text-[11px] tracking-widest text-white/40 border-t border-white/10 pt-4 custom-scrollbar z-10 bg-black/40 rounded-t-xl px-4 transition-all hover:bg-black/60">
+        <div className="h-40 mt-10 overflow-y-auto flex flex-col justify-end font-mono text-[12px] tracking-widest text-white/40 border-t border-white/10 pt-4 custom-scrollbar z-10 bg-black/40 rounded-t-xl px-4 transition-all hover:bg-black/60">
           {battleLog.slice(0, battleStep + 1).map((log, i) => (
-            <div key={i} className={`py-1 animate-slide-up uppercase transition-colors ${log.type === 'critical' ? 'text-red-400 font-bold text-base' : ''} ${log.type === 'skill' ? 'text-white font-bold' : ''}`}>{log.text}</div>
+            <div key={i} className={`py-1 animate-slide-up uppercase transition-colors ${log.type === 'critical' ? 'text-red-400 font-bold text-lg' : ''} ${log.type === 'skill' ? 'text-white font-bold text-sm' : ''}`}>{log.text}</div>
           ))}
           <div ref={el => el && el.scrollIntoView()} />
         </div>
@@ -1436,7 +1459,7 @@ export default function RogCard() {
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-3px);} 75% {transform: translateX(3px);} }
         @keyframes tension-shake { 0%, 100% {transform: translate(0,0);} 10% {transform: translate(-2px, 2px);} 30% {transform: translate(2px, -2px);} 50% {transform: translate(-2px, -2px);} 70% {transform: translate(2px, 2px);} 90% {transform: translate(-2px, 1px);} }
         @keyframes shatter { 0% { opacity: 1; transform: scale(1); filter: brightness(2); } 100% { opacity: 0; transform: scale(0.95); filter: grayscale(1) blur(4px); } }
-        @keyframes flash-bang { 0% { filter: brightness(1); opacity: 1; } 10% { filter: brightness(3); opacity: 1; transform: scale(1.05); } 100% { filter: brightness(1); opacity: 0; transform: scale(1); } }
+        @keyframes flash-bang { 0% { filter: brightness(1); opacity: 1; } 10% { filter: brightness(3); opacity: 1; transform: scale(1.05); } 100% { filter: brightness(1.2); opacity: 1; transform: scale(1); } }
         @keyframes flash-white { 0% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes flash-red { 0% { background-color: rgba(239, 68, 68, 0.5); } 100% { background-color: transparent; } }
         @keyframes float-up { 0% { transform: translate(-50%, -50%); opacity: 1; } 100% { transform: translate(-50%, -100%); opacity: 0; } }
@@ -1520,7 +1543,7 @@ export default function RogCard() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in" onClick={() => setPreviewCard(null)}>
           <div className="relative w-full max-w-sm flex flex-col items-center animate-slide-up transform scale-110 md:scale-125" onClick={e => e.stopPropagation()}>
             <CardItem card={previewCard} className="w-full pointer-events-none" />
-            <button onClick={wrapClick(() => setPreviewCard(null))} onMouseEnter={handleHover} className="mt-8 px-8 py-3 bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black font-mono text-xs tracking-widest uppercase transition-colors duration-300">닫기</button>
+            <button onClick={wrapClick(() => setPreviewCard(null))} onMouseEnter={handleHover} className="mt-8 px-8 py-3 bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black font-mono text-sm tracking-widest uppercase transition-colors duration-300">닫기</button>
           </div>
         </div>
       )}
@@ -1528,9 +1551,9 @@ export default function RogCard() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
           <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-sm relative transition-all duration-300">
             <HUDCorner />
-            <h3 className="font-mono font-light text-lg text-white mb-4 tracking-widest uppercase">{confirmModal.title}</h3>
-            <p className="font-sans text-sm text-white/60 mb-10 whitespace-pre-wrap leading-relaxed">{confirmModal.message}</p>
-            <div className="flex gap-4 font-mono font-light text-xs tracking-widest uppercase">
+            <h3 className="font-mono font-light text-xl text-white mb-4 tracking-widest uppercase">{confirmModal.title}</h3>
+            <p className="font-sans text-base text-white/60 mb-10 whitespace-pre-wrap leading-relaxed">{confirmModal.message}</p>
+            <div className="flex gap-4 font-mono font-light text-sm tracking-widest uppercase">
               <button onClick={wrapClick(confirmModal.onCancel || (() => setConfirmModal(null)))} onMouseEnter={handleHover} className="flex-1 py-3 border border-white/20 text-white/50 hover:text-white transition-colors duration-300">{confirmModal.cancelText || "취소"}</button>
               <button onClick={wrapClick(confirmModal.onConfirm)} onMouseEnter={handleHover} disabled={isProcessing} className="flex-1 py-3 bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black transition-all duration-300 disabled:opacity-30">{isProcessing ? '처리 중...' : (confirmModal.confirmText || "확인")}</button>
             </div>
