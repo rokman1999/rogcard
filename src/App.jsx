@@ -1076,6 +1076,17 @@ export default function RogCard() {
       } else {
         if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleBet * 2, wins: (userData.wins || 0) + 1 });
         else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
+
+        // 글로벌 채팅에 승패 결과 전송 (호스트만 전송하여 중복 방지)
+        if (pvpRoomData?.host?.uid === user.uid) {
+           const winnerName = isWin ? pvpRoomData.host.nickname : pvpRoomData.guest.nickname;
+           const loserName = isWin ? pvpRoomData.guest.nickname : pvpRoomData.host.nickname;
+           await addDoc(collection(db, GLOBAL_CHAT_PATH), { 
+              sender: 'SYSTEM', 
+              text: `⚔️ [${winnerName}]님이 [${loserName}]님과의 혈투에서 승리하여 ${formatMoney(battleBet * 2)} GOLD를 쟁취했습니다!`, 
+              timestamp: Date.now() 
+           });
+        }
       }
     } catch(e) { console.error(e); }
   };
@@ -1095,8 +1106,9 @@ export default function RogCard() {
     setIsProcessing(false);
   };
 
-  const handleJoinPvPRoom = async (roomId) => {
+  const handleJoinPvPRoom = async (roomId, cardOverride = null) => {
     setIsProcessing(true);
+    const targetCard = cardOverride || selectedCard;
     try {
       const matchRef = doc(db, MATCHES_PATH, roomId);
       const snap = await getDoc(matchRef);
@@ -1105,7 +1117,7 @@ export default function RogCard() {
         if(data.status !== 'waiting') showToast("이미 게임이 시작되었거나 가득 찬 방입니다.", "warning");
         else if(userData.money < data.bet) showToast(`입장 자금이 부족합니다. (필요: ${formatMoney(data.bet)} GOLD)`, "error");
         else {
-          await updateDoc(matchRef, { guest: { uid: user.uid, nickname: userData.nickname }, guestCard: selectedCard, status: 'ready' });
+          await updateDoc(matchRef, { guest: { uid: user.uid, nickname: userData.nickname }, guestCard: targetCard, status: 'ready' });
           setBattleBet(data.bet); setPvpRoomId(roomId); setBattleType('PvP'); setCurrentView('pvp_room');
         }
       } else { showToast("존재하지 않는 방입니다.", "error"); }
@@ -1380,6 +1392,20 @@ export default function RogCard() {
            </div>
         </div>
         <div className="flex-1 flex flex-col gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+            <div onClick={wrapClick(() => setCurrentView('deck'))} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04] rounded-none">
+              <HUDCorner /><Hexagon size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
+              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">카드 관리</h3><p className="font-sans text-base text-white/40 font-light">디지털 카드를 생성하고 한계를 돌파하세요.</p></div>
+            </div>
+            <div onClick={wrapClick(() => {
+               if (myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
+               startAIBattleSetup(myCards[0]);
+            })} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04] rounded-none">
+              <HUDCorner /><Cpu size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
+              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">AI 전투</h3><p className="font-sans text-base text-white/40 font-light">가상 적들과 대결하여 골드를 벌어보세요.</p></div>
+            </div>
+          </div>
+          
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-1 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 flex justify-between items-center relative transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
               <HUDCorner />
@@ -1394,14 +1420,42 @@ export default function RogCard() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 relative">
-            <div onClick={wrapClick(() => setCurrentView('deck'))} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04] rounded-none">
-              <HUDCorner /><Hexagon size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
-              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">카드 관리</h3><p className="font-sans text-base text-white/40 font-light">디지털 카드를 생성하고 한계를 돌파하세요.</p></div>
+          {/* 1:1 유저 전투 (PVP 방 목록) */}
+          <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col flex-1 min-h-[300px] transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
+            <HUDCorner />
+            <div className="flex justify-between items-start mb-6 z-10 border-b border-white/10 pb-6">
+              <div>
+                <h3 className="font-mono font-light text-xl text-white tracking-widest mb-2 uppercase flex items-center gap-2"><Swords size={20} /> 1:1 유저 전투</h3>
+                <p className="font-sans text-sm text-white/40 font-light">방을 개설하거나 참가하여 실시간으로 대결하세요.</p>
+              </div>
+              <button onClick={wrapClick(() => {
+                  if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
+                  if(!selectedCard) setSelectedCard(myCards[0]);
+                  setCurrentView('pvp_setup');
+                })} className="px-6 py-3 bg-white/10 text-white font-mono text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all border border-white/20 rounded-none whitespace-nowrap">방 개설 / 참가 준비</button>
             </div>
-            <div onClick={wrapClick(() => setCurrentView('battle_select'))} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04] rounded-none">
-              <HUDCorner /><Swords size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
-              <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">1:1 전투</h3><p className="font-sans text-base text-white/40 font-light">AI 및 타 유저와 대결하고 배팅하세요.</p></div>
+            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2 z-10">
+              {activeRooms.length === 0 ? (
+                <div className="text-center text-white/30 font-mono text-sm mt-8">활성화된 대기방이 없습니다.</div>
+              ) : (
+                activeRooms.map(room => (
+                  <div key={room.id} className="p-4 bg-white/5 border border-white/10 flex justify-between items-center rounded-none hover:bg-white/10 transition-colors">
+                    <div className="flex flex-col flex-1 min-w-0 pr-4">
+                      <span className="font-mono text-white text-base truncate">{room.roomName}</span>
+                      <span className="font-mono text-xs text-white/50 truncate">Host: {room.host.nickname}</span>
+                    </div>
+                    <div className="flex items-center gap-4 whitespace-nowrap">
+                      <span className="font-mono text-amber-400 text-sm">{formatMoney(room.bet)} G</span>
+                      <button onClick={wrapClick(() => {
+                         if (myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
+                         const targetCard = selectedCard || myCards[0];
+                         setSelectedCard(targetCard);
+                         handleJoinPvPRoom(room.id, targetCard);
+                      })} className="px-6 py-2 bg-white/10 text-white font-mono text-xs uppercase hover:bg-white hover:text-black transition-colors rounded-none">참가</button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1631,25 +1685,6 @@ export default function RogCard() {
     );
   };
 
-  const renderBattleSelect = () => (
-    <div className="p-4 md:p-10 max-w-5xl mx-auto animate-fade-in relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
-      <h2 className="text-3xl font-mono font-light text-white mb-16 tracking-[0.2em] uppercase drop-shadow-md">전투 모드 선택</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-        <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } startAIBattleSetup(myCards[0]); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
-          <HUDCorner /><Cpu size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">AI와 대전하기</h3>
-          <p className="text-white/40 text-base font-sans font-light">가상 적들과 대결하여 골드를 벌어보세요.</p>
-        </div>
-        <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } if(!selectedCard) setSelectedCard(myCards[0]); setCurrentView('pvp_setup'); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
-          <HUDCorner /><User size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">유저와 대결하기</h3>
-          <p className="text-white/40 text-base font-sans font-light">방을 개설하고 실시간으로 대결하세요.</p>
-        </div>
-      </div>
-      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
-    </div>
-  );
-
   const renderPvPSetup = () => (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
       <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
@@ -1684,7 +1719,7 @@ export default function RogCard() {
           <button onClick={wrapClick(handleCreatePvPRoom)} disabled={isProcessing || !selectedCard} className="mt-auto py-4 bg-white/10 text-white font-mono text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30 rounded-none">개설 및 대기</button>
         </div>
       </div>
-      <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
+      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
     </div>
   );
 
@@ -1741,7 +1776,7 @@ export default function RogCard() {
             <div className="text-white/40 text-xs tracking-[0.2em] font-mono mb-2">EXPECTED REWARD</div>
             <div className="text-amber-400 font-mono font-bold text-3xl bg-white/5 px-6 py-3 rounded-none border border-amber-500/30 mb-8 whitespace-nowrap">{formatMoney(battleReward)} GOLD</div>
             <div className="w-full text-center"><button onClick={wrapClick(executeAIBattle)} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 border border-white/20 text-white font-mono text-sm hover:bg-white hover:text-black transition-all uppercase font-bold rounded-none">교전 시작</button></div>
-            <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-10 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">뒤로 가기</button>
+            <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-10 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">뒤로 가기</button>
           </div>
           <div className="flex flex-col items-center flex-1"><h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 uppercase flex items-center gap-2"><Crosshair size={14} strokeWidth={1}/> 적대 자산 (AI)</h3><div className="w-56"><CardItem card={aiOpponent} /></div></div>
         </div>
