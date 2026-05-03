@@ -8,7 +8,7 @@ import { Trophy, Swords, Cpu, User, Skull, Ghost, Terminal, Plus, ArrowRight, Sh
 // 1. 게임 기획 데이터 (상수)
 // ==========================================
 const CREATE_CARD_COST = 5000;
-const STARTING_GOLD = 500000;
+const STARTING_GOLD = 1000000; // 초기 자금을 100만 골드로 변경
 
 const STATS_BY_LEVEL = [
   null,
@@ -320,7 +320,7 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
     >
       <div className="w-full h-full relative z-10 rounded-[8px] overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
         <img src={card.imageUrl} alt={card.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
-        <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+        <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuODUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIi8+PC9zdmc+')" }}></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
         
         {renderFrameOverlay(card.equippedFrame)}
@@ -428,6 +428,42 @@ export default function RogCard() {
   const [liveState, setLiveState] = useState(null);
   const [battleResult, setBattleResult] = useState(null);
   const [battleType, setBattleType] = useState('AI'); 
+
+  // --- PWA 및 모바일 뷰포트 설정 동적 주입 ---
+  useEffect(() => {
+    // 모바일 줌 방지 및 뷰포트 고정 (PWA 앱처럼 보이기 위함)
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (!viewportMeta) {
+      viewportMeta = document.createElement('meta');
+      viewportMeta.name = 'viewport';
+      document.head.appendChild(viewportMeta);
+    }
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    // PWA 매니페스트 동적 생성 (바탕화면 추가 기능)
+    const manifestContent = {
+      name: "ROG CARD ARENA",
+      short_name: "ROG CARD",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#050505",
+      theme_color: "#050505",
+      icons: [{ src: "https://api.dicebear.com/7.x/bottts/svg?seed=rogcard&backgroundColor=0a0a0a", sizes: "192x192", type: "image/svg+xml" }]
+    };
+    const blob = new Blob([JSON.stringify(manifestContent)], { type: 'application/json' });
+    const manifestURL = URL.createObjectURL(blob);
+    
+    let manifestLink = document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+    }
+    manifestLink.href = manifestURL;
+    
+    return () => URL.revokeObjectURL(manifestURL);
+  }, []);
+  // ----------------------------------------
 
   const playSfx = (type, param) => { if(soundEnabled && sfx[type]) sfx[type](param); };
   const showToast = (msg, type = 'info') => setToast({ message: msg, type });
@@ -1270,7 +1306,8 @@ export default function RogCard() {
       <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
       <div className="w-full max-w-6xl mb-12">
         <h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 text-center uppercase">출전 카드 선택</h3>
-        <div className="flex overflow-x-auto gap-4 pb-6 px-2 custom-scrollbar">
+        {/* 상단 패딩(pt-8)을 추가하여 카드 확대 시 위쪽이 잘리지 않도록 수정 */}
+        <div className="flex overflow-x-auto gap-4 pb-6 pt-8 px-2 custom-scrollbar">
           {myCards.map(card => (
             <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => setSelectedCard(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>
           ))}
@@ -1344,7 +1381,8 @@ export default function RogCard() {
         <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">AI 교전 준비</h2>
         <div className="w-full max-w-5xl mb-8">
           <h3 className="text-white/50 font-mono text-xs tracking-widest mb-4 text-center uppercase">출전 카드 변경</h3>
-          <div className="flex overflow-x-auto gap-4 pb-4 px-2 custom-scrollbar">
+          {/* 상단 패딩(pt-8)을 추가하여 카드 확대 시 위쪽이 잘리지 않도록 수정 */}
+          <div className="flex overflow-x-auto gap-4 pb-4 pt-8 px-2 custom-scrollbar">
             {myCards.map(card => (<div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>))}
           </div>
         </div>
