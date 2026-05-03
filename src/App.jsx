@@ -1123,6 +1123,9 @@ export default function RogCard() {
 
     return (
       <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in min-h-[80vh] relative z-10 flex flex-col">
+        <div className="w-full flex justify-start mb-6">
+          <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
+        </div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 pb-6 border-b border-white/20">
           <div className="flex items-center gap-4"><h2 className="text-2xl font-mono font-light text-white tracking-[0.2em] uppercase">카드 관리</h2><span className="font-mono text-sm text-white/40 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">보유량: {myCards.length}/{maxSlots}</span></div>
           <div className="relative"><button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black"><Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]</button></div>
@@ -1361,11 +1364,12 @@ export default function RogCard() {
             {isHost ? (<button onClick={wrapClick(handleStartPvPBattle)} disabled={!isReady} className="w-full max-w-md py-4 bg-white text-black font-mono text-base hover:bg-white/80 disabled:opacity-30 font-bold uppercase tracking-[0.2em]">{isReady ? '전투 시작' : '상대 대기 중...'}</button>) : (<div className="w-full max-w-md py-4 border border-white/20 text-white/40 text-center font-mono text-sm uppercase tracking-[0.2em]">호스트의 시작 대기 중...</div>)}
             <button onClick={wrapClick(async () => { if (isHost) { try { await deleteDoc(doc(db, MATCHES_PATH, pvpRoomId)); } catch(e){} } setPvpRoomId(null); setCurrentView('lobby'); })} className="mt-8 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">방 나가기</button>
           </div>
-          <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden min-h-[400px]">
+          <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden h-[400px] lg:h-[550px]">
             <HUDCorner />
             <div className="p-5 border-b border-white/10 font-mono font-light text-sm text-white/50 tracking-widest uppercase flex justify-center gap-2"><MessageSquare size={16} /> 통신 채널</div>
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 font-mono text-xs custom-scrollbar">
               {pvpRoomData.chat.map((msg, i) => (<div key={i} className={`flex flex-col ${msg.sender === userData.nickname ? 'items-end' : 'items-start'} animate-slide-up`}><span className="text-[10px] text-white/30 mb-1">{msg.sender}</span><div className={`px-4 py-2 ${msg.sender === userData.nickname ? 'bg-white/10 text-white' : 'border border-white/10 text-white/70'} max-w-[90%] break-words rounded-md`}>{msg.text}</div></div>))}
+              <div ref={el => el && el.scrollIntoView()} />
             </div>
             <form onSubmit={handleSendChat} className="p-4 border-t border-white/10 flex gap-3"><input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} className="flex-1 bg-transparent border-b border-white/20 px-2 py-2 text-white font-mono text-sm focus:outline-none focus:border-white transition-colors placeholder-white/20" placeholder="메시지 입력" /><button type="submit" className="text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase">전송</button></form>
           </div>
