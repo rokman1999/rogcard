@@ -451,7 +451,7 @@ export default function RogCard() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [rankingTab, setRankingTab] = useState('win'); 
+  const [rankingTab, setRankingTab] = useState('level'); 
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   const [previewCard, setPreviewCard] = useState(null); 
@@ -1291,16 +1291,44 @@ export default function RogCard() {
             </div>
           </div>
         </div>
+
+        {/* 새롭게 추가된 보유 카드 목록 섹션 */}
+        <div className="mt-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative rounded-none">
+          <HUDCorner />
+          <h3 className="text-white/50 font-mono text-sm tracking-widest mb-6 uppercase flex items-center gap-2"><Hexagon size={16}/> 보유 자산 목록 ({viewingUserCards.length})</h3>
+          {viewingUserCards.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {viewingUserCards.map(card => (
+                <div key={card.id} className="cursor-pointer transition-transform hover:-translate-y-2" onClick={wrapClick(() => setPreviewCard(card))}>
+                  <CardItem card={card} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-white/30 font-mono text-sm py-10">보유한 카드가 없습니다.</div>
+          )}
+        </div>
+
       </div>
     );
   };
 
   const renderLobby = () => {
-    const richUsers = [...allUsers].sort((a,b) => b.money - a.money).slice(0, 50);
-    const topWins = [...allUsers].sort((a,b) => b.wins - a.wins).slice(0, 50);
+    const userMaxLevels = {};
+    allCards.forEach(c => {
+      if (!userMaxLevels[c.ownerId] || c.level > userMaxLevels[c.ownerId]) {
+        userMaxLevels[c.ownerId] = c.level;
+      }
+    });
+
+    const topLevelUsers = [...allUsers].sort((a,b) => (userMaxLevels[b.userId] || 0) - (userMaxLevels[a.userId] || 0)).slice(0, 50);
+    const topWins = [...allUsers].sort((a,b) => (b.wins || 0) - (a.wins || 0)).slice(0, 50);
+    const richUsers = [...allUsers].sort((a,b) => (b.money || 0) - (a.money || 0)).slice(0, 50);
+    
     const isAttended = userData?.lastAttendance === new Date().toISOString().split('T')[0];
-    const topUser = rankingTab === 'money' ? richUsers[0] : topWins[0];
+    const topUser = rankingTab === 'level' ? topLevelUsers[0] : rankingTab === 'money' ? richUsers[0] : topWins[0];
     const topUserCard = topUser ? allCards.filter(c => c.ownerId === topUser.userId).sort((a,b) => b.level - a.level)[0] : null;
+    const currentList = rankingTab === 'level' ? topLevelUsers : rankingTab === 'money' ? richUsers : topWins;
 
     return (
       <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in relative z-10 flex flex-col lg:flex-row gap-10 w-full h-full">
@@ -1318,17 +1346,18 @@ export default function RogCard() {
                 </div>
               )}
               <div className="flex gap-4 mb-4 font-mono text-xs tracking-widest">
+                <button onClick={wrapClick(()=>setRankingTab('level'))} className={`pb-1 ${rankingTab==='level' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>강화</button>
                 <button onClick={wrapClick(()=>setRankingTab('win'))} className={`pb-1 ${rankingTab==='win' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>승리</button>
                 <button onClick={wrapClick(()=>setRankingTab('money'))} className={`pb-1 ${rankingTab==='money' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>자산</button>
               </div>
               <div className="font-mono text-sm tracking-wide overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
-                {(rankingTab === 'money' ? richUsers : topWins).map((u, i) => (
+                {currentList.map((u, i) => (
                   <div key={u.userId} className={`flex justify-between items-center pb-2 border-b border-white/5 ${u.userId === user?.uid ? 'text-white font-bold' : 'text-white/60'}`}>
                     <div className="flex items-center gap-3">
                       <span className="w-6 opacity-30 text-xs">{String(i+1).padStart(2,'0')}</span> 
                       <span className="truncate w-24 cursor-pointer hover:text-emerald-300 transition-colors" onClick={wrapClick(()=>{setViewingProfileUserId(u.userId); setCurrentView('profile');})}>{u.nickname}</span>
                     </div>
-                    <span>{rankingTab === 'money' ? formatMoney(u.money) : `${u.wins} W`}</span>
+                    <span>{rankingTab === 'level' ? `LV.${userMaxLevels[u.userId] || 0}` : rankingTab === 'money' ? formatMoney(u.money) : `${u.wins} W`}</span>
                   </div>
                 ))}
               </div>
