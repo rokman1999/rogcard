@@ -11,12 +11,18 @@ const CREATE_CARD_COST = 5000;
 const STARTING_GOLD = 1000000; 
 
 const QUESTS = [
-  { id: 'ai', title: '가상 훈련', desc: 'AI 대전 5회 참여', target: 5, reward: 150000 },
-  { id: 'win_ai', title: '인공지능 정복', desc: 'AI 대전 3회 승리', target: 3, reward: 200000 },
-  { id: 'enhance', title: '한계 돌파', desc: '카드 강화 5회 시도', target: 5, reward: 100000 },
-  { id: 'pvp', title: '실전 투입', desc: '유저 1:1 대결 3회 참여', target: 3, reward: 300000 },
-  { id: 'chat', title: '소통의 장', desc: '전체 채팅 5회 입력', target: 5, reward: 50000 },
-  { id: 'market', title: '거상', desc: '거래소에 자산 1회 등록', target: 1, reward: 100000 }
+  { id: 'q1', type: 'ai', title: '워밍업', desc: 'AI 대전 1회 참여', target: 1, reward: 50000 },
+  { id: 'q2', type: 'ai', title: '가상 훈련', desc: 'AI 대전 5회 참여', target: 5, reward: 300000 },
+  { id: 'q3', type: 'ai', title: '전투광', desc: 'AI 대전 10회 참여', target: 10, reward: 800000 },
+  { id: 'q4', type: 'win_ai', title: '인공지능 정복 I', desc: 'AI 대전 3회 승리', target: 3, reward: 200000 },
+  { id: 'q5', type: 'win_ai', title: '인공지능 정복 II', desc: 'AI 대전 7회 승리', target: 7, reward: 600000 },
+  { id: 'q6', type: 'enhance', title: '한계 돌파 I', desc: '카드 강화 3회 시도', target: 3, reward: 100000 },
+  { id: 'q7', type: 'enhance', title: '한계 돌파 II', desc: '카드 강화 7회 시도', target: 7, reward: 300000 },
+  { id: 'q8', type: 'pvp', title: '첫 실전', desc: '유저 1:1 대결 1회 참여', target: 1, reward: 150000 },
+  { id: 'q9', type: 'pvp', title: '아레나의 투사', desc: '유저 1:1 대결 5회 참여', target: 5, reward: 500000 },
+  { id: 'q10', type: 'chat', title: '소통의 장', desc: '전체 채팅 5회 입력', target: 5, reward: 50000 },
+  { id: 'q11', type: 'market', title: '거상', desc: '거래소에 자산 1회 등록', target: 1, reward: 100000 },
+  { id: 'q12', type: 'buy_market', title: '쇼핑 매니아', desc: '거래소에서 아이템 1회 구매', target: 1, reward: 150000 }
 ];
 
 const STATS_BY_LEVEL = [
@@ -103,42 +109,72 @@ const TRAIT_COLORS = {
   '럭키가이': 'bg-amber-500/20 border-amber-500/50 text-amber-400'
 };
 
-const getRandomTrait = () => UNIQUE_TRAITS[Math.floor(Math.random() * UNIQUE_TRAITS.length)];
-
-const SKILL_UNLOCKS = {
-  3: '퇴사 선언', 5: '팩트 폭력', 8: '칼퇴의 요정', 10: '분노의 야근', 12: '법카 찬스', 14: '철면피', 15: '비트코인 떡락', 18: '엄마 호출', 20: '비선실세'
-};
-
 const SKILLS_DATA = {
-  '퇴사 선언': '스피드와 무관하게 전투 시작 시 무조건 선공을 가져갑니다. 사표가 최고죠.',
-  '팩트 폭력': '매 4번째 공격마다 적의 멘탈을 부수는 1.5배의 뼈 때리는 치명타를 날립니다.',
-  '칼퇴의 요정': '15% 확률로 휙! 하고 물리 타격을 잔상만 남기며 요리조리 회피합니다.',
-  '분노의 야근': '현재 체력이 30% 이하가 되면 억눌린 빡침이 폭발하여 공격력이 1.5배 상승합니다.',
-  '법카 찬스': '적에게 입힌 피해의 15%를 달달하게 체력으로 환급(흡혈)받습니다.',
-  '철면피': '얼굴이 두꺼워져 적의 모든 공격에서 들어오는 최종 데미지를 10% 무시합니다.',
-  '비트코인 떡락': '체력이 깎일수록 파멸적인 분노를 느껴 최대 2배까지 데미지가 무식하게 상승합니다.',
-  '엄마 호출': 'HP가 0이 되어도 한 번은 엄마 빽으로 최대 체력 30% 상태로 부활합니다.',
-  '비선실세': '모든 공격이 자비 없이 무조건 2배 데미지(치명타)로 꽂히는 압도적 권력입니다.',
   '선빵필승': '스피드와 무관하게 전투 시작 시 무조건 선공을 가져갑니다. 빠따가 최고죠.',
-  '뚝배기 브레이커': '매 4번째 공격마다 적의 멘탈을 부수는 1.5배의 치명타를 날립니다.',
-  '닌자 무빙': '15% 확률로 휙! 하고 물리 타격을 잔상만 남기며 회피합니다.',
-  '풀악셀': '현재 체력이 30% 이하가 되면 리미터를 해제하여 공격력이 1.5배 상승합니다.',
-  '뱀파이어 흡혈': '적에게 입힌 피해의 15%를 달달하게 체력으로 훔쳐옵니다.',
+  '퇴사 선언': '스피드와 무관하게 전투 시작 시 무조건 선공을 가져갑니다. 사표가 최고죠.',
+  '빛의 속도': '시공간을 비틀어 전투 시작 시 무조건 선제 공격을 가합니다.',
+  '시간 정지': '시간을 멈추고 첫 타를 날립니다. 절대적인 선공권입니다.',
+  '닌자 무빙': '20% 확률로 휙! 하고 물리 타격을 잔상만 남기며 회피합니다.',
+  '칼퇴의 요정': '20% 확률로 휙! 하고 물리 타격을 잔상만 남기며 요리조리 회피합니다.',
+  '환영 분신': '적의 눈을 속여 20% 확률로 공격을 완벽히 회피합니다.',
+  '매트릭스 회피': '총알도 피하는 반사신경으로 20% 확률로 데미지를 무효화합니다.',
+  '원펀맨': '모든 공격이 자비 없이 무조건 2배 데미지(치명타)로 꽂힙니다.',
+  '비선실세': '모든 공격이 자비 없이 무조건 2배 데미지(치명타)로 꽂히는 압도적 권력입니다.',
+  '신의 심판': '확률을 무시하고 타격마다 무조건 치명타를 발생시킵니다.',
+  '필살의 일격': '매 공격이 급소를 찔러 100% 확률로 치명타가 터집니다.',
+  '뚝배기 브레이커': '매 3번째 공격마다 적의 멘탈을 부수는 1.6배의 치명타를 날립니다.',
+  '팩트 폭력': '매 3번째 공격마다 적의 멘탈을 부수는 1.6배의 뼈 때리는 치명타를 날립니다.',
+  '무호흡 펀치': '연타의 끝에 3타마다 1.6배의 강력한 데미지를 꽂아넣습니다.',
+  '연속 뺨치기': '3대 맞으면 정신을 못 차립니다. 3타마다 1.6배 데미지를 줍니다.',
+  '풀악셀': '현재 체력이 50% 이하가 되면 리미터를 해제하여 공격력이 1.5배 상승합니다.',
+  '분노의 야근': '현재 체력이 50% 이하가 되면 억눌린 빡침이 폭발하여 공격력이 1.5배 상승합니다.',
+  '배수의 진': '체력이 절반 이하일 때 사력을 다해 1.5배의 피해를 입힙니다.',
+  '마지막 발악': '죽기 직전의 힘을 쥐어짜 체력 50% 이하에서 공격력이 1.5배가 됩니다.',
+  '눈깔 뒤집힘': '체력이 깎일수록 분노하여 최대 2.5배까지 데미지가 무식하게 상승합니다.',
+  '비트코인 떡락': '체력이 깎일수록 파멸적인 분노를 느껴 최대 2.5배까지 데미지가 무식하게 상승합니다.',
+  '복수귀': '잃은 체력에 비례하여 적에게 돌려주는 피해량이 최대 2.5배 상승합니다.',
+  '광기의 칼날': '고통을 쾌락으로 승화시켜, 체력이 낮을수록 데미지가 폭발적으로 오릅니다.',
+  '뱀파이어 흡혈': '적에게 입힌 피해의 25%를 달달하게 체력으로 훔쳐옵니다.',
+  '법카 찬스': '적에게 입힌 피해의 25%를 달달하게 체력으로 환급(흡혈)받습니다.',
+  '영혼 흡수': '공격 시 상대의 생명력을 25% 강탈하여 내 체력을 회복합니다.',
+  '피의 축제': '피를 볼 때마다 희열을 느껴 가한 데미지의 25%를 회복합니다.',
   '우주 방어력': '적의 모든 공격에서 들어오는 최종 데미지를 10% 깎아냅니다.',
-  '눈깔 뒤집힘': '체력이 깎일수록 분노하여 최대 2배까지 데미지가 무식하게 상승합니다.',
-  '예토전생': 'HP가 0이 되어도 한 번은 좀비처럼 최대 체력 30%로 부활합니다.',
-  '원펀맨': '모든 공격이 자비 없이 무조건 2배 데미지(치명타)로 꽂힙니다.'
+  '철면피': '얼굴이 두꺼워져 적의 모든 공격에서 들어오는 최종 데미지를 10% 무시합니다.',
+  '절대 방벽': '보이지 않는 실드가 최종 타격 데미지의 10%를 방어합니다.',
+  '티타늄 바디': '몸이 금속으로 변해 받는 모든 데미지가 10% 감소합니다.',
+  '예토전생': 'HP가 0이 되어도 한 번은 좀비처럼 최대 체력 40%로 부활합니다.',
+  '엄마 호출': 'HP가 0이 되어도 한 번은 엄마 빽으로 최대 체력 40% 상태로 부활합니다.',
+  '불사조의 깃털': '죽음을 극복하고 최대 체력의 40%를 지닌 채 1회 부활합니다.',
+  '타임 루프': '치명상을 입는 순간 시간을 되돌려 체력 40% 상태로 생존합니다.'
 };
 
-const getUnlockedSkills = (level) => {
-  const skills = [];
-  for (let i = 1; i <= level; i++) {
-    if (SKILL_UNLOCKS[i]) skills.push(SKILL_UNLOCKS[i]);
+const SKILL_GROUPS = {
+  PREEMPTIVE: ['선빵필승', '퇴사 선언', '빛의 속도', '시간 정지'],
+  DODGE: ['닌자 무빙', '칼퇴의 요정', '환영 분신', '매트릭스 회피'],
+  CRIT_GUARANTEE: ['원펀맨', '비선실세', '신의 심판', '필살의 일격'],
+  CRIT_MULTI_HIT: ['뚝배기 브레이커', '팩트 폭력', '무호흡 펀치', '연속 뺨치기'],
+  LOW_HP_ATK: ['풀악셀', '분노의 야근', '배수의 진', '마지막 발악'],
+  LOST_HP_ATK: ['눈깔 뒤집힘', '비트코인 떡락', '복수귀', '광기의 칼날'],
+  VAMPIRE: ['뱀파이어 흡혈', '법카 찬스', '영혼 흡수', '피의 축제'],
+  DEFENSE: ['우주 방어력', '철면피', '절대 방벽', '티타늄 바디'],
+  REVIVE: ['예토전생', '엄마 호출', '불사조의 깃털', '타임 루프']
+};
+
+const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
+  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
+  let newSkills = [...(currentSkills || [])];
+  
+  if (SKILL_MILESTONES.includes(newLevel)) {
+      const allSkillKeys = Object.keys(SKILLS_DATA);
+      const available = allSkillKeys.filter(s => !newSkills.includes(s));
+      if (available.length > 0) {
+          const randomSkill = available[Math.floor(Math.random() * available.length)];
+          newSkills.push(randomSkill);
+      }
   }
-  return skills;
+  return newSkills;
 };
 
-// 업적 계산 및 데이터
 const ACHIEVEMENTS_DATA = {
   "🏆 첫 승리의 짜릿함": "처음으로 전투에서 승리했습니다. 시작이 반이죠.",
   "🏅 골목대장": "전투 10승 달성. 동네에서는 좀 치는군요.",
@@ -155,13 +191,15 @@ const ACHIEVEMENTS_DATA = {
 const checkAchievements = (userData, userCards) => {
   let ach = [];
   if (!userData) return ach;
-  if (userData.wins >= 1) ach.push("🏆 첫 승리의 짜릿함");
-  if (userData.wins >= 10) ach.push("🏅 골목대장");
-  if (userData.wins >= 50) ach.push("👑 전장의 지배자");
+  const realWins = Math.max(0, (userData.wins || 0) - (userData.aiWins || 0));
+  
+  if (realWins >= 1) ach.push("🏆 첫 승리의 짜릿함");
+  if (realWins >= 10) ach.push("🏅 골목대장");
+  if (realWins >= 50) ach.push("👑 전장의 지배자");
   if (userData.money >= 5000000) ach.push("💰 벼락부자");
   if (userData.money >= 20000000) ach.push("🏦 걸어다니는 은행");
   if (userCards.some(c => c.level >= 10)) ach.push("✨ 두 자릿수 돌파");
-  if (userCards.some(c => c.level >= 15)) ach.push("🔥 인간을 초월한 자");
+  if (userCards.some(c => c.level >= 15)) ach.push("🔥 인간 초월한 자");
   if (userCards.some(c => c.level >= 20)) ach.push("🚀 만렙의 경지");
   if (userData.losses >= 10) ach.push("🤕 쿠쿠다스 멘탈");
   if (userData.losses >= 30) ach.push("😭 동네 북");
@@ -320,18 +358,18 @@ const getIcon = (name) => {
 const ICONS_KEYS = ['User', 'Skull', 'Ghost', 'Terminal', 'Cpu'];
 
 const getFoilClass = (level) => {
-  if (level >= 20) return 'bg-[length:200%_200%] bg-gradient-to-tr from-cyan-400 via-purple-500 to-yellow-400 animate-foil-shift p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.4)]';
-  if (level >= 18) return 'bg-[length:200%_200%] bg-gradient-to-tr from-pink-500 via-fuchsia-600 to-purple-800 animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,0,255,0.3)]';
-  if (level >= 15) return 'bg-[length:200%_200%] bg-gradient-to-tr from-red-600 via-red-900 to-black animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,51,0,0.3)]';
-  if (level >= 11) return 'bg-[length:200%_200%] bg-gradient-to-tr from-yellow-300 via-yellow-600 to-amber-900 animate-foil-shift p-[2px]';
-  if (level >= 8)  return 'bg-[length:200%_200%] bg-gradient-to-tr from-purple-400 via-purple-700 to-black animate-foil-shift p-[2px]';
-  if (level >= 5)  return 'bg-[length:200%_200%] bg-gradient-to-tr from-blue-400 via-blue-700 to-black animate-foil-shift p-[2px]';
-  return 'bg-gradient-to-b from-gray-500 to-gray-800 p-[1px]';
+  if (level >= 20) return 'max-level-card rounded-none p-[3px]';
+  if (level >= 17) return 'mythic-card rounded-none p-[3px]';
+  if (level >= 15) return 'bg-[length:200%_200%] bg-gradient-to-tr from-red-600 via-red-900 to-black animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,51,0,0.3)] rounded-none';
+  if (level >= 11) return 'bg-[length:200%_200%] bg-gradient-to-tr from-yellow-300 via-yellow-600 to-amber-900 animate-foil-shift p-[2px] rounded-none';
+  if (level >= 8)  return 'bg-[length:200%_200%] bg-gradient-to-tr from-purple-400 via-purple-700 to-black animate-foil-shift p-[2px] rounded-none';
+  if (level >= 5)  return 'bg-[length:200%_200%] bg-gradient-to-tr from-blue-400 via-blue-700 to-black animate-foil-shift p-[2px] rounded-none';
+  return 'bg-gradient-to-b from-gray-500 to-gray-800 p-[1px] rounded-none';
 };
 
 const getTierTextColor = (level) => {
-  if (level >= 20) return 'text-cyan-300 drop-shadow-[0_0_8px_#67e8f9]';
-  if (level >= 18) return 'text-fuchsia-400 drop-shadow-[0_0_8px_#e879f9]';
+  if (level >= 20) return 'text-yellow-100 drop-shadow-[0_0_10px_#fef08a]';
+  if (level >= 17) return 'text-rose-300 drop-shadow-[0_0_8px_#fda4af]';
   if (level >= 15) return 'text-red-400 drop-shadow-[0_0_8px_#f87171]';
   if (level >= 11) return 'text-yellow-400 drop-shadow-[0_0_5px_#facc15]';
   if (level >= 8)  return 'text-purple-400 drop-shadow-[0_0_5px_#c084fc]';
@@ -386,63 +424,66 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
   return (
     <div 
       onClick={onClick} onMouseEnter={onHover}
-      className={`relative w-full aspect-[2/3.1] rounded-none transition-all duration-500 group ${foilBg} ${className}`}
+      className={`relative flex flex-col w-full cursor-pointer transition-all duration-500 hover:-translate-y-2 group ${className}`}
     >
-      <div className="w-full h-full relative z-10 rounded-none overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
-        <img src={card.imageUrl} alt={card.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
-        <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
-        
-        {card.isSelling && (
-          <div className="absolute top-4 -left-10 bg-red-600/90 text-white text-[10px] font-bold py-1 px-12 transform -rotate-45 z-40 border-y border-white/50 shadow-lg shadow-red-900/50 tracking-widest text-center">
-            FOR SALE
-          </div>
-        )}
+      <div className={`relative w-full aspect-[2/3.1] rounded-none transition-all duration-500 group-hover:shadow-2xl ${foilBg}`}>
+        <div className="w-full h-full relative z-10 rounded-none overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
+          <img src={card.imageUrl} alt={card.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
+          <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
+          
+          {renderFrameOverlay(card.equippedFrame)}
+          
+          {card.level >= 20 && <div className="absolute inset-0 bg-yellow-500/10 mix-blend-overlay animate-pulse z-20 pointer-events-none"></div>}
+          {card.level >= 17 && card.level < 20 && <div className="absolute inset-0 holographic-overlay opacity-60 mix-blend-color-dodge z-20 pointer-events-none animate-hue-shift"></div>}
+          {card.level >= 15 && card.level < 17 && <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>}
+          {card.level >= 11 && card.level < 15 && <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>}
 
-        {renderFrameOverlay(card.equippedFrame)}
-        
-        {card.level >= 11 && <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>}
-        {card.level >= 15 && <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>}
-
-        <div className="relative z-30 flex flex-col h-full p-3 transition-transform duration-500">
-          <div className="flex justify-between items-start w-full drop-shadow-lg relative min-h-[30px]">
-            <div className="font-sans font-black text-[1.1em] sm:text-[1.2em] tracking-wider text-white break-words text-left leading-tight mt-1 group-hover:text-emerald-300 transition-colors duration-300 w-[70%]">
-              {card.name}
-            </div>
-            {card.uniqueTrait && (
-              <div className={`absolute right-0 top-0 px-1.5 py-0.5 border rounded-none text-[0.45em] sm:text-[0.5em] font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap ${traitColorClass}`}>
-                {card.uniqueTrait.name}
+          <div className="relative z-30 flex flex-col h-full p-3 transition-transform duration-500">
+            <div className="flex justify-between items-start w-full drop-shadow-lg relative min-h-[30px]">
+              <div className="font-sans font-black text-[1.1em] sm:text-[1.2em] tracking-wider text-white break-words text-left leading-tight mt-1 group-hover:text-emerald-300 transition-colors duration-300 w-[70%]">
+                {card.name}
               </div>
-            )}
-          </div>
-
-          <div className="mt-auto flex flex-col gap-2 w-full">
-            <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-none border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
-              "{card.description}"
-            </div>
-            <div className="flex flex-wrap gap-1 w-full">
-              {card.unlockedSkills.map((s, i) => (
-                <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-none border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
-                  <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
+              {card.uniqueTrait && (
+                <div className={`absolute right-0 top-0 px-1.5 py-0.5 border rounded-none text-[0.45em] sm:text-[0.5em] font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap ${traitColorClass}`}>
+                  {card.uniqueTrait.name}
                 </div>
-              ))}
+              )}
             </div>
 
-            <div className="flex justify-between items-end gap-2 w-full mt-1">
-              <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-none transition-all duration-300 group-hover:bg-black/80">
-                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.75em] font-bold text-white">{card.stats.atk}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.75em] font-bold text-white">{card.stats.def}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.75em] font-bold text-white">{card.stats.spd}</span></div>
-                <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.75em] font-bold text-white">{card.stats.crit}</span></div>
+            <div className="mt-auto flex flex-col gap-2 w-full">
+              <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-none border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
+                "{card.description}"
               </div>
-              
-              <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>
-                <span className="transform skew-x-12 text-[0.8em] font-mono font-black tracking-tighter drop-shadow-md">LV.{card.level}</span>
+              <div className="flex flex-wrap gap-1 w-full">
+                {card.unlockedSkills && card.unlockedSkills.map((s, i) => (
+                  <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-none border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
+                    <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-end gap-2 w-full mt-1">
+                <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-none transition-all duration-300 group-hover:bg-black/80">
+                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.75em] font-bold text-white">{card.stats.atk}</span></div>
+                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.75em] font-bold text-white">{card.stats.def}</span></div>
+                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.75em] font-bold text-white">{card.stats.spd}</span></div>
+                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.75em] font-bold text-white">{card.stats.crit}</span></div>
+                </div>
+                
+                <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>
+                  <span className="transform skew-x-12 text-[0.8em] font-mono font-black tracking-tighter drop-shadow-md">LV.{card.level}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {card.isSelling && (
+        <div className="w-full bg-red-600/20 text-red-400 border border-red-500/50 text-[10px] font-black py-1.5 mt-2 z-40 tracking-[0.3em] text-center shadow-[0_0_10px_rgba(220,38,38,0.2)]">
+          FOR SALE
+        </div>
+      )}
     </div>
   );
 };
@@ -518,63 +559,12 @@ export default function RogCard() {
   const [marketTab, setMarketTab] = useState('all');
   const [marketSelectedCardId, setMarketSelectedCardId] = useState('');
 
-  // --- PWA 및 모바일 뷰포트 설정 동적 주입 ---
-  useEffect(() => {
-    let viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (!viewportMeta) {
-      viewportMeta = document.createElement('meta');
-      viewportMeta.name = 'viewport';
-      document.head.appendChild(viewportMeta);
-    }
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-
-    // OG Image 동적 주입
-    let ogImage = document.querySelector('meta[property="og:image"]');
-    if (!ogImage) {
-      ogImage = document.createElement('meta');
-      ogImage.setAttribute('property', 'og:image');
-      document.head.appendChild(ogImage);
-    }
-    ogImage.setAttribute('content', 'https://res.cloudinary.com/dkotceims/image/upload/v1777807405/Artboard_1_o1ws3a.png');
-
-    // 사이트 아이콘(Favicon) 동적 주입
-    let iconLink = document.querySelector('link[rel="icon"]');
-    if (!iconLink) {
-      iconLink = document.createElement('link');
-      iconLink.setAttribute('rel', 'icon');
-      document.head.appendChild(iconLink);
-    }
-    iconLink.setAttribute('href', 'https://res.cloudinary.com/dkotceims/image/upload/v1777807404/Artboard_2_a4ie5j.png');
-
-    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
-    if (!appleIcon) {
-      appleIcon = document.createElement('link');
-      appleIcon.setAttribute('rel', 'apple-touch-icon');
-      document.head.appendChild(appleIcon);
-    }
-    appleIcon.setAttribute('href', 'https://res.cloudinary.com/dkotceims/image/upload/v1777807404/Artboard_2_a4ie5j.png');
-
-    const manifestContent = {
-      name: "ROG CARD ARENA",
-      short_name: "ROG CARD",
-      start_url: ".",
-      display: "standalone",
-      background_color: "#050505",
-      theme_color: "#050505",
-      icons: [{ src: "https://res.cloudinary.com/dkotceims/image/upload/v1777807404/Artboard_2_a4ie5j.png", sizes: "192x192", type: "image/png" }]
-    };
-    const blob = new Blob([JSON.stringify(manifestContent)], { type: 'application/json' });
-    const manifestURL = URL.createObjectURL(blob);
-    
-    let manifestLink = document.querySelector('link[rel="manifest"]');
-    if (!manifestLink) {
-      manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      document.head.appendChild(manifestLink);
-    }
-    manifestLink.href = manifestURL;
-    return () => URL.revokeObjectURL(manifestURL);
-  }, []);
+  // --- 어드민 및 충전 모달 상태 ---
+  const [isEditingGold, setIsEditingGold] = useState(false);
+  const [editGoldValue, setEditGoldValue] = useState('');
+  const [showChargeModal, setShowChargeModal] = useState(false);
+  const [chargeStep, setChargeStep] = useState(1);
+  const [selectedChargePack, setSelectedChargePack] = useState(null);
 
   const playSfx = (type, param) => { if(soundEnabled && sfx[type]) sfx[type](param); };
   const showToast = (msg, type = 'info') => setToast({ message: msg, type });
@@ -632,7 +622,8 @@ export default function RogCard() {
     });
     const globalChatUnsub = onSnapshot(collection(db, GLOBAL_CHAT_PATH), (snapshot) => {
       let chats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setGlobalChats(chats.sort((a,b) => a.timestamp - b.timestamp).slice(-50));
+      // 정렬 버그 수정: undefined나 문자열 방어 후 안전하게 타임스탬프로 오름차순 정렬
+      setGlobalChats(chats.sort((a,b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0)).slice(-50));
     });
     const matchesUnsub = onSnapshot(collection(db, MATCHES_PATH), (snapshot) => {
       const matches = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -648,6 +639,7 @@ export default function RogCard() {
         const data = snap.data();
         setPvpRoomData(data);
         if (data.status === 'battling' && currentView === 'pvp_room') {
+          // PVP 시작 시 상태 초기화
           setBattleLog(data.battleLog);
           setLiveState({ p1Hp: data.hostCard.stats.hp, p2Hp: data.guestCard.stats.hp, p1Max: data.hostCard.stats.hp, p2Max: data.guestCard.stats.hp, currentAction: null });
           setBattleStep(0); setBattleResult(null); setCurrentView('battle_pvp_play');
@@ -866,7 +858,7 @@ export default function RogCard() {
         updateQuestProgress('enhance'); // 퀘스트 업데이트
 
         if (Math.random() * 100 < finalRate) {
-          const updatedCard = { ...card, level: nextLevel, stats: STATS_BY_LEVEL[nextLevel], unlockedSkills: getUnlockedSkills(nextLevel) };
+          const updatedCard = { ...card, level: nextLevel, stats: STATS_BY_LEVEL[nextLevel], unlockedSkills: acquireRandomSkillsForLevelUp(card.unlockedSkills, nextLevel) };
           await updateDoc(doc(db, CARDS_PATH, card.id), updatedCard);
           setSelectedCard(updatedCard);
           setEnhanceVisualState(`success_${nextLevel}`); playSfx('upgradeSuccess'); showToast(`강화 성공: LV.${nextLevel}`, "success");
@@ -876,7 +868,7 @@ export default function RogCard() {
             setEnhanceVisualState('fail'); playSfx('error'); showToast("강화 실패 (등급 유지)", "warning");
           } else if (rule.onFail === 'down') {
             const newLvl = Math.max(1, card.level - rule.levelDownOnFail);
-            const updatedCard = { ...card, level: newLvl, stats: STATS_BY_LEVEL[newLvl], unlockedSkills: getUnlockedSkills(newLvl) };
+            const updatedCard = { ...card, level: newLvl, stats: STATS_BY_LEVEL[newLvl] };
             await updateDoc(doc(db, CARDS_PATH, card.id), updatedCard);
             setSelectedCard(updatedCard); setEnhanceVisualState('fail'); playSfx('upgradeFail'); showToast(`등급 하락: LV.${newLvl}`, "error");
           } else if (rule.onFail === 'mixed') {
@@ -885,7 +877,7 @@ export default function RogCard() {
               setEnhanceVisualState('destroyed'); playSfx('upgradeFail'); showToast("카드 파괴됨", "error"); setSelectedCard(null);
             } else {
               const newLvl = Math.max(1, card.level - rule.levelDownOnFail);
-              const updatedCard = { ...card, level: newLvl, stats: STATS_BY_LEVEL[newLvl], unlockedSkills: getUnlockedSkills(newLvl) };
+              const updatedCard = { ...card, level: newLvl, stats: STATS_BY_LEVEL[newLvl] };
               await updateDoc(doc(db, CARDS_PATH, card.id), updatedCard);
               setSelectedCard(updatedCard); setEnhanceVisualState('fail'); playSfx('upgradeFail'); showToast(`치명적 실패 (등급 하락): LV.${newLvl}`, "error");
             }
@@ -914,7 +906,8 @@ export default function RogCard() {
     const p2 = { ...c2.stats, name: c2.name, skills: c2.unlockedSkills || [], trait: c2.uniqueTrait, attackCount:0, revived:false, damageTaken:0, key:'p2', originalHp: c2.stats.hp };
     
     const hasTrait = (p, tNew, tOld) => p.trait?.name === tNew || p.trait?.name === tOld;
-    const hasSkill = (p, sNew, sOld) => p.skills.includes(sNew) || p.skills.includes(sOld);
+    const hasSkillInGroup = (p, groupName) => p.skills.some(s => SKILL_GROUPS[groupName].includes(s));
+    const getActiveSkillInGroup = (p, groupName) => p.skills.find(s => SKILL_GROUPS[groupName].includes(s));
 
     if (hasTrait(p1, '키보드 워리어', '암살자')) p1.crit += 25; 
     if (hasTrait(p2, '키보드 워리어', '암살자')) p2.crit += 25;
@@ -924,14 +917,15 @@ export default function RogCard() {
     const log = [{ type: 'start', text: `교전 개시: [${p1.name}] VS [${p2.name}]`, state: { p1Hp: p1.hp, p2Hp: p2.hp } }];
     
     let p1First = p1.spd >= p2.spd;
-    if (hasSkill(p1, '퇴사 선언', '선빵필승') && !hasSkill(p2, '퇴사 선언', '선빵필승')) p1First = true;
-    if (!hasSkill(p1, '퇴사 선언', '선빵필승') && hasSkill(p2, '퇴사 선언', '선빵필승')) p1First = false;
+    const p1Preemptive = getActiveSkillInGroup(p1, 'PREEMPTIVE');
+    const p2Preemptive = getActiveSkillInGroup(p2, 'PREEMPTIVE');
+    if (p1Preemptive && !p2Preemptive) p1First = true;
+    if (!p1Preemptive && p2Preemptive) p1First = false;
 
-    // 선공 스킬 시각적 표출 추가
-    if (hasSkill(p1First ? p1 : p2, '퇴사 선언', '선빵필승')) {
-        const starter = p1First ? p1 : p2;
-        const skillName = starter.skills.includes('퇴사 선언') ? '퇴사 선언' : '선빵필승';
-        log.push({ type: 'skill', text: `✨ [${starter.name}]의 <${skillName}> 발동! 무조건 선공!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: starter.key, skill: skillName });
+    if (p1First && p1Preemptive) {
+        log.push({ type: 'skill', text: `✨ [${p1.name}]의 <${p1Preemptive}> 발동! 무조건 선공!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: p1.key, skill: p1Preemptive });
+    } else if (!p1First && p2Preemptive) {
+        log.push({ type: 'skill', text: `✨ [${p2.name}]의 <${p2Preemptive}> 발동! 무조건 선공!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: p2.key, skill: p2Preemptive });
     }
 
     let turn = 0;
@@ -944,7 +938,9 @@ export default function RogCard() {
         if(defender.hp <= 0) continue;
 
         attacker.attackCount++;
-        let dodgeChance = hasSkill(defender, '칼퇴의 요정', '닌자 무빙') ? 20 : 0;
+        
+        let dodgeChance = 0;
+        if (getActiveSkillInGroup(defender, 'DODGE')) dodgeChance += 20;
         if (hasTrait(defender, '탈주 닌자', '바람돌이')) dodgeChance += 15;
 
         let oldP1Hp = p1.hp; let oldP2Hp = p2.hp;
@@ -962,49 +958,50 @@ export default function RogCard() {
           if (Math.random() < 0.6) activatedSkills.push(attacker.trait.name);
         }
         
-        // 4타 -> 3타로 더 자주 터지게 변경
-        if(hasSkill(attacker, '팩트 폭력', '뚝배기 브레이커') && attacker.attackCount % 3 === 0) { 
+        const multiHitSkill = getActiveSkillInGroup(attacker, 'CRIT_MULTI_HIT');
+        if(multiHitSkill && attacker.attackCount % 3 === 0) { 
           damage *= 1.6; 
-          activatedSkills.push(attacker.skills.includes('팩트 폭력') ? '팩트 폭력' : '뚝배기 브레이커'); 
+          activatedSkills.push(multiHitSkill); 
         }
         
-        // 체력 조건 30% -> 50%로 완화 및 확률 증가
-        if(hasSkill(attacker, '분노의 야근', '풀악셀') && (attacker.hp / attacker.originalHp) < 0.5) { 
+        const lowHpSkill = getActiveSkillInGroup(attacker, 'LOW_HP_ATK');
+        if(lowHpSkill && (attacker.hp / attacker.originalHp) < 0.5) { 
           damage *= 1.5; 
-          if(Math.random() < 0.6) activatedSkills.push(attacker.skills.includes('분노의 야근') ? '분노의 야근' : '풀악셀'); 
+          if(Math.random() < 0.6) activatedSkills.push(lowHpSkill); 
         }
         
-        if(hasSkill(attacker, '비트코인 떡락', '눈깔 뒤집힘')) { 
+        const lostHpSkill = getActiveSkillInGroup(attacker, 'LOST_HP_ATK');
+        if(lostHpSkill) { 
           let mult = 1 + Math.min(1.5, (attacker.damageTaken / attacker.originalHp) * 1.5);
           damage *= mult; 
-          if(mult > 1.2 && Math.random() < 0.5) activatedSkills.push(attacker.skills.includes('비트코인 떡락') ? '비트코인 떡락' : '눈깔 뒤집힘'); 
+          if(mult > 1.2 && Math.random() < 0.5) activatedSkills.push(lostHpSkill); 
         }
         
-        if(hasSkill(attacker, '비선실세', '원펀맨')) { 
+        const critSkill = getActiveSkillInGroup(attacker, 'CRIT_GUARANTEE');
+        if(critSkill) { 
           isCrit = true; 
-          if(Math.random() < 0.5) activatedSkills.push(attacker.skills.includes('비선실세') ? '비선실세' : '원펀맨'); 
+          if(Math.random() < 0.5) activatedSkills.push(critSkill); 
         }
         else if(Math.random() * 100 < attacker.crit) { isCrit = true; }
 
         if(isCrit) damage *= 2;
         
-        // 발동된 스킬들을 각각 분리해서 로그에 먼저 푸시 (애니메이션이 차례대로 터지도록)
         for (const s of activatedSkills) {
            log.push({ type: 'skill', text: `✨ [${attacker.name}]의 특수 프로토콜 <${s}> 발동!`, state: { p1Hp: oldP1Hp, p2Hp: oldP2Hp }, actor: attacker.key, skill: s });
         }
 
-        let finalDef = defender.def + (hasSkill(defender, '철면피', '우주 방어력') ? 10 : 0) + (hasTrait(defender, '무쇠뚝배기', '강철 바디') ? 15 : 0) + (hasTrait(defender, '월급 루팡', '월급 루팡') ? 10 : 0);
+        let finalDef = defender.def + (getActiveSkillInGroup(defender, 'DEFENSE') ? 10 : 0) + (hasTrait(defender, '무쇠뚝배기', '강철 바디') ? 15 : 0) + (hasTrait(defender, '월급 루팡', '월급 루팡') ? 10 : 0);
         damage = Math.max(1, Math.floor(damage * (1 - Math.min(90, finalDef) / 100)));
         defender.hp -= damage; defender.damageTaken += damage;
 
         log.push({ type: isCrit ? 'critical' : 'attack', text: `[${attacker.name}] ${isCrit ? "뼈와 살이 분리되는 일격!!" : "퍼억! 데미지가 들어갑니다."} (-${Math.floor(damage)})`, state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) }, damage: Math.floor(damage), attacker: attacker.key, defender: defender.key });
 
-        // 흡혈 확률 증가
-        let healAmount = (hasSkill(attacker, '법카 찬스', '뱀파이어 흡혈') ? damage * 0.25 : 0) + (hasTrait(attacker, '사내 모기', '흡혈귀') ? damage * 0.20 : 0);
+        const vampSkill = getActiveSkillInGroup(attacker, 'VAMPIRE');
+        let healAmount = (vampSkill ? damage * 0.25 : 0) + (hasTrait(attacker, '사내 모기', '흡혈귀') ? damage * 0.20 : 0);
         if (healAmount > 0) { 
           attacker.hp = Math.min(attacker.originalHp, attacker.hp + Math.floor(healAmount)); 
           let lsSkill = null;
-          if (hasSkill(attacker, '법카 찬스', '뱀파이어 흡혈') && Math.random() < 0.7) lsSkill = attacker.skills.includes('법카 찬스') ? '법카 찬스' : '뱀파이어 흡혈';
+          if (vampSkill && Math.random() < 0.7) lsSkill = vampSkill;
           else if (hasTrait(attacker, '사내 모기', '흡혈귀') && Math.random() < 0.5) lsSkill = attacker.trait.name;
 
           if (lsSkill) {
@@ -1012,11 +1009,10 @@ export default function RogCard() {
           }
         }
 
-        // 예토전생 체력량 증가 (30% -> 40%)
-        if(defender.hp <= 0 && hasSkill(defender, '엄마 호출', '예토전생') && !defender.revived) {
+        const reviveSkill = getActiveSkillInGroup(defender, 'REVIVE');
+        if(defender.hp <= 0 && reviveSkill && !defender.revived) {
           defender.hp = Math.floor(defender.originalHp * 0.4); defender.revived = true;
-          let reviveName = defender.skills.includes('엄마 호출') ? '엄마 호출' : '예토전생';
-          log.push({ type: 'revive', text: `🧟 [${defender.name}] : 기적처럼 <${reviveName}>로 부활합니다!`, state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) }, actor: defender.key });
+          log.push({ type: 'revive', text: `🧟 [${defender.name}] : 기적처럼 <${reviveSkill}>로 부활합니다!`, state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) }, actor: defender.key });
         }
       }
     }
@@ -1084,8 +1080,8 @@ export default function RogCard() {
     const userRef = doc(db, USERS_PATH, user.uid);
     try {
       if (battleType === 'AI') {
-        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleReward, wins: (userData.wins || 0) + 1, aiWins: (userData.aiWins || 0) + 1 });
-        else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
+        // AI 전투 승패는 전체 전적(wins/losses)에 추가하지 않고 돈과 AI승리 기록만 올립니다.
+        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleReward, aiWins: (userData.aiWins || 0) + 1 });
       } else {
         if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleBet * 2, wins: (userData.wins || 0) + 1 });
         else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
@@ -1179,8 +1175,8 @@ export default function RogCard() {
   const updateQuestProgress = async (type) => {
     if(!user || !userData) return;
     const today = new Date().toISOString().split('T')[0];
-    let q = userData.quests || { date: today, ai: 0, enhance: 0, win_ai: 0, pvp: 0, chat: 0, market: 0, claimed: [] };
-    if (q.date !== today) q = { date: today, ai: 0, enhance: 0, win_ai: 0, pvp: 0, chat: 0, market: 0, claimed: [] };
+    let q = userData.quests || { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+    if (q.date !== today) q = { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
     
     q[type] = (q[type] || 0) + 1;
     await updateDoc(doc(db, USERS_PATH, user.uid), { quests: q }).catch(()=>{});
@@ -1190,7 +1186,7 @@ export default function RogCard() {
     if(isProcessing) return;
     setIsProcessing(true);
     try {
-      let q = userData.quests || { date: new Date().toISOString().split('T')[0], ai: 0, enhance: 0, win_ai: 0, pvp: 0, chat: 0, market: 0, claimed: [] };
+      let q = userData.quests || { date: new Date().toISOString().split('T')[0], ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
       q.claimed.push(questId);
       await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(reward), quests: q });
       playSfx('success');
@@ -1208,6 +1204,7 @@ export default function RogCard() {
       setSellPriceInput('');
       setMarketSelectedCardId('');
       updateQuestProgress('market');
+      if (selectedCard?.id === card.id) setSelectedCard(null);
       setCurrentView('market');
     } catch(e) { showToast("등록 실패", "error"); }
     setIsProcessing(false);
@@ -1234,6 +1231,7 @@ export default function RogCard() {
           await updateDoc(sellerRef, { money: increment(card.price) });
           await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-card.price) });
           await updateDoc(doc(db, CARDS_PATH, card.id), { ownerId: user.uid, isSelling: false, price: null, equippedFrame: null });
+          updateQuestProgress('buy_market'); 
           playSfx('success'); showToast("성공적으로 거래되었습니다!", "success");
         } catch(e) { showToast("거래 실패", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null);
@@ -1247,6 +1245,16 @@ export default function RogCard() {
       await updateDoc(doc(db, USERS_PATH, user.uid), { equippedTitle: title });
       showToast(`[${title}] 칭호 장착 완료`, "success");
     } catch(e) { showToast("장착 실패", "error"); }
+  };
+
+  const handleAdminSetGold = async (targetUserId, amount) => {
+    if (userData?.nickname !== '영록달록') return;
+    setIsProcessing(true);
+    try {
+      await updateDoc(doc(db, USERS_PATH, targetUserId), { money: amount });
+      showToast(`어드민 권한: 골드 ${formatMoney(amount)} 적용 완료`, "success");
+    } catch(e) { showToast("적용 실패", "error"); }
+    setIsProcessing(false);
   };
 
   // ==========================================
@@ -1292,17 +1300,21 @@ export default function RogCard() {
       </div>
       <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"><ShoppingCart size={16}/> 상점</button>
-        <button onClick={wrapClick(() => setSoundEnabled(!soundEnabled))} className="hidden sm:flex text-white/50 hover:text-white transition-colors">{soundEnabled ? <span className="flex items-center gap-1"><Volume2 size={14}/> SOUND ON</span> : <span className="flex items-center gap-1"><VolumeX size={14}/> SOUND OFF</span>}</button>
-        {userData && (<div className="flex items-center gap-6 cursor-pointer hover:opacity-80" onClick={wrapClick(()=>{setViewingProfileUserId(user.uid); setCurrentView('profile');})}>
-          <div className="flex items-center gap-2 text-white/70">
-            {getIcon(userData.icon)} 
-            <div className="flex flex-col items-start">
-              {userData.equippedTitle && <span className="text-emerald-400 text-[9px] mb-[2px] leading-none tracking-widest bg-emerald-900/30 px-1 py-0.5 border border-emerald-500/30">{userData.equippedTitle}</span>}
-              <span>{userData.nickname}</span>
+        
+        {userData && (
+          <div className="flex items-center gap-6">
+            <button onClick={wrapClick(() => {setChargeStep(1); setShowChargeModal(true);})} className="text-amber-400 border border-amber-500/30 bg-amber-900/20 px-3 py-1.5 text-xs hover:bg-amber-500 hover:text-white transition-colors tracking-widest font-bold hidden sm:block rounded-none shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+              충전하기
+            </button>
+            <div className="flex items-center gap-6 cursor-pointer hover:opacity-80" onClick={wrapClick(()=>{setViewingProfileUserId(user.uid); setCurrentView('profile');})}>
+              <div className="flex items-center gap-2 text-white/70">
+                {getIcon(userData.icon)} 
+                <span>{userData.nickname}</span>
+              </div>
+              <div className="text-white opacity-90 font-bold text-sm hidden sm:block">{formatMoney(userData.money)} GOLD</div>
             </div>
           </div>
-          <div className="text-white opacity-90 font-bold text-sm hidden sm:block">{formatMoney(userData.money)} GOLD</div>
-        </div>)}
+        )}
       </div>
     </header>
   );
@@ -1313,7 +1325,15 @@ export default function RogCard() {
     const viewingUserCards = allCards.filter(c => c.ownerId === viewingProfileUserId).sort((a,b) => b.level - a.level);
     const highestCard = viewingUserCards[0];
     const isMe = viewingUser.userId === user.uid;
+    const isAdmin = userData?.nickname === '영록달록';
     const achievements = checkAchievements(viewingUser, viewingUserCards);
+
+    const realWins = Math.max(0, (viewingUser.wins || 0) - (viewingUser.aiWins || 0));
+
+    const handleSaveGold = () => {
+      handleAdminSetGold(viewingUser.userId, Number(editGoldValue));
+      setIsEditingGold(false);
+    };
 
     return (
       <div className="p-4 md:p-10 max-w-[1200px] mx-auto animate-fade-in relative z-10 w-full min-h-[80vh] flex flex-col">
@@ -1338,8 +1358,23 @@ export default function RogCard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-amber-400 font-bold font-mono text-xl">{formatMoney(viewingUser.money)} G</div>
-                  <div className="text-white/50 font-mono text-sm">{viewingUser.wins} 승 / {viewingUser.losses} 패 ({viewingUser.wins+viewingUser.losses > 0 ? Math.round((viewingUser.wins/(viewingUser.wins+viewingUser.losses))*100) : 0}%)</div>
+                  <div className="flex items-center justify-end gap-3 mb-1">
+                     {isAdmin && !isEditingGold && (
+                        <button onClick={wrapClick(() => {setIsEditingGold(true); setEditGoldValue(viewingUser.money);})} className="px-2 py-1 text-[10px] bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500 hover:text-white font-mono transition-colors rounded-none">
+                          어드민 수정
+                        </button>
+                     )}
+                     {isAdmin && isEditingGold ? (
+                        <div className="flex items-center gap-1">
+                           <input type="number" value={editGoldValue} onChange={e=>setEditGoldValue(e.target.value)} className="w-24 bg-black/50 border border-red-500/50 text-red-400 font-mono px-2 py-1 text-sm outline-none rounded-none" />
+                           <button onClick={wrapClick(handleSaveGold)} className="px-2 py-1 bg-red-500 text-white font-mono text-[10px] rounded-none">저장</button>
+                           <button onClick={wrapClick(()=>setIsEditingGold(false))} className="px-2 py-1 bg-white/20 text-white font-mono text-[10px] rounded-none">취소</button>
+                        </div>
+                     ) : (
+                        <div className="text-amber-400 font-bold font-mono text-xl">{formatMoney(viewingUser.money)} G</div>
+                     )}
+                  </div>
+                  <div className="text-white/50 font-mono text-sm">{realWins} 승 / {viewingUser.losses} 패 ({realWins+viewingUser.losses > 0 ? Math.round((realWins/(realWins+viewingUser.losses))*100) : 0}%)</div>
                 </div>
               </div>
 
@@ -1405,6 +1440,7 @@ export default function RogCard() {
           </div>
         </div>
 
+        {/* 보유 카드 목록 섹션 */}
         <div className="mt-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative rounded-none">
           <HUDCorner />
           <h3 className="text-white/50 font-mono text-sm tracking-widest mb-6 uppercase flex items-center gap-2"><Hexagon size={16}/> 보유 자산 목록 ({viewingUserCards.length})</h3>
@@ -1433,14 +1469,17 @@ export default function RogCard() {
       }
     });
 
+    // 랭킹 순위 필터 (AI 승리 제외)
     const topLevelUsers = [...allUsers].sort((a,b) => (userMaxLevels[b.userId] || 0) - (userMaxLevels[a.userId] || 0)).slice(0, 50);
-    const topWins = [...allUsers].sort((a,b) => (b.wins || 0) - (a.wins || 0)).slice(0, 50);
+    const topWins = [...allUsers].sort((a,b) => (Math.max(0, (b.wins || 0) - (b.aiWins || 0))) - (Math.max(0, (a.wins || 0) - (a.aiWins || 0)))).slice(0, 50);
     const richUsers = [...allUsers].sort((a,b) => (b.money || 0) - (a.money || 0)).slice(0, 50);
     
     const isAttended = userData?.lastAttendance === new Date().toISOString().split('T')[0];
     const topUser = rankingTab === 'level' ? topLevelUsers[0] : rankingTab === 'money' ? richUsers[0] : topWins[0];
     const topUserCard = topUser ? allCards.filter(c => c.ownerId === topUser.userId).sort((a,b) => b.level - a.level)[0] : null;
     const currentList = rankingTab === 'level' ? topLevelUsers : rankingTab === 'money' ? richUsers : topWins;
+
+    const availableToPlay = myCards.filter(c => !c.isSelling);
 
     return (
       <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in relative z-10 flex flex-col lg:flex-row gap-10 w-full h-full">
@@ -1463,15 +1502,18 @@ export default function RogCard() {
                 <button onClick={wrapClick(()=>setRankingTab('money'))} className={`pb-1 ${rankingTab==='money' ? 'text-white border-b border-white' : 'text-white/30 hover:text-white/60'}`}>자산</button>
               </div>
               <div className="font-mono text-sm tracking-wide overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
-                {currentList.map((u, i) => (
-                  <div key={u.userId} className={`flex justify-between items-center pb-2 border-b border-white/5 ${u.userId === user?.uid ? 'text-white font-bold' : 'text-white/60'}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 opacity-30 text-xs">{String(i+1).padStart(2,'0')}</span> 
-                      <span className="truncate w-24 cursor-pointer hover:text-emerald-300 transition-colors" onClick={wrapClick(()=>{setViewingProfileUserId(u.userId); setCurrentView('profile');})}>{u.nickname}</span>
+                {currentList.map((u, i) => {
+                  const realWins = Math.max(0, (u.wins || 0) - (u.aiWins || 0));
+                  return (
+                    <div key={u.userId} className={`flex justify-between items-center pb-2 border-b border-white/5 ${u.userId === user?.uid ? 'text-white font-bold' : 'text-white/60'}`}>
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 opacity-30 text-xs">{String(i+1).padStart(2,'0')}</span> 
+                        <span className="truncate w-24 cursor-pointer hover:text-emerald-300 transition-colors" onClick={wrapClick(()=>{setViewingProfileUserId(u.userId); setCurrentView('profile');})}>{u.nickname}</span>
+                      </div>
+                      <span>{rankingTab === 'level' ? `LV.${userMaxLevels[u.userId] || 0}` : rankingTab === 'money' ? formatMoney(u.money) : `${realWins} W`}</span>
                     </div>
-                    <span>{rankingTab === 'level' ? `LV.${userMaxLevels[u.userId] || 0}` : rankingTab === 'money' ? formatMoney(u.money) : `${u.wins} W`}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
            </div>
            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-5 flex flex-col h-[50%] relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
@@ -1516,8 +1558,8 @@ export default function RogCard() {
               <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">거래소</h3><p className="font-sans text-base text-white/40 font-light">다른 유저들과 카드를 거래하세요.</p></div>
             </div>
             <div onClick={wrapClick(() => {
-               if (myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
-               startAIBattleSetup(myCards[0]);
+               if (availableToPlay.length === 0) { showToast("전투 가능한 카드가 없습니다 (거래소 등록 중)", "error"); return; }
+               startAIBattleSetup(availableToPlay[0]);
             })} className="group p-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 hover:border-white/40 flex flex-col justify-center gap-6 cursor-pointer relative min-h-[250px] transition-all hover:-translate-y-2 hover:bg-white/[0.04] rounded-none">
               <HUDCorner /><Cpu size={40} className="text-white/40 group-hover:text-white transition-colors group-hover:scale-110" />
               <div className="relative z-10"><h3 className="font-mono font-light text-2xl text-white tracking-widest mb-3 uppercase">AI 전투</h3><p className="font-sans text-base text-white/40 font-light">가상 적들과 대결하여 골드를 벌어보세요.</p></div>
@@ -1530,8 +1572,8 @@ export default function RogCard() {
                   <p className="font-sans text-sm text-white/40 font-light">실시간으로 대결하세요.</p>
                 </div>
                 <button onClick={wrapClick(() => {
-                    if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
-                    if(!selectedCard) setSelectedCard(myCards[0]);
+                    if(availableToPlay.length === 0) { showToast("전투 가능한 카드가 없습니다 (거래소 등록 중)", "error"); return; }
+                    if(!selectedCard || selectedCard.isSelling) setSelectedCard(availableToPlay[0]);
                     setCurrentView('pvp_setup');
                   })} className="px-6 py-3 bg-white/10 text-white font-mono text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all border border-white/20 rounded-none whitespace-nowrap">방 개설 / 참가 준비</button>
               </div>
@@ -1548,8 +1590,8 @@ export default function RogCard() {
                       <div className="flex items-center gap-4 whitespace-nowrap">
                         <span className="font-mono text-amber-400 text-sm">{formatMoney(room.bet)} G</span>
                         <button onClick={wrapClick(() => {
-                          if (myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; }
-                          const targetCard = selectedCard || myCards[0];
+                          if (availableToPlay.length === 0) { showToast("전투 가능한 카드가 없습니다 (거래소 등록 중)", "error"); return; }
+                          const targetCard = (!selectedCard || selectedCard.isSelling) ? availableToPlay[0] : selectedCard;
                           setSelectedCard(targetCard);
                           handleJoinPvPRoom(room.id, targetCard);
                         })} className="px-6 py-2 bg-white/10 text-white font-mono text-xs uppercase hover:bg-white hover:text-black transition-colors rounded-none">참가</button>
@@ -1635,7 +1677,7 @@ export default function RogCard() {
         </div>
 
         {availableCards.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-xl text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md rounded-none"><span className="mb-2">사용 가능한 카드가 없습니다.</span><span className="text-sm">신규 카드를 생성하세요.</span></div>
+          <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-xl text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md rounded-none"><span className="mb-2">사용 가능한 카드가 없습니다.</span><span className="text-sm">암시장에 판매 중이거나, 신규 카드를 생성하세요.</span></div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
             {renderSlots.map((_, i) => {
@@ -1708,6 +1750,24 @@ export default function RogCard() {
               </div>
             </div>
             
+            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative rounded-none">
+              <HUDCorner /><h4 className="font-mono text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">암시장 거래</h4>
+              {!selectedCard.isSelling ? (
+                 <div className="flex gap-4 items-end">
+                    <div className="flex-1">
+                      <label className="block text-white/40 text-xs font-mono mb-2">판매 등록가 (GOLD)</label>
+                      <input type="number" value={sellPriceInput} onChange={e=>setSellPriceInput(e.target.value)} placeholder="금액 입력" className="w-full bg-black/40 border-b border-white/20 p-2 text-white font-mono focus:border-white outline-none rounded-none" />
+                    </div>
+                    <button onClick={wrapClick(() => handleListMarket(selectedCard, sellPriceInput))} disabled={isProcessing} className="px-6 py-2.5 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white font-mono text-sm rounded-none disabled:opacity-50">등록</button>
+                 </div>
+              ) : (
+                 <div className="flex justify-between items-center bg-black/40 p-4 border border-red-500/30 rounded-none">
+                    <span className="text-red-400 font-mono text-sm">현재 판매 중: {formatMoney(selectedCard.price)} G</span>
+                    <button onClick={wrapClick(() => handleCancelMarket(selectedCard))} disabled={isProcessing} className="px-4 py-2 bg-white/10 text-white hover:bg-white hover:text-black font-mono text-xs rounded-none disabled:opacity-50">판매 취소</button>
+                 </div>
+              )}
+            </div>
+
             <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative rounded-none">
               <HUDCorner /><h4 className="font-mono text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">프레임 장착</h4>
               <div className="flex flex-col gap-3 font-mono text-sm h-64 overflow-y-auto custom-scrollbar pr-2">
@@ -1789,62 +1849,68 @@ export default function RogCard() {
     );
   };
 
-  const renderBattleSelect = () => (
-    <div className="p-4 md:p-10 max-w-5xl mx-auto animate-fade-in relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
-      <h2 className="text-3xl font-mono font-light text-white mb-16 tracking-[0.2em] uppercase drop-shadow-md">전투 모드 선택</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-        <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } startAIBattleSetup(myCards[0]); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
-          <HUDCorner /><Cpu size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">AI와 대전하기</h3>
-          <p className="text-white/40 text-base font-sans font-light">가상 적들과 대결하여 골드를 벌어보세요.</p>
-        </div>
-        <div onClick={wrapClick(() => { if(myCards.length === 0) { showToast("보유한 카드가 없습니다", "error"); return; } if(!selectedCard) setSelectedCard(myCards[0]); setCurrentView('pvp_setup'); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
-          <HUDCorner /><User size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
-          <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">유저와 대결하기</h3>
-          <p className="text-white/40 text-base font-sans font-light">방을 개설하고 실시간으로 대결하세요.</p>
-        </div>
-      </div>
-      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
-    </div>
-  );
-
-  const renderPvPSetup = () => (
-    <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
-      <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
-      <div className="w-full max-w-6xl mb-12">
-        <h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 text-center uppercase">출전 카드 선택</h3>
-        <div className="flex overflow-x-auto gap-4 pb-6 pt-8 px-2 custom-scrollbar">
-          {myCards.map(card => (
-            <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => setSelectedCard(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
-        <div className="flex-[2] bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col min-h-[300px] rounded-none">
-          <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-6 tracking-widest uppercase">활성화된 대기방</h3>
-          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
-            {activeRooms.length === 0 ? (<div className="text-center text-white/30 font-mono text-sm mt-10">생성된 방이 없습니다.</div>) : (
-              activeRooms.map(room => (
-                <div key={room.id} className="p-4 bg-white/5 border border-white/10 flex justify-between items-center rounded-none">
-                  <div className="flex flex-col flex-1 min-w-0 pr-4"><span className="font-mono text-white text-base truncate">{room.roomName}</span><span className="font-mono text-xs text-white/50 truncate">Host: {room.host.nickname}</span></div>
-                  <div className="flex items-center gap-4 whitespace-nowrap"><span className="font-mono text-amber-400 text-sm">{formatMoney(room.bet)} G</span><button onClick={wrapClick(() => handleJoinPvPRoom(room.id))} disabled={!selectedCard} className="px-4 py-2 bg-white/10 text-white font-mono text-xs uppercase hover:bg-white hover:text-black transition-colors disabled:opacity-30 rounded-none">참가</button></div>
-                </div>
-              ))
-            )}
+  const renderBattleSelect = () => {
+    const availableToPlay = myCards.filter(c => !c.isSelling);
+    return (
+      <div className="p-4 md:p-10 max-w-5xl mx-auto animate-fade-in relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
+        <h2 className="text-3xl font-mono font-light text-white mb-16 tracking-[0.2em] uppercase drop-shadow-md">전투 모드 선택</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+          <div onClick={wrapClick(() => { if(availableToPlay.length === 0) { showToast("전투 가능한 카드가 없습니다", "error"); return; } startAIBattleSetup(availableToPlay[0]); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
+            <HUDCorner /><Cpu size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
+            <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">AI와 대전하기</h3>
+            <p className="text-white/40 text-base font-sans font-light">가상 적들과 대결하여 골드를 벌어보세요.</p>
+          </div>
+          <div onClick={wrapClick(() => { if(availableToPlay.length === 0) { showToast("전투 가능한 카드가 없습니다", "error"); return; } if(!selectedCard || selectedCard.isSelling) setSelectedCard(availableToPlay[0]); setCurrentView('pvp_setup'); })} className="group bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 cursor-pointer text-center flex flex-col items-center hover:bg-white/[0.05] hover:-translate-y-2 transition-all rounded-none">
+            <HUDCorner /><User size={48} strokeWidth={1} className="text-white/30 group-hover:text-white mb-8 transition-colors group-hover:scale-110" />
+            <h3 className="text-xl font-mono font-light text-white mb-3 tracking-widest uppercase">유저와 대결하기</h3>
+            <p className="text-white/40 text-base font-sans font-light">방을 개설하고 실시간으로 대결하세요.</p>
           </div>
         </div>
-        <div className="flex-1 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col rounded-none">
-          <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-8 tracking-widest uppercase">새로운 방 개설</h3>
-          <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">방 이름</label>
-          <input type="text" value={pvpRoomName} onChange={(e) => setPvpRoomName(e.target.value)} placeholder={`${userData.nickname}의 방`} maxLength={15} className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-base focus:border-white focus:outline-none mb-8 placeholder-white/20 transition-colors rounded-none" />
-          <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">배팅 금액 (GOLD)</label>
-          <input type="number" value={battleBet} onChange={(e) => setBattleBet(Number(e.target.value))} min="1000" max={userData.money} step="1000" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-xl focus:border-white focus:outline-none mb-10 transition-colors rounded-none" />
-          <button onClick={wrapClick(handleCreatePvPRoom)} disabled={isProcessing || !selectedCard} className="mt-auto py-4 bg-white/10 text-white font-mono text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30 rounded-none">개설 및 대기</button>
-        </div>
+        <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
       </div>
-      <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
-    </div>
-  );
+    );
+  };
+
+  const renderPvPSetup = () => {
+    const availableToPlay = myCards.filter(c => !c.isSelling);
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
+        <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">유저와 대결하기</h2>
+        <div className="w-full max-w-6xl mb-12">
+          <h3 className="text-white/50 font-mono text-xs tracking-widest mb-6 text-center uppercase">출전 카드 선택</h3>
+          <div className="flex overflow-x-auto gap-4 pb-6 pt-8 px-2 custom-scrollbar">
+            {availableToPlay.map(card => (
+              <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => setSelectedCard(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
+          <div className="flex-[2] bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col min-h-[300px] rounded-none">
+            <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-6 tracking-widest uppercase">활성화된 대기방</h3>
+            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+              {activeRooms.length === 0 ? (<div className="text-center text-white/30 font-mono text-sm mt-10">생성된 방이 없습니다.</div>) : (
+                activeRooms.map(room => (
+                  <div key={room.id} className="p-4 bg-white/5 border border-white/10 flex justify-between items-center rounded-none">
+                    <div className="flex flex-col flex-1 min-w-0 pr-4"><span className="font-mono text-white text-base truncate">{room.roomName}</span><span className="font-mono text-xs text-white/50 truncate">Host: {room.host.nickname}</span></div>
+                    <div className="flex items-center gap-4 whitespace-nowrap"><span className="font-mono text-amber-400 text-sm">{formatMoney(room.bet)} G</span><button onClick={wrapClick(() => handleJoinPvPRoom(room.id))} disabled={!selectedCard || selectedCard.isSelling} className="px-4 py-2 bg-white/10 text-white font-mono text-xs uppercase hover:bg-white hover:text-black transition-colors disabled:opacity-30 rounded-none">참가</button></div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <div className="flex-1 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col rounded-none">
+            <HUDCorner /><h3 className="text-base font-mono font-light text-white mb-8 tracking-widest uppercase">새로운 방 개설</h3>
+            <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">방 이름</label>
+            <input type="text" value={pvpRoomName} onChange={(e) => setPvpRoomName(e.target.value)} placeholder={`${userData.nickname}의 방`} maxLength={15} className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-base focus:border-white focus:outline-none mb-8 placeholder-white/20 transition-colors rounded-none" />
+            <label className="text-white/40 text-xs font-mono mb-2 tracking-widest uppercase">배팅 금액 (GOLD)</label>
+            <input type="number" value={battleBet} onChange={(e) => setBattleBet(Number(e.target.value))} min="1000" max={userData.money} step="1000" className="w-full bg-transparent border-b border-white/30 p-2 text-white font-mono text-xl focus:border-white focus:outline-none mb-10 transition-colors rounded-none" />
+            <button onClick={wrapClick(handleCreatePvPRoom)} disabled={isProcessing || !selectedCard || selectedCard.isSelling} className="mt-auto py-4 bg-white/10 text-white font-mono text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all disabled:opacity-30 rounded-none">개설 및 대기</button>
+          </div>
+        </div>
+        <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
+      </div>
+    );
+  };
 
   const renderPvPRoom = () => {
     if (!pvpRoomData) return null;
@@ -1882,14 +1948,18 @@ export default function RogCard() {
   };
 
   const renderBattleAISetup = () => {
-    if (!selectedCard || !aiOpponent) { if(myCards.length > 0) startAIBattleSetup(myCards[0]); return null; }
+    const availableToPlay = myCards.filter(c => !c.isSelling);
+    if (!selectedCard || selectedCard.isSelling || !aiOpponent) { 
+      if(availableToPlay.length > 0) startAIBattleSetup(availableToPlay[0]); 
+      return null; 
+    }
     return (
       <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
         <h2 className="text-3xl font-mono font-light tracking-[0.2em] text-white mb-12 uppercase">AI 교전 준비</h2>
         <div className="w-full max-w-5xl mb-8">
           <h3 className="text-white/50 font-mono text-xs tracking-widest mb-4 text-center uppercase">출전 카드 변경</h3>
           <div className="flex overflow-x-auto gap-4 pb-4 pt-8 px-2 custom-scrollbar">
-            {myCards.map(card => (<div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>))}
+            {availableToPlay.map(card => (<div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}><CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} /></div>))}
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full max-w-5xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-12 relative transition-all rounded-none">
@@ -1992,7 +2062,7 @@ export default function RogCard() {
 
   const renderQuests = () => {
     const today = new Date().toISOString().split('T')[0];
-    const qData = userData?.quests?.date === today ? userData.quests : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, claimed: [] };
+    const qData = userData?.quests?.date === today ? userData.quests : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
 
     return (
       <div className="p-4 md:p-10 max-w-4xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col w-full">
@@ -2000,28 +2070,28 @@ export default function RogCard() {
           <h2 className="text-3xl font-mono font-light text-white tracking-[0.2em] uppercase">일일 퀘스트</h2>
           <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/50 hover:text-white font-mono text-sm tracking-widest uppercase flex items-center gap-2"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
         </div>
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {QUESTS.map(q => {
-            const currentCount = qData[q.id] || 0;
+            const currentCount = qData[q.type] || 0;
             const isCompleted = currentCount >= q.target;
             const isClaimed = qData.claimed?.includes(q.id);
             
             return (
-              <div key={q.id} className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col md:flex-row md:items-center justify-between gap-6 rounded-none">
+              <div key={q.id} className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col justify-between gap-6 rounded-none">
                 <HUDCorner />
                 <div>
                   <h3 className="font-mono font-light text-xl text-white mb-2 tracking-widest">{q.title}</h3>
-                  <p className="text-sm font-sans text-white/50 mb-4">{q.desc}</p>
-                  <div className="font-mono text-xs text-amber-400">보상: {formatMoney(q.reward)} G</div>
+                  <p className="text-sm font-sans text-white/50 mb-4 h-10">{q.desc}</p>
+                  <div className="font-mono text-sm font-bold text-amber-400 border-t border-white/10 pt-4">보상: {formatMoney(q.reward)} G</div>
                 </div>
-                <div className="flex flex-col items-end gap-3">
-                  <span className="font-mono text-white/70 text-sm">
+                <div className="flex justify-between items-end mt-2">
+                  <span className="font-mono text-white/70 text-sm bg-black/40 px-3 py-1 border border-white/10">
                     진행도: {Math.min(currentCount, q.target)} / {q.target}
                   </span>
                   {isClaimed ? (
-                    <button disabled className="px-8 py-3 bg-white/5 text-white/30 font-mono text-sm rounded-none border border-white/5">수령 완료</button>
+                    <button disabled className="px-6 py-2 bg-white/5 text-white/30 font-mono text-xs rounded-none border border-white/5">수령 완료</button>
                   ) : (
-                    <button onClick={wrapClick(() => handleClaimQuest(q.id, q.reward))} disabled={!isCompleted || isProcessing} className={`px-8 py-3 font-mono text-sm rounded-none transition-colors ${isCompleted ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white' : 'bg-white/10 text-white/50 border border-white/20 disabled:opacity-50'}`}>
+                    <button onClick={wrapClick(() => handleClaimQuest(q.id, q.reward))} disabled={!isCompleted || isProcessing} className={`px-6 py-2 font-mono text-xs rounded-none transition-colors ${isCompleted ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white font-bold animate-pulse' : 'bg-white/10 text-white/50 border border-white/20 disabled:opacity-50'}`}>
                       보상 수령
                     </button>
                   )}
@@ -2127,6 +2197,54 @@ export default function RogCard() {
     );
   };
 
+  const renderChargeModal = () => {
+    const PACKS = [
+      { gold: 1000000, price: '10,000원' },
+      { gold: 3000000, price: '30,000원' },
+      { gold: 5000000, price: '50,000원' },
+      { gold: 10000000, price: '100,000원' },
+    ];
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
+        <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-lg relative transition-all duration-300 rounded-none shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+          <HUDCorner />
+          <h3 className="font-mono font-light text-2xl text-white mb-8 tracking-widest uppercase text-center border-b border-white/10 pb-4">자산 충전소</h3>
+          
+          {chargeStep === 1 ? (
+            <div className="flex flex-col gap-4 mb-8">
+              {PACKS.map((p, i) => (
+                <button key={i} onClick={wrapClick(() => { setSelectedChargePack(p); setChargeStep(2); })} className="flex justify-between items-center p-5 border border-white/10 bg-black/40 hover:bg-white/10 hover:border-amber-500/50 transition-all group rounded-none">
+                  <span className="font-mono text-amber-400 font-bold text-lg group-hover:scale-105 transition-transform">{formatMoney(p.gold)} GOLD</span>
+                  <span className="font-sans text-white/70 bg-white/5 px-4 py-2 text-sm border border-white/10 group-hover:text-white group-hover:bg-white/20 rounded-none">{p.price}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center mb-8 bg-black/40 border border-white/10 p-8 text-center gap-6 rounded-none">
+              <div className="w-16 h-16 bg-amber-500/20 flex items-center justify-center rounded-full mb-2">
+                <Banknote size={32} className="text-amber-400" />
+              </div>
+              <h4 className="text-xl font-bold text-white tracking-widest">입금 안내</h4>
+              <div className="text-amber-400 font-mono text-xl md:text-2xl font-black bg-amber-900/30 px-6 py-3 border border-amber-500/50 rounded-none whitespace-nowrap">
+                토스뱅크 1000-0052-1555
+              </div>
+              <div className="text-white/60 font-sans text-sm leading-relaxed">
+                선택하신 상품: <span className="text-white font-bold">{formatMoney(selectedChargePack?.gold)} GOLD ({selectedChargePack?.price})</span><br/><br/>
+                위 계좌로 입금해 주시기 바랍니다.<br/>
+                <span className="text-emerald-400 font-bold mt-2 block">"입금 확인이 완료되면 자동으로 충전됩니다"</span>
+              </div>
+            </div>
+          )}
+
+          <button onClick={wrapClick(() => setShowChargeModal(false))} className="w-full py-4 bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black transition-all duration-300 font-mono text-sm tracking-widest uppercase rounded-none">
+            닫기
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden">
       <style>{`
@@ -2138,6 +2256,39 @@ export default function RogCard() {
         .font-mono, .font-sans, .font-serif, input, button, textarea { font-family: 'Pretendard', system-ui, sans-serif !important; }
         .font-logo { font-family: 'SlowGothic', sans-serif !important; }
         .bg-obsidian { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 50%, #202025 0%, #050505 80%); filter: blur(40px); opacity: 0.9; }
+
+        @keyframes god-ray {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes mythic-glow {
+            0% { box-shadow: 0 0 25px rgba(255,0,0,0.6); }
+            15% { box-shadow: 0 0 25px rgba(255,127,0,0.6); }
+            30% { box-shadow: 0 0 25px rgba(255,255,0,0.6); }
+            45% { box-shadow: 0 0 25px rgba(0,255,0,0.6); }
+            60% { box-shadow: 0 0 25px rgba(0,0,255,0.6); }
+            75% { box-shadow: 0 0 25px rgba(75,0,130,0.6); }
+            90% { box-shadow: 0 0 25px rgba(148,0,211,0.6); }
+            100% { box-shadow: 0 0 25px rgba(255,0,0,0.6); }
+        }
+        @keyframes hue-shift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        .animate-hue-shift { animation: hue-shift 3s linear infinite; }
+
+        .max-level-card {
+            background: linear-gradient(45deg, #FFD700, #FFF8DC, #FFA500, #FF8C00, #FFD700);
+            background-size: 300% 300%;
+            animation: god-ray 3s ease infinite;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        .mythic-card {
+            background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff00ff, #ff0000);
+            background-size: 300% 300%;
+            animation: god-ray 3s linear infinite, mythic-glow 3s linear infinite;
+        }
 
         @keyframes slide-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -2229,6 +2380,20 @@ export default function RogCard() {
         </div>
       )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
+      {/* Charge Modal */}
+      {showChargeModal && renderChargeModal()}
+      
+      {/* Sound Toggle Button (Floating) */}
+      {currentView !== 'login' && (
+        <button 
+          onClick={wrapClick(() => setSoundEnabled(!soundEnabled))} 
+          className="fixed bottom-8 left-8 z-50 p-4 bg-black/60 border border-white/20 text-white/50 hover:text-white rounded-none backdrop-blur-md flex items-center justify-center transition-all hover:bg-white/10 hover:border-white/50 shadow-xl"
+        >
+          {soundEnabled ? <Volume2 size={24}/> : <VolumeX size={24}/>}
+        </button>
+      )}
+
       {previewCard && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in" onClick={() => setPreviewCard(null)}>
           <div className="relative w-full max-w-sm flex flex-col items-center animate-slide-up transform scale-110 md:scale-125" onClick={e => e.stopPropagation()}>
