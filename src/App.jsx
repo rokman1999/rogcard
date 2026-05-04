@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, arrayUnion, addDoc, query, where, getDocs, increment } from 'firebase/firestore';
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { Trophy, Swords, Cpu, User, Skull, Ghost, Terminal, Plus, ArrowRight, ShieldAlert, Sparkles, Coins, Banknote, Volume2, VolumeX, Hexagon, MessageSquare, Crosshair, Zap, ShoppingCart, Shield, ArrowUpCircle, Info, Edit3, Send, Users, ScrollText, Landmark, Award } from 'lucide-react';
 
 // ==========================================
@@ -22,7 +23,14 @@ const QUESTS = [
   { id: 'q9', type: 'pvp', title: '아레나의 투사', desc: '유저 1:1 대결 5회 참여', target: 5, reward: 500000 },
   { id: 'q10', type: 'chat', title: '소통의 장', desc: '전체 채팅 5회 입력', target: 5, reward: 50000 },
   { id: 'q11', type: 'market', title: '거상', desc: '거래소에 자산 1회 등록', target: 1, reward: 100000 },
-  { id: 'q12', type: 'buy_market', title: '쇼핑 매니아', desc: '거래소에서 아이템 1회 구매', target: 1, reward: 150000 }
+  { id: 'q12', type: 'buy_market', title: '쇼핑 매니아', desc: '거래소에서 아이템 1회 구매', target: 1, reward: 150000 },
+  { id: 'q13', type: 'ai', title: '베테랑의 길', desc: 'AI 대전 20회 참여', target: 20, reward: 1500000 },
+  { id: 'q14', type: 'win_ai', title: '인공지능 정복 III', desc: 'AI 대전 15회 승리', target: 15, reward: 1500000 },
+  { id: 'q15', type: 'enhance', title: '한계 돌파 III', desc: '카드 강화 15회 시도', target: 15, reward: 1000000 },
+  { id: 'q16', type: 'pvp', title: '아레나 마스터', desc: '유저 1:1 대결 10회 참여', target: 10, reward: 1200000 },
+  { id: 'q17', type: 'chat', title: '핵인싸', desc: '전체 채팅 20회 입력', target: 20, reward: 200000 },
+  { id: 'q18', type: 'market', title: '대거상', desc: '거래소에 자산 5회 등록', target: 5, reward: 500000 },
+  { id: 'q19', type: 'buy_market', title: 'VIP 고객', desc: '거래소에서 아이템 5회 구매', target: 5, reward: 1000000 }
 ];
 
 const STATS_BY_LEVEL = [
@@ -47,11 +55,14 @@ const STATS_BY_LEVEL = [
   { hp: 950, atk: 225, def: 44, spd: 133, crit: 49, luck: 31 },
   { hp: 1080, atk: 255, def: 47, spd: 141, crit: 52, luck: 33 },
   { hp: 1200, atk: 280, def: 50, spd: 150, crit: 55, luck: 35 },
+  { hp: 3500, atk: 800, def: 80, spd: 300, crit: 100, luck: 100 }, // LV.21 (초월)
 ];
 
 const COST_BY_LEVEL = [
   null, 100, 200, 300, 500, 800, 1200, 2000, 3500, 5000,
   8000, 15000, 25000, 40000, 60000, 90000, 140000, 200000, 300000, 500000,
+  1500000, // 20 -> 21 
+  null // 21 -> 22
 ];
 
 const getSellPrice = (level) => {
@@ -81,6 +92,8 @@ const ENHANCEMENT_RULES = [
   { successRate: 25,  onFail: 'down', destroyChance: 0, levelDownOnFail: 2 }, 
   { successRate: 15,  onFail: 'mixed', destroyChance: 10, levelDownOnFail: 2 }, 
   { successRate: 10,  onFail: 'mixed', destroyChance: 20, levelDownOnFail: 3 },
+  { successRate: 5,   onFail: 'mixed', destroyChance: 50, levelDownOnFail: 4 }, // LV.19 -> LV.20
+  null // LV.21
 ];
 
 const UNIQUE_TRAITS = [
@@ -108,6 +121,8 @@ const TRAIT_COLORS = {
   '바람돌이': 'bg-purple-500/20 border-purple-500/50 text-purple-400',
   '럭키가이': 'bg-amber-500/20 border-amber-500/50 text-amber-400'
 };
+
+const getRandomTrait = () => UNIQUE_TRAITS[Math.floor(Math.random() * UNIQUE_TRAITS.length)];
 
 const SKILLS_DATA = {
   '선빵필승': '스피드와 무관하게 전투 시작 시 무조건 선공을 가져갑니다. 빠따가 최고죠.',
@@ -145,7 +160,8 @@ const SKILLS_DATA = {
   '예토전생': 'HP가 0이 되어도 한 번은 좀비처럼 최대 체력 40%로 부활합니다.',
   '엄마 호출': 'HP가 0이 되어도 한 번은 엄마 빽으로 최대 체력 40% 상태로 부활합니다.',
   '불사조의 깃털': '죽음을 극복하고 최대 체력의 40%를 지닌 채 1회 부활합니다.',
-  '타임 루프': '치명상을 입는 순간 시간을 되돌려 체력 40% 상태로 생존합니다.'
+  '타임 루프': '치명상을 입는 순간 시간을 되돌려 체력 40% 상태로 생존합니다.',
+  '초월의 힘': '신을 뛰어넘은 존재. 적의 모든 방어와 회피를 무시하고 100% 확률로 치명타를 가하며 피해량의 50%를 회복합니다.'
 };
 
 const SKILL_GROUPS = {
@@ -157,7 +173,8 @@ const SKILL_GROUPS = {
   LOST_HP_ATK: ['눈깔 뒤집힘', '비트코인 떡락', '복수귀', '광기의 칼날'],
   VAMPIRE: ['뱀파이어 흡혈', '법카 찬스', '영혼 흡수', '피의 축제'],
   DEFENSE: ['우주 방어력', '철면피', '절대 방벽', '티타늄 바디'],
-  REVIVE: ['예토전생', '엄마 호출', '불사조의 깃털', '타임 루프']
+  REVIVE: ['예토전생', '엄마 호출', '불사조의 깃털', '타임 루프'],
+  TRANSCENDENT: ['초월의 힘']
 };
 
 const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
@@ -165,7 +182,7 @@ const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
   let newSkills = [...(currentSkills || [])];
   
   if (SKILL_MILESTONES.includes(newLevel)) {
-      const allSkillKeys = Object.keys(SKILLS_DATA);
+      const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
       const available = allSkillKeys.filter(s => !newSkills.includes(s));
       if (available.length > 0) {
           const randomSkill = available[Math.floor(Math.random() * available.length)];
@@ -173,6 +190,22 @@ const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
       }
   }
   return newSkills;
+};
+
+const getUnlockedSkills = (level) => {
+  let skills = [];
+  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
+  const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
+  
+  for (let i = 1; i <= level; i++) {
+    if (SKILL_MILESTONES.includes(i)) {
+      const available = allSkillKeys.filter(s => !skills.includes(s));
+      if (available.length > 0) {
+        skills.push(available[Math.floor(Math.random() * available.length)]);
+      }
+    }
+  }
+  return skills;
 };
 
 const ACHIEVEMENTS_DATA = {
@@ -185,7 +218,8 @@ const ACHIEVEMENTS_DATA = {
   "🔥 인간을 초월한 자": "LV.15 이상 카드 보유. 확률의 벽을 뚫었군요.",
   "🚀 만렙의 경지": "LV.20 최고 레벨 달성. 더 이상 오를 곳이 없습니다.",
   "🤕 쿠쿠다스 멘탈": "10번의 패배. 꺾이지 않는 마음이 중요합니다.",
-  "😭 동네 북": "30번의 패배. 이쯤 되면 맞는 걸 즐기는 걸지도 모릅니다."
+  "😭 동네 북": "30번의 패배. 이쯤 되면 맞는 걸 즐기는 걸지도 모릅니다.",
+  "🌌 초월자": "LV.21 초월 카드를 획득했습니다. 전설의 시작입니다."
 };
 
 const checkAchievements = (userData, userCards) => {
@@ -199,12 +233,30 @@ const checkAchievements = (userData, userCards) => {
   if (userData.money >= 5000000) ach.push("💰 벼락부자");
   if (userData.money >= 20000000) ach.push("🏦 걸어다니는 은행");
   if (userCards.some(c => c.level >= 10)) ach.push("✨ 두 자릿수 돌파");
-  if (userCards.some(c => c.level >= 15)) ach.push("🔥 인간 초월한 자");
+  if (userCards.some(c => c.level >= 15)) ach.push("🔥 인간을 초월한 자");
   if (userCards.some(c => c.level >= 20)) ach.push("🚀 만렙의 경지");
+  if (userCards.some(c => c.level >= 21)) ach.push("🌌 초월자");
   if (userData.losses >= 10) ach.push("🤕 쿠쿠다스 멘탈");
   if (userData.losses >= 30) ach.push("😭 동네 북");
   return ach;
 };
+
+// 프레임 데이터 모음
+const FRAMES_DATA = [
+  {id: 'frame_rust', name: '녹슨 고철', desc: '세월의 흔적이 묻은 앤틱 프레임', price: 10000, color: 'text-[#a1662f]'},
+  {id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이', price: 50000, color: 'text-cyan-300'},
+  {id: 'frame_blood', name: '블러드 펄스', desc: '핏빛 쉐도우 효과', price: 100000, color: 'text-red-500'},
+  {id: 'frame_obsidian', name: '옵시디언 엣지', desc: '고급스러운 다크 엣지 음영', price: 300000, color: 'text-gray-400'},
+  {id: 'frame_gold', name: '골든 아우라', desc: '황금빛 프레임 & 글로우', price: 500000, color: 'text-yellow-400'},
+  {id: 'frame_neon', name: '네온 사이버', desc: '시안/핑크 사이버펑크 네온', price: 1000000, color: 'text-pink-400'},
+  {id: 'frame_diamond', name: '다이아몬드 더스트', desc: '반짝이는 다이아몬드 결정', price: 2000000, color: 'text-blue-200'},
+  {id: 'frame_galaxy', name: '코스믹 갤럭시', desc: '우주의 심연을 담은 프레임', price: 3000000, color: 'text-indigo-400'},
+  {id: 'frame_fire', name: '지옥불 헬파이어', desc: '타오르는 화염 이펙트', price: 5000000, color: 'text-orange-500'},
+  {id: 'frame_ice', name: '절대 영도 빙결', desc: '얼어붙은 서리 효과', price: 5000000, color: 'text-cyan-200'},
+  {id: 'frame_toxic', name: '맹독성 늪', desc: '부식되는 맹독 프레임', price: 4000000, color: 'text-green-500'},
+  {id: 'frame_sakura', name: '흩날리는 벚꽃', desc: '아름다운 벚꽃잎 오버레이', price: 8000000, color: 'text-pink-300'},
+  {id: 'frame_matrix', name: '매트릭스 코드', desc: '디지털 비가 내리는 이펙트', price: 10000000, color: 'text-emerald-500'},
+];
 
 // ==========================================
 // 2. 사운드 시스템
@@ -288,7 +340,7 @@ const sfx = {
 // ==========================================
 // 3. Firebase 설정
 // ==========================================
-let app, auth, db, appId, USERS_PATH, CARDS_PATH, MATCHES_PATH, GLOBAL_CHAT_PATH;
+let app, auth, db, storage, appId, USERS_PATH, CARDS_PATH, MATCHES_PATH, GLOBAL_CHAT_PATH;
 try {
   const firebaseConfig = {
     apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "AIzaSyDhI7NY91JVUKNbLUP8wBOSViFOhww8B6g",
@@ -302,6 +354,7 @@ try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+  storage = getStorage(app);
   appId = 'rog-card-default';
   USERS_PATH = `artifacts/${appId}/public/data/users`;
   CARDS_PATH = `artifacts/${appId}/public/data/cards`;
@@ -358,7 +411,8 @@ const getIcon = (name) => {
 const ICONS_KEYS = ['User', 'Skull', 'Ghost', 'Terminal', 'Cpu'];
 
 const getFoilClass = (level) => {
-  if (level >= 20) return 'max-level-card rounded-none p-[3px]';
+  if (level >= 21) return 'transcendent-card rounded-none p-[4px]';
+  if (level === 20) return 'max-level-card rounded-none p-[3px]';
   if (level >= 17) return 'mythic-card rounded-none p-[3px]';
   if (level >= 15) return 'bg-[length:200%_200%] bg-gradient-to-tr from-red-600 via-red-900 to-black animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,51,0,0.3)] rounded-none';
   if (level >= 11) return 'bg-[length:200%_200%] bg-gradient-to-tr from-yellow-300 via-yellow-600 to-amber-900 animate-foil-shift p-[2px] rounded-none';
@@ -368,7 +422,8 @@ const getFoilClass = (level) => {
 };
 
 const getTierTextColor = (level) => {
-  if (level >= 20) return 'text-yellow-100 drop-shadow-[0_0_10px_#fef08a]';
+  if (level >= 21) return 'text-white drop-shadow-[0_0_15px_#fff] animate-pulse';
+  if (level === 20) return 'text-yellow-100 drop-shadow-[0_0_10px_#fef08a]';
   if (level >= 17) return 'text-rose-300 drop-shadow-[0_0_8px_#fda4af]';
   if (level >= 15) return 'text-red-400 drop-shadow-[0_0_8px_#f87171]';
   if (level >= 11) return 'text-yellow-400 drop-shadow-[0_0_5px_#facc15]';
@@ -377,8 +432,11 @@ const getTierTextColor = (level) => {
   return 'text-gray-300';
 };
 
+const noiseFilterUrl = 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")';
+
 const renderFrameOverlay = (frame) => {
   if (!frame) return null;
+  if (frame === 'frame_transcend') return <div className="absolute inset-0 pointer-events-none z-[45] border-[4px] border-white shadow-[0_0_30px_#fff,inset_0_0_30px_#fff] animate-pulse"></div>;
   if (frame === 'frame_rust') return <div className="absolute inset-0 pointer-events-none z-[40] border-[4px] border-[#a0522d] shadow-[inset_0_0_40px_rgba(139,69,19,0.9)] opacity-90"></div>;
   if (frame === 'frame_gold') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-yellow-400 shadow-[inset_0_0_50px_rgba(250,204,21,0.8)] animate-pulse"></div>;
   if (frame === 'frame_neon') return <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-cyan-400 shadow-[inset_0_0_20px_rgba(34,211,238,1),0_0_15px_rgba(236,72,153,1)] border-r-pink-500 border-b-pink-500"></div>;
@@ -391,6 +449,15 @@ const renderFrameOverlay = (frame) => {
   );
   if (frame === 'frame_blood') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-red-600" style={{ animation: 'blood-pulse 1.5s ease-in-out infinite' }}></div>;
   if (frame === 'frame_obsidian') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-gray-800 bg-[linear-gradient(105deg,transparent_20%,rgba(255,255,255,0.4)_25%,transparent_30%)]" style={{ backgroundSize: '200% 100%', animation: 'obsidian-shine 3s linear infinite', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.9)' }}></div>;
+  
+  if (frame === 'frame_diamond') return <div className="absolute inset-0 pointer-events-none z-[40] border-[4px] border-[#e0f2fe] shadow-[inset_0_0_30px_#e0f2fe] mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.8)_0%,transparent_50%)] animate-pulse opacity-80"></div>;
+  if (frame === 'frame_galaxy') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-indigo-500 shadow-[inset_0_0_50px_rgba(79,70,229,0.9)] bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_20%,rgba(49,46,129,0.5)_80%)] mix-blend-screen" style={{ animation: 'cosmic-swirl 5s infinite linear' }}></div>;
+  if (frame === 'frame_fire') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-orange-500 shadow-[inset_0_0_40px_rgba(249,115,22,0.8),0_0_20px_rgba(249,115,22,0.8)] mix-blend-color-dodge bg-gradient-to-t from-orange-600/40 to-transparent animate-pulse"></div>;
+  if (frame === 'frame_ice') return <div className="absolute inset-0 pointer-events-none z-[40] border-[4px] border-cyan-200 shadow-[inset_0_0_30px_rgba(165,243,252,0.9)] bg-gradient-to-b from-cyan-100/30 to-transparent backdrop-blur-[1px]"></div>;
+  if (frame === 'frame_toxic') return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-green-500 shadow-[inset_0_0_50px_rgba(34,197,94,0.7)] bg-[radial-gradient(circle_at_50%_100%,rgba(34,197,94,0.3)_0%,transparent_60%)] animate-bounce opacity-80"></div>;
+  if (frame === 'frame_sakura') return <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-pink-300 shadow-[inset_0_0_30px_rgba(249,168,212,0.6)] bg-gradient-to-br from-pink-300/20 to-transparent mix-blend-screen"></div>;
+  if (frame === 'frame_matrix') return <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-emerald-500 shadow-[inset_0_0_20px_rgba(16,185,129,0.8)] bg-[repeating-linear-gradient(180deg,transparent,transparent_4px,rgba(16,185,129,0.3)_5px,transparent_6px)] mix-blend-screen opacity-70" style={{ animation: 'scanline 2s linear infinite' }}></div>;
+
   return null;
 };
 
@@ -400,7 +467,7 @@ const MiniCard = ({ card, onClick }) => {
   return (
     <div onClick={onClick} className={`relative w-24 aspect-[2/3.1] rounded-none ${foilBg} overflow-hidden shadow-lg flex-shrink-0 transition-transform duration-500 hover:scale-110 ${onClick ? 'cursor-pointer' : ''}`}>
       <div className="w-full h-full bg-black relative rounded-none overflow-hidden border border-black/50">
-        <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover opacity-90" />
+        <img src={card.imageUrl} alt={card.name} decoding="async" fetchpriority="high" loading="eager" className="w-full h-full object-cover opacity-90" />
         {renderFrameOverlay(card.equippedFrame)}
         <div className="absolute bottom-0 left-0 right-0 bg-black/80 px-2 py-1 text-center border-t border-white/20 z-30">
           <span className={`text-xs font-mono font-black ${getTierTextColor(card.level)}`}>LV.{card.level}</span>
@@ -428,13 +495,14 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
     >
       <div className={`relative w-full aspect-[2/3.1] rounded-none transition-all duration-500 group-hover:shadow-2xl ${foilBg}`}>
         <div className="w-full h-full relative z-10 rounded-none overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
-          <img src={card.imageUrl} alt={card.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
-          <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+          <img src={card.imageUrl} alt={card.name} decoding="async" fetchpriority="high" loading="eager" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" />
+          <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: noiseFilterUrl }}></div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
           
           {renderFrameOverlay(card.equippedFrame)}
           
-          {card.level >= 20 && <div className="absolute inset-0 bg-yellow-500/10 mix-blend-overlay animate-pulse z-20 pointer-events-none"></div>}
+          {card.level >= 21 && <div className="absolute inset-0 bg-white/10 mix-blend-overlay animate-pulse z-20 pointer-events-none"></div>}
+          {card.level === 20 && <div className="absolute inset-0 bg-yellow-500/10 mix-blend-overlay animate-pulse z-20 pointer-events-none"></div>}
           {card.level >= 17 && card.level < 20 && <div className="absolute inset-0 holographic-overlay opacity-60 mix-blend-color-dodge z-20 pointer-events-none animate-hue-shift"></div>}
           {card.level >= 15 && card.level < 17 && <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>}
           {card.level >= 11 && card.level < 15 && <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>}
@@ -458,7 +526,7 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
               <div className="flex flex-wrap gap-1 w-full">
                 {card.unlockedSkills && card.unlockedSkills.map((s, i) => (
                   <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-none border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
-                    <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
+                    <span className={`text-[0.65em] font-bold tracking-widest ${s === '초월의 힘' ? 'text-cyan-300 animate-pulse' : 'text-white'}`}>{s}</span>
                   </div>
                 ))}
               </div>
@@ -479,11 +547,6 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
           </div>
         </div>
       </div>
-      {card.isSelling && (
-        <div className="w-full bg-red-600/20 text-red-400 border border-red-500/50 text-[10px] font-black py-1.5 mt-2 z-40 tracking-[0.3em] text-center shadow-[0_0_10px_rgba(220,38,38,0.2)]">
-          FOR SALE
-        </div>
-      )}
     </div>
   );
 };
@@ -518,6 +581,10 @@ export default function RogCard() {
   const [useProtect, setUseProtect] = useState(false);
   const [enhanceVisualState, setEnhanceVisualState] = useState('idle');
 
+  const [tCard1, setTCard1] = useState(null);
+  const [tCard2, setTCard2] = useState(null);
+  const [transcendState, setTranscendState] = useState('idle');
+
   const [cropImage, setCropImage] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [cropZoom, setCropZoom] = useState(1);
@@ -530,7 +597,6 @@ export default function RogCard() {
   const [loginPassword, setLoginPassword] = useState('');
   const [selectedIconName, setSelectedIconName] = useState('User');
 
-  // 프로필 관련 상태
   const [viewingProfileUserId, setViewingProfileUserId] = useState(null);
   const [guestbookInput, setGuestbookInput] = useState('');
   const [isEditingProfileDesc, setIsEditingProfileDesc] = useState(false);
@@ -554,12 +620,10 @@ export default function RogCard() {
   const [battleResult, setBattleResult] = useState(null);
   const [battleType, setBattleType] = useState('AI'); 
 
-  // --- 거래소 및 퀘스트 상태 ---
   const [sellPriceInput, setSellPriceInput] = useState('');
   const [marketTab, setMarketTab] = useState('all');
   const [marketSelectedCardId, setMarketSelectedCardId] = useState('');
 
-  // --- 어드민 및 충전 모달 상태 ---
   const [isEditingGold, setIsEditingGold] = useState(false);
   const [editGoldValue, setEditGoldValue] = useState('');
   const [showChargeModal, setShowChargeModal] = useState(false);
@@ -583,7 +647,6 @@ export default function RogCard() {
     }
   }, [soundEnabled]);
 
-  // 접속자 추적 로직 (최근 5분 이내 활동)
   useEffect(() => {
     if (!user) return;
     const ping = () => { updateDoc(doc(db, USERS_PATH, user.uid), { lastActive: Date.now() }).catch(()=>{}); };
@@ -622,7 +685,6 @@ export default function RogCard() {
     });
     const globalChatUnsub = onSnapshot(collection(db, GLOBAL_CHAT_PATH), (snapshot) => {
       let chats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      // 정렬 버그 수정: undefined나 문자열 방어 후 안전하게 타임스탬프로 오름차순 정렬
       setGlobalChats(chats.sort((a,b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0)).slice(-50));
     });
     const matchesUnsub = onSnapshot(collection(db, MATCHES_PATH), (snapshot) => {
@@ -639,7 +701,6 @@ export default function RogCard() {
         const data = snap.data();
         setPvpRoomData(data);
         if (data.status === 'battling' && currentView === 'pvp_room') {
-          // PVP 시작 시 상태 초기화
           setBattleLog(data.battleLog);
           setLiveState({ p1Hp: data.hostCard.stats.hp, p2Hp: data.guestCard.stats.hp, p1Max: data.hostCard.stats.hp, p2Max: data.guestCard.stats.hp, currentAction: null });
           setBattleStep(0); setBattleResult(null); setCurrentView('battle_pvp_play');
@@ -653,6 +714,7 @@ export default function RogCard() {
     if(currentView !== 'enhance') { setUseBoost(false); setUseProtect(false); }
     if(currentView !== 'card_details') { setSelectedSkillDesc(null); }
     if(currentView !== 'profile') { setSelectedAchDesc(null); }
+    if(currentView !== 'transcend') { setTCard1(null); setTCard2(null); setTranscendState('idle'); }
   }, [currentView]);
 
   useEffect(() => {
@@ -667,7 +729,7 @@ export default function RogCard() {
     setIsProcessing(true);
     try {
       const dummyEmail = `${loginNickname.toLowerCase()}@rogcard.app`;
-      const firebasePassword = loginPassword + "_ROG"; // Firebase 6자리 제한 우회용 패딩
+      const firebasePassword = loginPassword + "_ROG";
       let currentUser;
       try {
         const cred = await signInWithEmailAndPassword(auth, dummyEmail, firebasePassword);
@@ -719,7 +781,7 @@ export default function RogCard() {
     if (userData.lastAttendance === today) return; 
     setIsProcessing(true);
     try {
-      await updateDoc(doc(db, USERS_PATH, user.uid), { money: userData.money + 10000, lastAttendance: today });
+      await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(10000), lastAttendance: today });
       playSfx('success'); showToast("일일 출석 보상: +10,000 GOLD", "success");
     } catch (err) { showToast("시스템 오류 발생", "error"); playSfx('error'); }
     setIsProcessing(false);
@@ -731,6 +793,7 @@ export default function RogCard() {
       reader.onload = (ev) => { setCropImage(ev.target.result); setImgLoaded(false); setCropZoom(1); setCropPan({ x: 0, y: 0 }); };
       reader.readAsDataURL(e.target.files[0]);
     }
+    e.target.value = '';
   };
 
   const clampPan = (x, y, zoom) => {
@@ -753,28 +816,65 @@ export default function RogCard() {
     e.preventDefault();
     if (myCards.length >= (userData?.maxSlots || 3)) { showToast("보유 슬롯이 가득 찼습니다.", "error"); playSfx('error'); return; }
     if (userData.money < CREATE_CARD_COST) { showToast("자금이 부족합니다.", "error"); playSfx('error'); return; }
-    if (!cropImage || !imgLoaded || !imgRef.current) { showToast("이미지를 업로드해주세요.", "error"); playSfx('error'); return; }
+    if (!cropImage || !imgRef.current) { showToast("이미지를 업로드해주세요.", "error"); playSfx('error'); return; }
     
     setIsProcessing(true);
-    try {
-      const targetW = 800; const targetH = 1240; const R = targetW / 200; 
-      const canvas = document.createElement('canvas'); canvas.width = targetW; canvas.height = targetH;
-      const ctx = canvas.getContext('2d');
-      const S_0 = Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight);
-      const finalScale = S_0 * cropZoom;
-      const dW = imgRef.current.naturalWidth * finalScale; const dH = imgRef.current.naturalHeight * finalScale;
+    const cardNameValue = e.target.cardName.value.toUpperCase();
+    const cardDescValue = e.target.cardDescription.value || "DATA CORRUPTED.";
 
-      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, targetW, targetH);
-      ctx.drawImage(imgRef.current, (100 - dW/2 + cropPan.x) * R, (155 - dH/2 + cropPan.y) * R, dW * R, dH * R);
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        const targetW = 400; const targetH = 620; const R = targetW / 200; 
+        const canvas = document.createElement('canvas'); canvas.width = targetW; canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        const nW = img.naturalWidth || 1;
+        const nH = img.naturalHeight || 1;
+        const S_0 = Math.max(200 / nW, 310 / nH);
+        const finalScale = S_0 * cropZoom;
+        const dW = nW * finalScale; const dH = nH * finalScale;
 
-      const base64Image = canvas.toDataURL('image/jpeg', 0.95);
-      const newCardRef = doc(collection(db, CARDS_PATH));
-      
-      await updateDoc(doc(db, USERS_PATH, user.uid), { money: userData.money - CREATE_CARD_COST });
-      await setDoc(newCardRef, { cardId: newCardRef.id, ownerId: user.uid, name: e.target.cardName.value.toUpperCase(), description: e.target.cardDescription.value || "DATA CORRUPTED.", imageUrl: base64Image, level: 1, stats: STATS_BY_LEVEL[1], unlockedSkills: [], equippedFrame: null, uniqueTrait: getRandomTrait(), createdAt: new Date().toISOString() });
-      
-      playSfx('success'); showToast("카드 생성 완료", "success"); setShowCreateModal(false); setIsProcessing(false);
-    } catch (err) { playSfx('error'); showToast("생성 실패", "error"); setIsProcessing(false); }
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, targetW, targetH);
+        ctx.drawImage(img, (100 - dW/2 + cropPan.x) * R, (155 - dH/2 + cropPan.y) * R, dW * R, dH * R);
+
+        const base64Image = canvas.toDataURL('image/jpeg', 0.85);
+        
+        showToast("이미지를 클라우드에 업로드 중입니다...", "info");
+        
+        // 1. Firebase Storage에 이미지 업로드
+        const imagePath = `card_images/${user.uid}_${Date.now()}.jpg`;
+        const imageRef = ref(storage, imagePath);
+        await uploadString(imageRef, base64Image, 'data_url');
+        
+        // 2. 다운로드 URL 가져오기
+        const imageUrl = await getDownloadURL(imageRef);
+
+        const newCardRef = doc(collection(db, CARDS_PATH));
+        
+        await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-CREATE_CARD_COST) });
+        await setDoc(newCardRef, { 
+          cardId: newCardRef.id, 
+          ownerId: user.uid, 
+          name: cardNameValue, 
+          description: cardDescValue, 
+          imageUrl: imageUrl, 
+          level: 1, 
+          stats: STATS_BY_LEVEL[1], 
+          unlockedSkills: [], 
+          equippedFrame: null, 
+          uniqueTrait: getRandomTrait(), 
+          createdAt: new Date().toISOString() 
+        });
+        
+        playSfx('success'); showToast("카드 생성 완료", "success"); setShowCreateModal(false); setIsProcessing(false);
+      } catch (err) { 
+        playSfx('error'); showToast("생성 실패 (스토리지 연결 확인)", "error"); setIsProcessing(false); console.error(err);
+      }
+    };
+    img.onerror = () => {
+      playSfx('error'); showToast("이미지 로드 실패", "error"); setIsProcessing(false);
+    };
+    img.src = cropImage;
   };
 
   const handleSellCard = (card) => {
@@ -784,7 +884,7 @@ export default function RogCard() {
       onConfirm: async () => {
         setIsProcessing(true);
         try {
-          await updateDoc(doc(db, USERS_PATH, user.uid), { money: userData.money + sellPrice });
+          await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(sellPrice) });
           await deleteDoc(doc(db, CARDS_PATH, card.id));
           playSfx('success'); showToast(`판매 완료: +${formatMoney(sellPrice)} GOLD`, "success");
         } catch(e) { showToast("오류 발생", "error"); playSfx('error'); }
@@ -809,7 +909,7 @@ export default function RogCard() {
     setIsProcessing(true);
     try {
       const userRef = doc(db, USERS_PATH, user.uid);
-      let updateData = { money: userData.money - price };
+      let updateData = { money: increment(-price) };
       if (itemId === 'boost') updateData.items = { ...(userData.items || {}), boost: ((userData.items || {}).boost || 0) + 1 };
       else if (itemId === 'protect') updateData.items = { ...(userData.items || {}), protect: ((userData.items || {}).protect || 0) + 1 };
       else if (itemId === 'slot') updateData.maxSlots = (userData.maxSlots || 3) + 1;
@@ -853,9 +953,9 @@ export default function RogCard() {
         if (useBoost) itemsUpdate.boost = Math.max(0, (itemsUpdate.boost || 0) - 1);
         if (useProtect) itemsUpdate.protect = Math.max(0, (itemsUpdate.protect || 0) - 1);
 
-        await updateDoc(doc(db, USERS_PATH, user.uid), { money: userData.money - cost, items: itemsUpdate });
+        await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-cost), items: itemsUpdate });
         setUseBoost(false); setUseProtect(false);
-        updateQuestProgress('enhance'); // 퀘스트 업데이트
+        updateQuestProgress('enhance'); 
 
         if (Math.random() * 100 < finalRate) {
           const updatedCard = { ...card, level: nextLevel, stats: STATS_BY_LEVEL[nextLevel], unlockedSkills: acquireRandomSkillsForLevelUp(card.unlockedSkills, nextLevel) };
@@ -889,13 +989,67 @@ export default function RogCard() {
     }, isFast ? 100 : 2500);
   };
 
+  const handleTranscend = async () => {
+    if (!tCard1 || !tCard2 || tCard1.id === tCard2.id) { showToast("합성할 LV.20 카드 두 장을 선택해주세요.", "warning"); return; }
+    if (userData.money < 5000000) { showToast("자금이 부족합니다. (5,000,000 G 필요)", "error"); return; }
+    
+    setIsProcessing(true);
+    setTranscendState('merging');
+    playSfx('charge'); 
+    
+    setTimeout(async () => {
+      try {
+        await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-5000000) });
+        
+        const newStats = STATS_BY_LEVEL[21];
+        let newSkills = [...tCard1.unlockedSkills];
+        if(!newSkills.includes('초월의 힘')) newSkills.push('초월의 힘');
+        
+        await updateDoc(doc(db, CARDS_PATH, tCard1.id), {
+          level: 21,
+          stats: newStats,
+          unlockedSkills: newSkills,
+          equippedFrame: 'frame_transcend'
+        });
+        
+        await deleteDoc(doc(db, CARDS_PATH, tCard2.id));
+        
+        setTranscendState('success');
+        playSfx('upgradeSuccess');
+        showToast("초월 합성 성공!", "success");
+        await addDoc(collection(db, GLOBAL_CHAT_PATH), { sender: 'SYSTEM', text: `✨ [${userData.nickname}]님이 [${tCard1.name}] 초월에 성공하여 신의 영역에 도달했습니다! ✨`, timestamp: Date.now() });
+        
+        setTimeout(() => {
+           setTranscendState('idle');
+           setTCard1(null); setTCard2(null);
+           setCurrentView('deck');
+        }, 3000);
+        
+      } catch(e) {
+        showToast("초월 합성 중 오류가 발생했습니다.", "error");
+        setTranscendState('idle');
+      }
+      setIsProcessing(false);
+    }, 3000);
+  };
+
   const startAIBattleSetup = (myCard) => {
-    const aiLevel = Math.min(20, 1 + Math.floor((userData?.aiWins || 0) / 2));
+    const aiLevel = Math.min(20, 1 + Math.floor((userData?.aiWins || 0) / 4)); // AI 레벨 상승폭 너프
     const aiNames = ["SYS.GHOST", "NEXUS.AI", "NULL.PTR", "GLITCH.SYS", "VOID.EXE"];
+    const baseStats = STATS_BY_LEVEL[aiLevel];
+    // AI 전투력 대폭 너프
+    const nerfedStats = {
+      hp: Math.max(50, Math.floor(baseStats.hp * 0.6)),
+      atk: Math.max(10, Math.floor(baseStats.atk * 0.5)),
+      def: Math.max(0, Math.floor(baseStats.def * 0.4)),
+      spd: Math.max(10, Math.floor(baseStats.spd * 0.6)),
+      crit: Math.max(0, Math.floor(baseStats.crit * 0.5)),
+      luck: 0
+    };
     setAiOpponent({
       id: 'ai_card', cardId: 'ai_card', name: aiNames[Math.floor(Math.random() * aiNames.length)], level: aiLevel,
-      stats: STATS_BY_LEVEL[aiLevel], unlockedSkills: getUnlockedSkills(aiLevel),
-      description: `네트워크를 떠도는 위협 수준 ${aiLevel}의 개체.`,
+      stats: nerfedStats, unlockedSkills: getUnlockedSkills(aiLevel),
+      description: `네트워크를 떠도는 위협 수준 ${aiLevel}의 개체. (너프됨)`,
       imageUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${Math.random()}&backgroundColor=0a0a0a`
     });
     setSelectedCard(myCard); setBattleReward(aiLevel * 2000 + 5000); setBattleType('AI'); setCurrentView('battle_ai_setup');
@@ -943,6 +1097,12 @@ export default function RogCard() {
         if (getActiveSkillInGroup(defender, 'DODGE')) dodgeChance += 20;
         if (hasTrait(defender, '탈주 닌자', '바람돌이')) dodgeChance += 15;
 
+        const transcendSkill = getActiveSkillInGroup(attacker, 'TRANSCENDENT');
+
+        if (transcendSkill) {
+            dodgeChance = 0; 
+        }
+
         let oldP1Hp = p1.hp; let oldP2Hp = p2.hp;
 
         if(Math.random() * 100 < dodgeChance) { 
@@ -978,11 +1138,14 @@ export default function RogCard() {
         }
         
         const critSkill = getActiveSkillInGroup(attacker, 'CRIT_GUARANTEE');
-        if(critSkill) { 
+        
+        if (transcendSkill) {
+          isCrit = true; 
+          activatedSkills.push(transcendSkill);
+        } else if (critSkill) { 
           isCrit = true; 
           if(Math.random() < 0.5) activatedSkills.push(critSkill); 
-        }
-        else if(Math.random() * 100 < attacker.crit) { isCrit = true; }
+        } else if(Math.random() * 100 < attacker.crit) { isCrit = true; }
 
         if(isCrit) damage *= 2;
         
@@ -991,6 +1154,8 @@ export default function RogCard() {
         }
 
         let finalDef = defender.def + (getActiveSkillInGroup(defender, 'DEFENSE') ? 10 : 0) + (hasTrait(defender, '무쇠뚝배기', '강철 바디') ? 15 : 0) + (hasTrait(defender, '월급 루팡', '월급 루팡') ? 10 : 0);
+        if (transcendSkill) finalDef = 0; 
+
         damage = Math.max(1, Math.floor(damage * (1 - Math.min(90, finalDef) / 100)));
         defender.hp -= damage; defender.damageTaken += damage;
 
@@ -998,10 +1163,16 @@ export default function RogCard() {
 
         const vampSkill = getActiveSkillInGroup(attacker, 'VAMPIRE');
         let healAmount = (vampSkill ? damage * 0.25 : 0) + (hasTrait(attacker, '사내 모기', '흡혈귀') ? damage * 0.20 : 0);
+        
+        if (transcendSkill) {
+            healAmount += damage * 0.5; 
+        }
+
         if (healAmount > 0) { 
           attacker.hp = Math.min(attacker.originalHp, attacker.hp + Math.floor(healAmount)); 
           let lsSkill = null;
-          if (vampSkill && Math.random() < 0.7) lsSkill = vampSkill;
+          if (transcendSkill) lsSkill = transcendSkill;
+          else if (vampSkill && Math.random() < 0.7) lsSkill = vampSkill;
           else if (hasTrait(attacker, '사내 모기', '흡혈귀') && Math.random() < 0.5) lsSkill = attacker.trait.name;
 
           if (lsSkill) {
@@ -1080,13 +1251,11 @@ export default function RogCard() {
     const userRef = doc(db, USERS_PATH, user.uid);
     try {
       if (battleType === 'AI') {
-        // AI 전투 승패는 전체 전적(wins/losses)에 추가하지 않고 돈과 AI승리 기록만 올립니다.
-        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleReward, aiWins: (userData.aiWins || 0) + 1 });
+        if (isWin) await updateDoc(userRef, { money: increment(battleReward), aiWins: increment(1) });
       } else {
-        if (isWin) await updateDoc(userRef, { money: (userData.money || 0) + battleBet * 2, wins: (userData.wins || 0) + 1 });
-        else await updateDoc(userRef, { losses: (userData.losses || 0) + 1 });
+        if (isWin) await updateDoc(userRef, { money: increment(battleBet * 2), wins: increment(1) });
+        else await updateDoc(userRef, { losses: increment(1) });
 
-        // 글로벌 채팅에 승패 결과 전송 (호스트만 전송하여 중복 방지)
         if (pvpRoomData?.host?.uid === user.uid) {
            const winnerName = isWin ? pvpRoomData.host.nickname : pvpRoomData.guest.nickname;
            const loserName = isWin ? pvpRoomData.guest.nickname : pvpRoomData.host.nickname;
@@ -1142,7 +1311,7 @@ export default function RogCard() {
 
   const handleStartPvPBattle = async () => {
     if(!pvpRoomData || pvpRoomData.host.uid !== user.uid || pvpRoomData.status !== 'ready') return;
-    await updateDoc(doc(db, USERS_PATH, pvpRoomData.host.uid), { money: userData.money - pvpRoomData.bet });
+    await updateDoc(doc(db, USERS_PATH, pvpRoomData.host.uid), { money: increment(-pvpRoomData.bet) });
     await updateDoc(doc(db, MATCHES_PATH, pvpRoomId), { status: 'battling', battleLog: simulateBattleLog(pvpRoomData.hostCard, pvpRoomData.guestCard) });
   };
 
@@ -1257,9 +1426,6 @@ export default function RogCard() {
     setIsProcessing(false);
   };
 
-  // ==========================================
-  // 렌더링 뷰 (Views)
-  // ==========================================
   const renderLogin = () => (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4 relative z-10 overflow-hidden">
       <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
@@ -1644,14 +1810,7 @@ export default function RogCard() {
       </div>
       <h3 className="text-xl font-mono font-light text-white tracking-widest mb-6 uppercase border-b border-white/10 pb-2">프레임 스킨 (상세 정보에서 장착)</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {[
-          {id: 'frame_rust', name: '녹슨 고철', desc: '세월의 흔적이 묻은 앤틱 프레임', price: 10000, color: 'text-[#a1662f]'},
-          {id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이', price: 50000, color: 'text-cyan-300'},
-          {id: 'frame_blood', name: '블러드 펄스', desc: '핏빛 쉐도우 효과', price: 100000, color: 'text-red-500'},
-          {id: 'frame_obsidian', name: '옵시디언 엣지', desc: '고급스러운 다크 엣지 음영', price: 300000, color: 'text-gray-400'},
-          {id: 'frame_gold', name: '골든 아우라', desc: '황금빛 프레임 & 글로우', price: 500000, color: 'text-yellow-400'},
-          {id: 'frame_neon', name: '네온 사이버', desc: '시안/핑크 사이버펑크 네온', price: 1000000, color: 'text-pink-400'}
-        ].map(f => (
+        {FRAMES_DATA.map(f => (
           <div key={f.id} className="bg-white/[0.02] border border-white/10 p-5 flex items-center justify-between transition-colors hover:bg-white/[0.05] rounded-none">
             <div><div className={`${f.color} font-mono mb-1 text-sm font-bold`}>{f.name}</div><div className="text-xs text-white/50">{f.desc}</div></div>
             {userData?.frames?.includes(f.id) ? <button disabled className="px-4 py-2 bg-white/20 text-white/50 font-mono text-[10px] whitespace-nowrap rounded-none">보유 중</button> : <button onClick={()=>handleBuyItem(f.id, f.price, f.name)} className="px-4 py-2 bg-white/10 hover:bg-white hover:text-black font-mono text-[10px] whitespace-nowrap rounded-none">{formatMoney(f.price)} G</button>}
@@ -1673,7 +1832,10 @@ export default function RogCard() {
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 pb-6 border-b border-white/20">
           <div className="flex items-center gap-4"><h2 className="text-2xl font-mono font-light text-white tracking-[0.2em] uppercase">카드 관리</h2><span className="font-mono text-sm text-white/40 tracking-widest bg-white/5 px-3 py-1 border border-white/10 rounded-none">보유량: {availableCards.length}/{maxSlots}</span></div>
-          <div className="relative"><button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black rounded-none"><Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]</button></div>
+          <div className="flex items-center gap-3">
+            <button onClick={wrapClick(() => setCurrentView('transcend'))} className="flex items-center gap-3 px-6 py-3 text-cyan-300 font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-white rounded-none shadow-[0_0_15px_rgba(6,182,212,0.3)]"><Sparkles size={14} /> 초월 합성</button>
+            <button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black rounded-none"><Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]</button>
+          </div>
         </div>
 
         {availableCards.length === 0 ? (
@@ -1688,7 +1850,7 @@ export default function RogCard() {
                   <CardItem card={card} />
                   <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5 rounded-none">
                     <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none"><Info size={14} className="inline mr-1"/> 상세 정보</button>
-                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none">카드 강화</button>
+                    {card.level < 21 && <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none">카드 강화</button>}
                     <button onClick={wrapClick(() => startAIBattleSetup(card))} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none">전투 참가</button>
                     <button onClick={wrapClick(() => handleSellCard(card))} className="w-full py-2 mt-2 text-white/50 bg-transparent font-mono text-[10px] underline hover:text-white hover:scale-105 rounded-none">카드 시스템 판매</button>
                   </div>
@@ -1725,11 +1887,6 @@ export default function RogCard() {
 
   const renderCardDetails = () => {
     if (!selectedCard) return null;
-    const framesList = [
-      { id: 'frame_rust', name: '녹슨 고철', desc: '세월의 흔적이 묻은 앤틱 프레임' }, { id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이' }, { id: 'frame_blood', name: '블러드 펄스', desc: '핏빛 쉐도우 효과' },
-      { id: 'frame_obsidian', name: '옵시디언 엣지', desc: '고급스러운 다크 엣지 음영' }, { id: 'frame_gold', name: '골든 아우라', desc: '황금빛 프레임 효과' }, { id: 'frame_neon', name: '네온 사이버', desc: '사이버펑크 네온 효과' }
-    ];
-
     return (
       <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
         <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
@@ -1771,7 +1928,7 @@ export default function RogCard() {
             <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative rounded-none">
               <HUDCorner /><h4 className="font-mono text-base text-white/50 mb-6 border-b border-white/10 pb-3 uppercase">프레임 장착</h4>
               <div className="flex flex-col gap-3 font-mono text-sm h-64 overflow-y-auto custom-scrollbar pr-2">
-                {framesList.map(frame => {
+                {FRAMES_DATA.map(frame => {
                   const isOwned = userData?.frames?.includes(frame.id);
                   const isEquipped = selectedCard.equippedFrame === frame.id;
                   return (
@@ -1845,6 +2002,54 @@ export default function RogCard() {
             )}
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const renderTranscend = () => {
+    const availableCards = myCards.filter(c => c.level === 20 && !c.isSelling);
+    
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
+        <div className="w-full flex justify-start mb-8"><button onClick={wrapClick(() => setCurrentView('deck'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button></div>
+        <h2 className="text-4xl font-mono font-light text-cyan-300 mb-4 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]">초월 합성</h2>
+        <p className="text-white/60 font-sans mb-12 text-center">LV.20 최고 레벨 카드 두 장을 희생하여 <span className="text-cyan-300 font-bold">LV.21 초월자</span>를 탄생시킵니다.<br/>합성 시 우측 제물 카드는 소멸하며 5,000,000 GOLD가 소모됩니다.</p>
+        
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 w-full max-w-5xl mb-12">
+          {/* 베이스 카드 */}
+          <div className="flex flex-col items-center gap-6 w-full lg:w-1/3">
+            <h3 className="font-mono text-cyan-300 tracking-widest text-sm uppercase">베이스 카드 (초월 대상)</h3>
+            <div className={`w-56 md:w-64 transition-all duration-700 ${transcendState === 'merging' ? 'scale-110 drop-shadow-[0_0_50px_#0ff]' : ''} ${transcendState === 'success' ? 'animate-flash-bang' : ''}`}>
+              {tCard1 ? <CardItem card={tCard1} className="pointer-events-none" /> : <div className="w-full aspect-[2/3.1] border-2 border-dashed border-cyan-500/30 flex items-center justify-center text-cyan-500/30 font-mono text-sm">SELECT LV.20</div>}
+            </div>
+            <select className="bg-black border border-cyan-500/50 text-cyan-300 font-mono p-3 outline-none focus:border-cyan-300 w-full" value={tCard1?.id || ''} onChange={(e) => setTCard1(availableCards.find(c => c.id === e.target.value))}>
+              <option value="">베이스 카드 선택</option>
+              {availableCards.map(c => <option key={c.id} value={c.id}>[LV.20] {c.name}</option>)}
+            </select>
+          </div>
+
+          <div className="text-4xl text-cyan-500/50 animate-pulse hidden lg:block"><Plus size={48} /></div>
+
+          {/* 제물 카드 */}
+          <div className="flex flex-col items-center gap-6 w-full lg:w-1/3">
+            <h3 className="font-mono text-red-400 tracking-widest text-sm uppercase">제물 카드 (소멸)</h3>
+            <div className={`w-56 md:w-64 transition-all duration-700 ${transcendState === 'merging' ? 'scale-90 opacity-0 blur-xl translate-x-[-100px]' : ''}`}>
+              {tCard2 ? <CardItem card={tCard2} className="pointer-events-none grayscale opacity-80" /> : <div className="w-full aspect-[2/3.1] border-2 border-dashed border-red-500/30 flex items-center justify-center text-red-500/30 font-mono text-sm">SELECT LV.20</div>}
+            </div>
+            <select className="bg-black border border-red-500/50 text-red-400 font-mono p-3 outline-none focus:border-red-400 w-full" value={tCard2?.id || ''} onChange={(e) => setTCard2(availableCards.find(c => c.id === e.target.value))}>
+              <option value="">제물 카드 선택</option>
+              {availableCards.map(c => <option key={c.id} value={c.id}>[LV.20] {c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <button 
+          onClick={wrapClick(handleTranscend)} 
+          disabled={isProcessing || !tCard1 || !tCard2 || tCard1.id === tCard2.id || transcendState !== 'idle'} 
+          className="w-full max-w-md py-5 bg-cyan-900/20 border border-cyan-500 text-cyan-300 font-mono text-lg uppercase tracking-[0.2em] hover:bg-cyan-500 hover:text-white transition-all disabled:opacity-30 shadow-[0_0_20px_rgba(6,182,212,0.3)] disabled:shadow-none"
+        >
+          {tCard1 && tCard2 && tCard1.id === tCard2.id ? '같은 카드를 선택할 수 없습니다' : '초월 합성 [ -5,000,000 G ]'}
+        </button>
       </div>
     );
   };
@@ -1950,8 +2155,12 @@ export default function RogCard() {
   const renderBattleAISetup = () => {
     const availableToPlay = myCards.filter(c => !c.isSelling);
     if (!selectedCard || selectedCard.isSelling || !aiOpponent) { 
-      if(availableToPlay.length > 0) startAIBattleSetup(availableToPlay[0]); 
-      return null; 
+      return (
+        <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 z-10 relative">
+          <p className="text-white/50 mb-4 font-mono">전투 데이터를 불러오지 못했습니다.</p>
+          <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="px-6 py-2 bg-white/10 text-white font-mono hover:bg-white hover:text-black transition-colors rounded-none border border-white/20">돌아가기</button>
+        </div>
+      ); 
     }
     return (
       <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
@@ -2276,18 +2485,31 @@ export default function RogCard() {
             0% { filter: hue-rotate(0deg); }
             100% { filter: hue-rotate(360deg); }
         }
+        @keyframes cosmic-swirl {
+            0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+            50% { background-position: 100% 50%; filter: hue-rotate(180deg); }
+            100% { background-position: 0% 50%; filter: hue-rotate(360deg); }
+        }
+
         .animate-hue-shift { animation: hue-shift 3s linear infinite; }
 
         .max-level-card {
             background: linear-gradient(45deg, #FFD700, #FFF8DC, #FFA500, #FF8C00, #FFD700);
             background-size: 300% 300%;
-            animation: god-ray 3s ease infinite;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            animation: god-ray 2s ease infinite;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 255, 255, 0.8);
+            border: 2px solid #FFD700;
         }
         .mythic-card {
             background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff00ff, #ff0000);
             background-size: 300% 300%;
             animation: god-ray 3s linear infinite, mythic-glow 3s linear infinite;
+        }
+        .transcendent-card {
+            background: linear-gradient(135deg, #000, #0ff, #f0f, #000);
+            background-size: 400% 400%;
+            animation: cosmic-swirl 3s infinite linear;
+            box-shadow: 0 0 50px #0ff, inset 0 0 30px #f0f;
         }
 
         @keyframes slide-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -2351,11 +2573,6 @@ export default function RogCard() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
 
-        .holographic-overlay {
-            background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.5) 25%, transparent 30%, transparent 40%, rgba(255,255,255,0.5) 45%, transparent 50%);
-            background-size: 200% 200%;
-            animation: holo-shine 5s infinite linear;
-        }
       `}</style>
       <audio ref={bgmRef} src="https://res.cloudinary.com/dkotceims/video/upload/v1777608697/%EB%A9%94%EC%9D%B4%ED%94%8C%EC%8A%A4%ED%86%A0%EB%A6%AC_BGM_-_%EB%A0%88%EC%A7%80%EC%8A%A4%ED%83%95%EC%8A%A4_%EB%B3%B8%EB%B6%80_w7ucsi.mp3" loop preload="auto" />
       {currentView === 'login' ? renderLogin() : (
@@ -2368,6 +2585,7 @@ export default function RogCard() {
             {currentView === 'deck' && renderDeck()}
             {currentView === 'card_details' && renderCardDetails()}
             {currentView === 'enhance' && renderEnhancement()}
+            {currentView === 'transcend' && renderTranscend()}
             {currentView === 'battle_select' && renderBattleSelect()}
             {currentView === 'battle_ai_setup' && renderBattleAISetup()}
             {currentView === 'pvp_setup' && renderPvPSetup()}
@@ -2381,10 +2599,8 @@ export default function RogCard() {
       )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
-      {/* Charge Modal */}
       {showChargeModal && renderChargeModal()}
       
-      {/* Sound Toggle Button (Floating) */}
       {currentView !== 'login' && (
         <button 
           onClick={wrapClick(() => setSoundEnabled(!soundEnabled))} 
