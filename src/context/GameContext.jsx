@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 // GameContext: 앱 전체 상태와 핸들러의 단일 진실 공급원(Single Source of Truth)
 // 모든 뷰 컴포넌트가 props 없이 useGame() 훅으로 상태와 핸들러에 접근할 수 있게 함.
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   auth, db,
   USERS_PATH, CARDS_PATH, MATCHES_PATH, GLOBAL_CHAT_PATH,
@@ -114,6 +115,63 @@ export function GameProvider({ children }) {
   const [marketSelectedCardId, setMarketSelectedCardId] = useState('');
 
   // ============================================================
+  // showToast / playSfx: 여러 useEffect와 핸들러에서 사용되므로
+  // 모든 useEffect 선언 이전에 배치
+  // ============================================================
+  const showToast = (msg, type = 'info') => setToast({ message: msg, type });
+
+  const playSfx = (type, param) => {
+    if (soundEnabled && sfx[type]) sfx[type](param);
+  };
+
+  // ============================================================
+  // updateQuestProgress / handleBattleEnd: useEffect 9(전투 루프)
+  // 내부에서 참조되므로 useEffect 이전에 선언
+  // ============================================================
+  const updateQuestProgress = async (type) => {
+    if (!user || !userData) return;
+    const today = new Date().toISOString().split('T')[0];
+    let q = userData.quests || { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+    if (q.date !== today) q = { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+    const newQ = { ...q, [type]: (q[type] || 0) + 1 };
+    await updateDoc(doc(db, USERS_PATH, user.uid), { quests: newQ }).catch(() => { /* no-op */ });
+  };
+
+  const handleBattleEnd = async (isWin) => {
+    setBattleResult(isWin ? 'win' : 'lose');
+    if (!user || !userData) return;
+
+    if (battleType === 'AI') {
+      updateQuestProgress('ai');
+      if (isWin) updateQuestProgress('win_ai');
+    } else if (battleType === 'PvP') {
+      updateQuestProgress('pvp');
+    }
+
+    const userRef = doc(db, USERS_PATH, user.uid);
+    try {
+      if (battleType === 'AI') {
+        if (isWin) await updateDoc(userRef, { money: increment(battleReward), aiWins: increment(1) });
+        else await updateDoc(userRef, { losses: increment(1) });
+      } else {
+        if (isWin) await updateDoc(userRef, { money: increment(battleBet * 2), wins: increment(1) });
+        else await updateDoc(userRef, { losses: increment(1) });
+
+        // PvP 종료 시 시스템 메시지
+        if (pvpRoomData?.host?.uid === user.uid) {
+          const winnerName = isWin ? pvpRoomData.host.nickname : pvpRoomData.guest.nickname;
+          const loserName = isWin ? pvpRoomData.guest.nickname : pvpRoomData.host.nickname;
+          await addDoc(collection(db, GLOBAL_CHAT_PATH), {
+            sender: 'SYSTEM',
+            text: `⚔️ [${winnerName}]님이 [${loserName}]님과의 혈투에서 승리하여 ${formatMoney(battleBet * 2)} GOLD를 쟁취했습니다!`,
+            timestamp: Date.now()
+          });
+        }
+      }
+    } catch (_) { console.error(_); }
+  };
+
+  // ============================================================
   // useEffect 1: PWA 뷰포트 및 매니페스트 설정
   // ============================================================
   useEffect(() => {
@@ -143,7 +201,7 @@ export function GameProvider({ children }) {
   // ============================================================
   useEffect(() => {
     if (bgmRef.current) {
-      if (soundEnabled) bgmRef.current.play().catch(() => {});
+      if (soundEnabled) bgmRef.current.play().catch(() => { /* no-op */ });
       else bgmRef.current.pause();
     }
   }, [soundEnabled]);
@@ -153,7 +211,7 @@ export function GameProvider({ children }) {
   // ============================================================
   useEffect(() => {
     if (!user) return;
-    const ping = () => { updateDoc(doc(db, USERS_PATH, user.uid), { lastActive: Date.now() }).catch(() => {}); };
+    const ping = () => { updateDoc(doc(db, USERS_PATH, user.uid), { lastActive: Date.now() }).catch(() => { /* no-op */ }); };
     ping();
     const interval = setInterval(ping, 60000);
     return () => clearInterval(interval);
@@ -303,18 +361,12 @@ export function GameProvider({ children }) {
   // 핸들러 함수들
   // ============================================================
 
-  const playSfx = (type, param) => {
-    if (soundEnabled && sfx[type]) sfx[type](param);
-  };
-
-  const showToast = (msg, type = 'info') => setToast({ message: msg, type });
-
   const wrapClick = (fn) => (e) => {
     sfx.init();
     playSfx('click');
     if (soundEnabled && bgmRef.current && bgmRef.current.paused) {
       bgmRef.current.volume = 0.2;
-      bgmRef.current.play().catch(() => {});
+      bgmRef.current.play().catch(() => { /* no-op */ });
     }
     if (fn) fn(e);
   };
@@ -334,7 +386,7 @@ export function GameProvider({ children }) {
       try {
         const cred = await signInWithEmailAndPassword(auth, dummyEmail, firebasePassword);
         currentUser = cred.user;
-      } catch (err) {
+      } catch (_) {
         try {
           const cred = await createUserWithEmailAndPassword(auth, dummyEmail, firebasePassword);
           currentUser = cred.user;
@@ -377,7 +429,7 @@ export function GameProvider({ children }) {
         }
       }
       playSfx('login'); setCurrentView('lobby');
-    } catch (err) {
+    } catch (_) {
       showToast("접근이 거부되었습니다.", "error"); playSfx('error');
     } finally { setIsProcessing(false); }
   };
@@ -387,9 +439,9 @@ export function GameProvider({ children }) {
     if (userData.lastAttendance === today) return;
     setIsProcessing(true);
     try {
-      await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(10000), lastAttendance: today });
-      playSfx('success'); showToast("일일 출석 보상: +10,000 GOLD", "success");
-    } catch (err) { showToast("시스템 오류 발생", "error"); playSfx('error'); }
+      await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(1000000), lastAttendance: today });
+      playSfx('success'); showToast("일일 출석 보상: +1,000,000 GOLD", "success");
+    } catch (_) { showToast("시스템 오류 발생", "error"); playSfx('error'); }
     setIsProcessing(false);
   };
 
@@ -474,8 +526,8 @@ export function GameProvider({ children }) {
         });
 
         playSfx('success'); showToast("카드 생성 완료", "success"); setShowCreateModal(false); setIsProcessing(false);
-      } catch (err) {
-        playSfx('error'); showToast("생성 실패", "error"); setIsProcessing(false); console.error(err);
+      } catch (_) {
+        playSfx('error'); showToast("생성 실패", "error"); setIsProcessing(false); console.error(_);
       }
     };
     img.onerror = () => { playSfx('error'); showToast("이미지 로드 실패", "error"); setIsProcessing(false); };
@@ -494,7 +546,7 @@ export function GameProvider({ children }) {
           await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(sellPrice) });
           await deleteDoc(doc(db, CARDS_PATH, card.id));
           playSfx('success'); showToast(`판매 완료: +${formatMoney(sellPrice)} GOLD`, "success");
-        } catch (e) { showToast("오류 발생", "error"); playSfx('error'); }
+        } catch (_) { showToast("오류 발생", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null); setCurrentView('deck');
       },
       onCancel: () => setConfirmModal(null)
@@ -510,7 +562,7 @@ export function GameProvider({ children }) {
       });
       setGlobalChatInput('');
       updateQuestProgress('chat');
-    } catch (err) {}
+    } catch (_) { /* no-op */ }
   };
 
   const handleBuyItem = async (itemId, price, name) => {
@@ -526,7 +578,7 @@ export function GameProvider({ children }) {
 
       await updateDoc(userRef, updateData);
       playSfx('success'); showToast(`구매 완료: ${name}`, "success");
-    } catch (e) { showToast("구매 실패", "error"); playSfx('error'); }
+    } catch (_) { showToast("구매 실패", "error"); playSfx('error'); }
     setIsProcessing(false);
   };
 
@@ -537,7 +589,7 @@ export function GameProvider({ children }) {
       await updateDoc(doc(db, CARDS_PATH, selectedCard.id), { equippedFrame: frameId });
       setSelectedCard(prev => ({ ...prev, equippedFrame: frameId }));
       playSfx('equip'); showToast(frameId ? "프레임 장착 완료" : "프레임 해제 완료", "success");
-    } catch (e) { showToast("적용 실패", "error"); playSfx('error'); }
+    } catch (_) { showToast("적용 실패", "error"); playSfx('error'); }
     setIsProcessing(false);
   };
 
@@ -592,7 +644,7 @@ export function GameProvider({ children }) {
             }
           }
         }
-      } catch (e) { showToast("시스템 오류 발생", "error"); setEnhanceVisualState('idle'); }
+      } catch (_) { showToast("시스템 오류 발생", "error"); setEnhanceVisualState('idle'); }
       setIsProcessing(false);
       setTimeout(() => { setEnhanceVisualState((prev) => prev === 'destroyed' ? 'destroyed' : 'idle'); }, 800);
     }, isFast ? 100 : 2500);
@@ -611,7 +663,7 @@ export function GameProvider({ children }) {
         await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-5000000) });
 
         const newStats = STATS_BY_LEVEL[21];
-        let newSkills = [...tCard1.unlockedSkills];
+        const newSkills = [...tCard1.unlockedSkills];
         if (!newSkills.includes('초월의 힘')) newSkills.push('초월의 힘');
 
         await updateDoc(doc(db, CARDS_PATH, tCard1.id), { level: 21, stats: newStats, unlockedSkills: newSkills, equippedFrame: 'frame_transcend' });
@@ -623,7 +675,7 @@ export function GameProvider({ children }) {
         await addDoc(collection(db, GLOBAL_CHAT_PATH), { sender: 'SYSTEM', text: `✨ [${userData.nickname}]님이 [${tCard1.name}] 초월에 성공하여 신의 영역에 도달했습니다! ✨`, timestamp: Date.now() });
 
         setTimeout(() => { setTranscendState('idle'); setTCard1(null); setTCard2(null); setCurrentView('deck'); }, 3000);
-      } catch (e) {
+      } catch (_) {
         showToast("초월 합성 중 오류가 발생했습니다.", "error");
         setTranscendState('idle');
       }
@@ -667,40 +719,6 @@ export function GameProvider({ children }) {
     setBattleStep(0); setBattleResult(null); setCurrentView('battle');
   };
 
-  const handleBattleEnd = async (isWin) => {
-    setBattleResult(isWin ? 'win' : 'lose');
-    if (!user || !userData) return;
-
-    if (battleType === 'AI') {
-      updateQuestProgress('ai');
-      if (isWin) updateQuestProgress('win_ai');
-    } else if (battleType === 'PvP') {
-      updateQuestProgress('pvp');
-    }
-
-    const userRef = doc(db, USERS_PATH, user.uid);
-    try {
-      if (battleType === 'AI') {
-        if (isWin) await updateDoc(userRef, { money: increment(battleReward), aiWins: increment(1) });
-        else await updateDoc(userRef, { losses: increment(1) });
-      } else {
-        if (isWin) await updateDoc(userRef, { money: increment(battleBet * 2), wins: increment(1) });
-        else await updateDoc(userRef, { losses: increment(1) });
-
-        // PvP 종료 시 시스템 메시지
-        if (pvpRoomData?.host?.uid === user.uid) {
-          const winnerName = isWin ? pvpRoomData.host.nickname : pvpRoomData.guest.nickname;
-          const loserName = isWin ? pvpRoomData.guest.nickname : pvpRoomData.host.nickname;
-          await addDoc(collection(db, GLOBAL_CHAT_PATH), {
-            sender: 'SYSTEM',
-            text: `⚔️ [${winnerName}]님이 [${loserName}]님과의 혈투에서 승리하여 ${formatMoney(battleBet * 2)} GOLD를 쟁취했습니다!`,
-            timestamp: Date.now()
-          });
-        }
-      }
-    } catch (e) { console.error(e); }
-  };
-
   const generateRoomCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
 
   const handleCreatePvPRoom = async (e) => {
@@ -717,7 +735,7 @@ export function GameProvider({ children }) {
         bet: battleBet, status: 'waiting', chat: [], battleLog: null, createdAt: Date.now()
       });
       setPvpRoomId(code); setBattleType('PvP'); setCurrentView('pvp_room');
-    } catch (err) { showToast("방 생성 실패", "error"); }
+    } catch (_) { showToast("방 생성 실패", "error"); }
     setIsProcessing(false);
   };
 
@@ -736,7 +754,7 @@ export function GameProvider({ children }) {
           setBattleBet(data.bet); setPvpRoomId(roomId); setBattleType('PvP'); setCurrentView('pvp_room');
         }
       } else { showToast("존재하지 않는 방입니다.", "error"); }
-    } catch (err) { showToast("입장 실패", "error"); }
+    } catch (_) { showToast("입장 실패", "error"); }
     setIsProcessing(false);
   };
 
@@ -748,7 +766,7 @@ export function GameProvider({ children }) {
         chat: arrayUnion({ sender: userData.nickname, text: chatInput.trim(), time: Date.now() })
       });
       setChatInput('');
-    } catch (err) {}
+    } catch (_) { /* no-op */ }
   };
 
   const handleStartPvPBattle = async () => {
@@ -762,7 +780,7 @@ export function GameProvider({ children }) {
 
   const handleLeaveRoom = async () => {
     const isHost = pvpRoomData?.host?.uid === user?.uid;
-    if (isHost) { try { await deleteDoc(doc(db, MATCHES_PATH, pvpRoomId)); } catch (e) {} }
+    if (isHost) { try { await deleteDoc(doc(db, MATCHES_PATH, pvpRoomId)); } catch (_) { /* no-op */ } }
     setPvpRoomId(null);
     setCurrentView('lobby');
   };
@@ -775,7 +793,7 @@ export function GameProvider({ children }) {
         guestbook: arrayUnion({ writerId: user.uid, writerName: userData.nickname, text: guestbookInput.trim(), timestamp: Date.now() })
       });
       setGuestbookInput('');
-    } catch (err) { showToast("방명록 작성 실패", "error"); }
+    } catch (_) { showToast("방명록 작성 실패", "error"); }
   };
 
   const handleSaveProfileDesc = async () => {
@@ -784,28 +802,19 @@ export function GameProvider({ children }) {
       await updateDoc(doc(db, USERS_PATH, user.uid), { profileDesc: editProfileDesc });
       setIsEditingProfileDesc(false);
       showToast("프로필 업데이트 완료", "success");
-    } catch (err) { showToast("업데이트 실패", "error"); }
-  };
-
-  const updateQuestProgress = async (type) => {
-    if (!user || !userData) return;
-    const today = new Date().toISOString().split('T')[0];
-    let q = userData.quests || { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
-    if (q.date !== today) q = { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
-    q[type] = (q[type] || 0) + 1;
-    await updateDoc(doc(db, USERS_PATH, user.uid), { quests: q }).catch(() => {});
+    } catch (_) { showToast("업데이트 실패", "error"); }
   };
 
   const handleClaimQuest = async (questId, reward) => {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      let q = userData.quests || { date: new Date().toISOString().split('T')[0], ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
-      q.claimed.push(questId);
-      await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(reward), quests: q });
+      const q = userData.quests || { date: new Date().toISOString().split('T')[0], ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+      const newQ = { ...q, claimed: [...(q.claimed || []), questId] };
+      await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(reward), quests: newQ });
       playSfx('success');
       showToast(`보상 수령: +${formatMoney(reward)} G`, "success");
-    } catch (e) { showToast("수령 실패", "error"); }
+    } catch (_) { showToast("수령 실패", "error"); }
     setIsProcessing(false);
   };
 
@@ -820,7 +829,7 @@ export function GameProvider({ children }) {
       updateQuestProgress('market');
       if (selectedCard?.id === card.id) setSelectedCard(null);
       setCurrentView('market');
-    } catch (e) { showToast("등록 실패", "error"); }
+    } catch (_) { showToast("등록 실패", "error"); }
     setIsProcessing(false);
   };
 
@@ -830,7 +839,7 @@ export function GameProvider({ children }) {
       await updateDoc(doc(db, CARDS_PATH, card.id), { isSelling: false, price: null });
       showToast("판매가 취소되었습니다.", "success");
       setCurrentView('deck');
-    } catch (e) { showToast("취소 실패", "error"); }
+    } catch (_) { showToast("취소 실패", "error"); }
     setIsProcessing(false);
   };
 
@@ -848,7 +857,7 @@ export function GameProvider({ children }) {
           await updateDoc(doc(db, CARDS_PATH, card.id), { ownerId: user.uid, isSelling: false, price: null, equippedFrame: null });
           updateQuestProgress('buy_market');
           playSfx('success'); showToast("성공적으로 거래되었습니다!", "success");
-        } catch (e) { showToast("거래 실패", "error"); playSfx('error'); }
+        } catch (_) { showToast("거래 실패", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null);
       },
       onCancel: () => setConfirmModal(null)
@@ -859,7 +868,7 @@ export function GameProvider({ children }) {
     try {
       await updateDoc(doc(db, USERS_PATH, user.uid), { equippedTitle: title });
       showToast(`[${title}] 칭호 장착 완료`, "success");
-    } catch (e) { showToast("장착 실패", "error"); }
+    } catch (_) { showToast("장착 실패", "error"); }
   };
 
   const handleAdminSetGold = async (targetUserId, amount) => {
@@ -868,7 +877,7 @@ export function GameProvider({ children }) {
     try {
       await updateDoc(doc(db, USERS_PATH, targetUserId), { money: amount });
       showToast(`어드민 권한: 골드 ${formatMoney(amount)} 적용 완료`, "success");
-    } catch (e) { showToast("적용 실패", "error"); }
+    } catch (_) { showToast("적용 실패", "error"); }
     setIsProcessing(false);
   };
 
