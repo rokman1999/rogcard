@@ -41,7 +41,8 @@ const CardItem = ({ card, onClick, onHover, className = "" }) => {
         <FrameOverlay frame={card.equippedFrame} />
 
         {/* 고급 레벨 전용 홀로그래픽 오버레이 효과 */}
-        {card.level >= 11 && (
+        {/* level 15+ 빨간 포일 티어에서 color-dodge 와 color-burn 동시 적용 시 윈도우 GPU에서 초록 아티팩트 발생 → level 11-14에만 적용 */}
+        {card.level >= 11 && card.level < 15 && (
           <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>
         )}
         {card.level >= 15 && (
