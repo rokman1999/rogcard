@@ -61,8 +61,7 @@ const STATS_BY_LEVEL = [
 const COST_BY_LEVEL = [
   null, 100, 200, 300, 500, 800, 1200, 2000, 3500, 5000,
   8000, 15000, 25000, 40000, 60000, 90000, 140000, 200000, 300000, 500000,
-  1500000, // 20 -> 21 
-  null // 21 -> 22
+  1500000, null
 ];
 
 const getSellPrice = (level) => {
@@ -92,8 +91,8 @@ const ENHANCEMENT_RULES = [
   { successRate: 25,  onFail: 'down', destroyChance: 0, levelDownOnFail: 2 }, 
   { successRate: 15,  onFail: 'mixed', destroyChance: 10, levelDownOnFail: 2 }, 
   { successRate: 10,  onFail: 'mixed', destroyChance: 20, levelDownOnFail: 3 },
-  { successRate: 5,   onFail: 'mixed', destroyChance: 50, levelDownOnFail: 4 }, // LV.19 -> LV.20
-  null // LV.21
+  { successRate: 5,   onFail: 'mixed', destroyChance: 50, levelDownOnFail: 4 },
+  null
 ];
 
 const UNIQUE_TRAITS = [
@@ -113,13 +112,7 @@ const TRAIT_COLORS = {
   '사내 모기': 'bg-rose-500/20 border-rose-500/50 text-rose-400',
   '탈주 닌자': 'bg-purple-500/20 border-purple-500/50 text-purple-400',
   '될놈될': 'bg-amber-500/20 border-amber-500/50 text-amber-400',
-  '월급 루팡': 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400',
-  '강철 바디': 'bg-slate-500/20 border-slate-500/50 text-slate-300',
-  '암살자': 'bg-orange-500/20 border-orange-500/50 text-orange-400',
-  '광전사': 'bg-red-500/20 border-red-500/50 text-red-400',
-  '흡혈귀': 'bg-rose-500/20 border-rose-500/50 text-rose-400',
-  '바람돌이': 'bg-purple-500/20 border-purple-500/50 text-purple-400',
-  '럭키가이': 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+  '월급 루팡': 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
 };
 
 const getRandomTrait = () => UNIQUE_TRAITS[Math.floor(Math.random() * UNIQUE_TRAITS.length)];
@@ -180,7 +173,6 @@ const SKILL_GROUPS = {
 const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
   const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
   let newSkills = [...(currentSkills || [])];
-  
   if (SKILL_MILESTONES.includes(newLevel)) {
       const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
       const available = allSkillKeys.filter(s => !newSkills.includes(s));
@@ -196,13 +188,10 @@ const getUnlockedSkills = (level) => {
   let skills = [];
   const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
   const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
-  
   for (let i = 1; i <= level; i++) {
     if (SKILL_MILESTONES.includes(i)) {
       const available = allSkillKeys.filter(s => !skills.includes(s));
-      if (available.length > 0) {
-        skills.push(available[Math.floor(Math.random() * available.length)]);
-      }
+      if (available.length > 0) skills.push(available[Math.floor(Math.random() * available.length)]);
     }
   }
   return skills;
@@ -226,7 +215,6 @@ const checkAchievements = (userData, userCards) => {
   let ach = [];
   if (!userData) return ach;
   const realWins = Math.max(0, (userData.wins || 0) - (userData.aiWins || 0));
-  
   if (realWins >= 1) ach.push("🏆 첫 승리의 짜릿함");
   if (realWins >= 10) ach.push("🏅 골목대장");
   if (realWins >= 50) ach.push("👑 전장의 지배자");
@@ -241,7 +229,6 @@ const checkAchievements = (userData, userCards) => {
   return ach;
 };
 
-// 프레임 데이터 모음
 const FRAMES_DATA = [
   {id: 'frame_rust', name: '녹슨 고철', desc: '세월의 흔적이 묻은 앤틱 프레임', price: 10000, color: 'text-[#a1662f]'},
   {id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이', price: 50000, color: 'text-cyan-300'},
@@ -473,11 +460,11 @@ const MiniCard = ({ card, onClick }) => {
           <span className={`text-xs font-mono font-black ${getTierTextColor(card.level)}`}>LV.{card.level}</span>
         </div>
       </div>
-    </header>
+    </div>
   );
 };
 
-const CardItem = ({ card, onClick, onHover, className="" }) => {
+const CardItem = ({ card, onClick, onHover, className="", hideDetails=false }) => {
   if(!card) return (
     <div className={`w-full aspect-[2/3.1] border border-white/10 bg-white/[0.02] backdrop-blur-2xl rounded-none flex items-center justify-center text-white/30 font-mono text-sm transition-all duration-500 ${className}`}>
       <span className="opacity-30">EMPTY SLOT</span>
@@ -499,6 +486,12 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
           <div className="absolute inset-0 opacity-15 pointer-events-none z-10 mix-blend-overlay" style={{ backgroundImage: noiseFilterUrl }}></div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95 pointer-events-none z-10 transition-opacity duration-500 group-hover:opacity-80"></div>
           
+          {card.isSelling && (
+            <div className="absolute top-[40%] left-0 w-full bg-red-600/90 text-white text-xs font-black py-1.5 z-40 border-y border-white/50 shadow-[0_0_15px_rgba(220,38,38,0.6)] tracking-[0.3em] text-center backdrop-blur-sm -translate-y-1/2">
+              FOR SALE
+            </div>
+          )}
+
           {renderFrameOverlay(card.equippedFrame)}
           
           {card.level >= 21 && <div className="absolute inset-0 bg-white/10 mix-blend-overlay animate-pulse z-20 pointer-events-none"></div>}
@@ -512,44 +505,52 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
               <div className="font-sans font-black text-[1.1em] sm:text-[1.2em] tracking-wider text-white break-words text-left leading-tight mt-1 group-hover:text-emerald-300 transition-colors duration-300 w-[70%]">
                 {card.name}
               </div>
-              {card.uniqueTrait && (
+              {!hideDetails && card.uniqueTrait && (
                 <div className={`absolute right-0 top-0 px-1.5 py-0.5 border rounded-none text-[0.45em] sm:text-[0.5em] font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap ${traitColorClass}`}>
                   {card.uniqueTrait.name}
                 </div>
               )}
             </div>
 
-            <div className="mt-auto flex flex-col gap-2 w-full">
-              <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-none border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
-                "{card.description}"
-              </div>
-              <div className="flex flex-wrap gap-1 w-full">
-                {card.unlockedSkills && card.unlockedSkills.map((s, i) => (
-                  <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-none border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
-                    <span className={`text-[0.65em] font-bold tracking-widest ${s === '초월의 힘' ? 'text-cyan-300 animate-pulse' : 'text-white'}`}>{s}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-between items-end gap-2 w-full mt-1">
-                <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-none transition-all duration-300 group-hover:bg-black/80">
-                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.75em] font-bold text-white">{card.stats.atk}</span></div>
-                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.75em] font-bold text-white">{card.stats.def}</span></div>
-                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.75em] font-bold text-white">{card.stats.spd}</span></div>
-                  <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.75em] font-bold text-white">{card.stats.crit}</span></div>
+            {!hideDetails ? (
+              <div className="mt-auto flex flex-col gap-2 w-full">
+                <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-none border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
+                  "{card.description}"
                 </div>
-                
+                <div className="flex flex-wrap gap-1 w-full">
+                  {(card.unlockedSkills || []).map((s, i) => (
+                    <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-none border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
+                      <span className={`text-[0.65em] font-bold tracking-widest ${s === '초월의 힘' ? 'text-cyan-300 animate-pulse' : 'text-white'}`}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-end gap-2 w-full mt-1">
+                  <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-none transition-all duration-300 group-hover:bg-black/80">
+                    <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span><span className="text-[0.75em] font-bold text-white">{card.stats.atk}</span></div>
+                    <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span><span className="text-[0.75em] font-bold text-white">{card.stats.def}</span></div>
+                    <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span><span className="text-[0.75em] font-bold text-white">{card.stats.spd}</span></div>
+                    <div className="flex flex-col items-center"><span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span><span className="text-[0.75em] font-bold text-white">{card.stats.crit}</span></div>
+                  </div>
+                  
+                  <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>
+                    <span className="transform skew-x-12 text-[0.8em] font-mono font-black tracking-tighter drop-shadow-md">LV.{card.level}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-auto flex justify-end w-full">
                 <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>
                   <span className="transform skew-x-12 text-[0.8em] font-mono font-black tracking-tighter drop-shadow-md">LV.{card.level}</span>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 // ==========================================
 // 5. 메인 앱 컴포넌트
@@ -676,7 +677,15 @@ export default function RogCard() {
     const userUnsub = onSnapshot(doc(db, USERS_PATH, user.uid), (docSnap) => { if (docSnap.exists()) setUserData(docSnap.data()); });
     const cardsUnsub = onSnapshot(collection(db, CARDS_PATH), (snapshot) => {
       const cards = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setAllCards(cards); setMyCards(cards.filter(c => c.ownerId === user.uid).sort((a,b) => b.level - a.level));
+      setAllCards(cards); 
+      setMyCards(cards.filter(c => c.ownerId === user.uid).sort((a,b) => b.level - a.level));
+      
+      cards.forEach(card => {
+        if (card.imageUrl) {
+          const img = new Image();
+          img.src = card.imageUrl;
+        }
+      });
     });
     const usersUnsub = onSnapshot(collection(db, USERS_PATH), (snapshot) => { 
       const usersData = snapshot.docs.map(d => d.data());
@@ -684,8 +693,13 @@ export default function RogCard() {
       setOnlineCount(usersData.filter(u => Date.now() - (u.lastActive || 0) < 300000).length);
     });
     const globalChatUnsub = onSnapshot(collection(db, GLOBAL_CHAT_PATH), (snapshot) => {
-      let chats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setGlobalChats(chats.sort((a,b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0)).slice(-50));
+      const chats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const sortedChats = chats.sort((a, b) => {
+        const timeA = typeof a.timestamp === 'number' ? a.timestamp : Number(a.timestamp) || 0;
+        const timeB = typeof b.timestamp === 'number' ? b.timestamp : Number(b.timestamp) || 0;
+        return timeA - timeB;
+      });
+      setGlobalChats(sortedChats.slice(-100)); 
     });
     const matchesUnsub = onSnapshot(collection(db, MATCHES_PATH), (snapshot) => {
       const matches = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -839,16 +853,6 @@ export default function RogCard() {
 
         const base64Image = canvas.toDataURL('image/jpeg', 0.85);
         
-        showToast("이미지를 클라우드에 업로드 중입니다...", "info");
-        
-        // 1. Firebase Storage에 이미지 업로드
-        const imagePath = `card_images/${user.uid}_${Date.now()}.jpg`;
-        const imageRef = ref(storage, imagePath);
-        await uploadString(imageRef, base64Image, 'data_url');
-        
-        // 2. 다운로드 URL 가져오기
-        const imageUrl = await getDownloadURL(imageRef);
-
         const newCardRef = doc(collection(db, CARDS_PATH));
         
         await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-CREATE_CARD_COST) });
@@ -857,7 +861,7 @@ export default function RogCard() {
           ownerId: user.uid, 
           name: cardNameValue, 
           description: cardDescValue, 
-          imageUrl: imageUrl, 
+          imageUrl: base64Image, 
           level: 1, 
           stats: STATS_BY_LEVEL[1], 
           unlockedSkills: [], 
@@ -868,7 +872,7 @@ export default function RogCard() {
         
         playSfx('success'); showToast("카드 생성 완료", "success"); setShowCreateModal(false); setIsProcessing(false);
       } catch (err) { 
-        playSfx('error'); showToast("생성 실패 (스토리지 연결 확인)", "error"); setIsProcessing(false); console.error(err);
+        playSfx('error'); showToast("생성 실패", "error"); setIsProcessing(false); console.error(err);
       }
     };
     img.onerror = () => {
@@ -1426,66 +1430,70 @@ export default function RogCard() {
     setIsProcessing(false);
   };
 
-  const renderLogin = () => (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4 relative z-10 overflow-hidden">
-      <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
-        <source src="https://res.cloudinary.com/dkotceims/video/upload/v1777616211/14904105-hd_1920_1080_30fps_i7kg6w.mp4" type="video/mp4" />
-      </video>
-      <div className="text-center mb-24 animate-fade-in flex flex-col items-center relative z-10">
-        <h1 className="text-6xl md:text-8xl font-black text-white font-logo tracking-[0.1em] drop-shadow-[0_0_20px_rgba(0,0,0,1)] hover:scale-105 transition-transform duration-700">ROG CARD</h1>
-        <p className="font-mono text-base tracking-[0.4em] text-white/90 drop-shadow-[0_0_10px_rgba(0,0,0,1)] mt-10">직접 만든 카드를 강화하세요.</p>
-      </div>
-      <form onSubmit={handleLogin} className="w-full max-w-sm flex flex-col gap-6 z-10 animate-slide-up bg-black/60 backdrop-blur-2xl border border-white/20 p-8 relative transition-all duration-300 hover:border-white/40 rounded-none">
-        <HUDCorner />
-        <div>
-          <label className="block font-mono text-sm text-white/50 mb-3 tracking-widest font-light">아바타 선택</label>
-          <div className="flex justify-between border-b border-white/10 pb-4">
-            {ICONS_KEYS.map(iconName => (
-              <div key={iconName} onClick={wrapClick(() => setSelectedIconName(iconName))} onMouseEnter={handleHover} className={`p-2 cursor-pointer transition-all duration-300 ${selectedIconName === iconName ? 'text-white border-b border-white scale-110' : 'text-white/30 hover:text-white/70 hover:scale-105'}`}>{getIcon(iconName)}</div>
-            ))}
-          </div>
+  function renderLogin() {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4 relative z-10 overflow-hidden">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
+          <source src="https://res.cloudinary.com/dkotceims/video/upload/v1777616211/14904105-hd_1920_1080_30fps_i7kg6w.mp4" type="video/mp4" />
+        </video>
+        <div className="text-center mb-24 animate-fade-in flex flex-col items-center relative z-10">
+          <h1 className="text-6xl md:text-8xl font-black text-white font-logo tracking-[0.1em] drop-shadow-[0_0_20px_rgba(0,0,0,1)] hover:scale-105 transition-transform duration-700">ROG CARD</h1>
+          <p className="font-mono text-base tracking-[0.4em] text-white/90 drop-shadow-[0_0_10px_rgba(0,0,0,1)] mt-10">직접 만든 카드를 강화하세요.</p>
         </div>
-        <div>
-          <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">닉네임</label>
-          <input type="text" value={loginNickname} onChange={(e) => setLoginNickname(e.target.value.toUpperCase())} placeholder="닉네임 입력" maxLength={10} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all uppercase placeholder-white/20 rounded-none" required />
-        </div>
-        <div>
-          <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">비밀번호</label>
-          <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="비밀번호 (4자리 이상)" minLength={4} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all placeholder-white/20 rounded-none" required />
-        </div>
-        <button type="submit" disabled={isProcessing} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 text-white font-light font-mono text-sm hover:bg-white hover:text-black disabled:opacity-50 transition-all uppercase tracking-widest mt-4 rounded-none">{isProcessing ? '초기화 중...' : '시스템 접속'}</button>
-      </form>
-    </div>
-  );
-
-  const renderHeader = () => (
-    <header className="sticky top-0 z-40 bg-white/[0.01] backdrop-blur-3xl border-b border-white/10 p-5 px-8 flex justify-between items-center transition-all hover:bg-white/[0.03]">
-      <div className="flex items-center gap-6">
-        <h2 onClick={wrapClick(() => setCurrentView('lobby'))} onMouseEnter={handleHover} className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]">ROG CARD</h2>
-        <span className="hidden md:flex text-white/30 text-xs font-mono items-center gap-1"><Users size={12}/> 접속 중: {onlineCount}명</span>
-      </div>
-      <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
-        <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"><ShoppingCart size={16}/> 상점</button>
-        
-        {userData && (
-          <div className="flex items-center gap-6">
-            <button onClick={wrapClick(() => {setChargeStep(1); setShowChargeModal(true);})} className="text-amber-400 border border-amber-500/30 bg-amber-900/20 px-3 py-1.5 text-xs hover:bg-amber-500 hover:text-white transition-colors tracking-widest font-bold hidden sm:block rounded-none shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-              충전하기
-            </button>
-            <div className="flex items-center gap-6 cursor-pointer hover:opacity-80" onClick={wrapClick(()=>{setViewingProfileUserId(user.uid); setCurrentView('profile');})}>
-              <div className="flex items-center gap-2 text-white/70">
-                {getIcon(userData.icon)} 
-                <span>{userData.nickname}</span>
-              </div>
-              <div className="text-white opacity-90 font-bold text-sm hidden sm:block">{formatMoney(userData.money)} GOLD</div>
+        <form onSubmit={handleLogin} className="w-full max-w-sm flex flex-col gap-6 z-10 animate-slide-up bg-black/60 backdrop-blur-2xl border border-white/20 p-8 relative transition-all duration-300 hover:border-white/40 rounded-none">
+          <HUDCorner />
+          <div>
+            <label className="block font-mono text-sm text-white/50 mb-3 tracking-widest font-light">아바타 선택</label>
+            <div className="flex justify-between border-b border-white/10 pb-4">
+              {ICONS_KEYS.map(iconName => (
+                <div key={iconName} onClick={wrapClick(() => setSelectedIconName(iconName))} onMouseEnter={handleHover} className={`p-2 cursor-pointer transition-all duration-300 ${selectedIconName === iconName ? 'text-white border-b border-white scale-110' : 'text-white/30 hover:text-white/70 hover:scale-105'}`}>{getIcon(iconName)}</div>
+              ))}
             </div>
           </div>
-        )}
+          <div>
+            <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">닉네임</label>
+            <input type="text" value={loginNickname} onChange={(e) => setLoginNickname(e.target.value.toUpperCase())} placeholder="닉네임 입력" maxLength={10} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all uppercase placeholder-white/20 rounded-none" required />
+          </div>
+          <div>
+            <label className="block font-mono text-sm text-white/50 mb-2 tracking-widest font-light">비밀번호</label>
+            <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="비밀번호 (4자리 이상)" minLength={4} className="w-full p-3 bg-transparent border-b border-white/20 text-white font-sans text-lg focus:outline-none focus:border-white transition-all placeholder-white/20 rounded-none" required />
+          </div>
+          <button type="submit" disabled={isProcessing} onMouseEnter={handleHover} className="w-full py-4 bg-white/10 text-white font-light font-mono text-sm hover:bg-white hover:text-black disabled:opacity-50 transition-all uppercase tracking-widest mt-4 rounded-none">{isProcessing ? '초기화 중...' : '시스템 접속'}</button>
+        </form>
       </div>
-    </header>
-  );
+    );
+  }
 
-  const renderProfile = () => {
+  function renderHeader() {
+    return (
+      <header className="sticky top-0 z-40 bg-white/[0.01] backdrop-blur-3xl border-b border-white/10 p-5 px-8 flex justify-between items-center transition-all hover:bg-white/[0.03]">
+        <div className="flex items-center gap-6">
+          <h2 onClick={wrapClick(() => setCurrentView('lobby'))} onMouseEnter={handleHover} className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]">ROG CARD</h2>
+          <span className="hidden md:flex text-white/30 text-xs font-mono items-center gap-1"><Users size={12}/> 접속 중: {onlineCount}명</span>
+        </div>
+        <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
+          <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"><ShoppingCart size={16}/> 상점</button>
+          
+          {userData && (
+            <div className="flex items-center gap-6">
+              <button onClick={wrapClick(() => {setChargeStep(1); setShowChargeModal(true);})} className="text-amber-400 border border-amber-500/30 bg-amber-900/20 px-3 py-1.5 text-xs hover:bg-amber-500 hover:text-white transition-colors tracking-widest font-bold hidden sm:block rounded-none shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                충전하기
+              </button>
+              <div className="flex items-center gap-6 cursor-pointer hover:opacity-80" onClick={wrapClick(()=>{setViewingProfileUserId(user.uid); setCurrentView('profile');})}>
+                <div className="flex items-center gap-2 text-white/70">
+                  {getIcon(userData.icon)} 
+                  <span>{userData.nickname}</span>
+                </div>
+                <div className="text-white opacity-90 font-bold text-sm hidden sm:block">{formatMoney(userData.money)} GOLD</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+    );
+  }
+
+  function renderProfile() {
     const viewingUser = allUsers.find(u => u.userId === viewingProfileUserId);
     if (!viewingUser) return <div className="text-white">프로필을 불러올 수 없습니다.</div>;
     const viewingUserCards = allCards.filter(c => c.ownerId === viewingProfileUserId).sort((a,b) => b.level - a.level);
@@ -1614,7 +1622,7 @@ export default function RogCard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {viewingUserCards.map(card => (
                 <div key={card.id} className="cursor-pointer transition-transform hover:-translate-y-2" onClick={wrapClick(() => setPreviewCard(card))}>
-                  <CardItem card={card} />
+                  <CardItem card={card} hideDetails={false} />
                 </div>
               ))}
             </div>
@@ -1625,9 +1633,9 @@ export default function RogCard() {
 
       </div>
     );
-  };
+  }
 
-  const renderLobby = () => {
+  function renderLobby() {
     const userMaxLevels = {};
     allCards.forEach(c => {
       if (!userMaxLevels[c.ownerId] || c.level > userMaxLevels[c.ownerId]) {
@@ -1635,7 +1643,6 @@ export default function RogCard() {
       }
     });
 
-    // 랭킹 순위 필터 (AI 승리 제외)
     const topLevelUsers = [...allUsers].sort((a,b) => (userMaxLevels[b.userId] || 0) - (userMaxLevels[a.userId] || 0)).slice(0, 50);
     const topWins = [...allUsers].sort((a,b) => (Math.max(0, (b.wins || 0) - (b.aiWins || 0))) - (Math.max(0, (a.wins || 0) - (a.aiWins || 0)))).slice(0, 50);
     const richUsers = [...allUsers].sort((a,b) => (b.money || 0) - (a.money || 0)).slice(0, 50);
@@ -1650,7 +1657,7 @@ export default function RogCard() {
     return (
       <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in relative z-10 flex flex-col lg:flex-row gap-10 w-full h-full">
         <div className="w-full lg:w-[350px] flex flex-col gap-6 h-[80vh]">
-           <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-6 flex flex-col h-[50%] relative transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
+           <div className="flex-1 min-h-0 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-6 flex flex-col relative transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
               <HUDCorner /><h3 className="font-mono font-light text-sm text-white/70 tracking-widest mb-4 uppercase">랭킹</h3>
               {topUserCard && (
                 <div className="mb-4 flex gap-5 items-center bg-white/5 p-4 rounded-none border border-amber-500/30 shadow-lg cursor-pointer" onClick={wrapClick(() => { setViewingProfileUserId(topUser.userId); setCurrentView('profile'); })}>
@@ -1682,7 +1689,7 @@ export default function RogCard() {
                 })}
               </div>
            </div>
-           <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-5 flex flex-col h-[50%] relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
+           <div className="flex-1 min-h-0 bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-5 flex flex-col relative overflow-hidden transition-all hover:border-white/20 hover:bg-white/[0.04] rounded-none">
               <HUDCorner /><h3 className="font-mono font-light text-sm text-white/70 tracking-widest mb-3 uppercase flex items-center gap-2">전체 채팅</h3>
               <div className="flex-1 overflow-y-auto flex flex-col gap-3 font-mono text-xs mb-3 pr-2 custom-scrollbar">
                 {globalChats.map((msg, i) => (
@@ -1771,56 +1778,108 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderShop = () => (
-    <div className="p-4 md:p-10 max-w-6xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col">
-      <div className="flex justify-between items-center mb-12 pb-6 border-b border-white/20">
-        <h2 className="text-3xl font-mono font-light text-white tracking-[0.2em] uppercase">시스템 상점</h2>
-        <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/50 hover:text-white font-mono text-sm tracking-widest uppercase flex items-center gap-2"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
-          <HUDCorner /><ArrowUpCircle size={36} className="text-emerald-400 mb-6" strokeWidth={1} />
-          <h3 className="font-mono font-light text-xl text-white mb-2">강화 확률 부스트</h3>
-          <p className="text-base font-sans text-white/50 mb-6 flex-1">다음 강화 시 성공 확률을 10% 증가시킵니다.</p>
-          <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.boost || 0}</span>
-            <button onClick={wrapClick(()=>handleBuyItem('boost', 50000, '확률 부스트'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black rounded-none">50,000 G</button>
+  function renderShop() {
+    return (
+      <div className="p-4 md:p-10 max-w-6xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col">
+        <div className="flex justify-between items-center mb-12 pb-6 border-b border-white/20">
+          <h2 className="text-3xl font-mono font-light text-white tracking-[0.2em] uppercase">시스템 상점</h2>
+          <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/50 hover:text-white font-mono text-sm tracking-widest uppercase flex items-center gap-2"><ArrowRight className="rotate-180" size={14}/> 뒤로 가기</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
+            <HUDCorner /><ArrowUpCircle size={36} className="text-emerald-400 mb-6" strokeWidth={1} />
+            <h3 className="font-mono font-light text-xl text-white mb-2">강화 확률 부스트</h3>
+            <p className="text-base font-sans text-white/50 mb-6 flex-1">다음 강화 시 성공 확률을 10% 증가시킵니다.</p>
+            <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
+              <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.boost || 0}</span>
+              <button onClick={wrapClick(()=>handleBuyItem('boost', 50000, '확률 부스트'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black rounded-none">50,000 G</button>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
+            <HUDCorner /><Shield size={36} className="text-blue-400 mb-6" strokeWidth={1} />
+            <h3 className="font-mono font-light text-xl text-white mb-2">하락/파괴 보호권</h3>
+            <p className="text-base font-sans text-white/50 mb-6 flex-1">강화 실패 시 등급 하락 및 파괴를 1회 막아줍니다.</p>
+            <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
+              <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.protect || 0}</span>
+              <button onClick={wrapClick(()=>handleBuyItem('protect', 150000, '하락/파괴 보호권'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black rounded-none">150,000 G</button>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
+            <HUDCorner /><Plus size={36} className="text-amber-400 mb-6" strokeWidth={1} />
+            <h3 className="font-mono font-light text-xl text-white mb-2">카드 슬롯 확장</h3>
+            <p className="text-base font-sans text-white/50 mb-6 flex-1">보유 가능한 카드의 최대 개수를 1칸 늘립니다.</p>
+            <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
+              <span className="font-mono text-white/40 text-sm">현재: {userData?.maxSlots || 3} / 10</span>
+              <button onClick={wrapClick(()=>handleBuyItem('slot', 50000, '카드 슬롯 확장'))} disabled={isProcessing || (userData?.maxSlots >= 10)} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black disabled:opacity-30 rounded-none">50,000 G</button>
+            </div>
           </div>
         </div>
-        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
-          <HUDCorner /><Shield size={36} className="text-blue-400 mb-6" strokeWidth={1} />
-          <h3 className="font-mono font-light text-xl text-white mb-2">하락/파괴 보호권</h3>
-          <p className="text-base font-sans text-white/50 mb-6 flex-1">강화 실패 시 등급 하락 및 파괴를 1회 막아줍니다.</p>
-          <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-sm">보유: {userData?.items?.protect || 0}</span>
-            <button onClick={wrapClick(()=>handleBuyItem('protect', 150000, '하락/파괴 보호권'))} disabled={isProcessing} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black rounded-none">150,000 G</button>
-          </div>
-        </div>
-        <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/10 p-8 relative flex flex-col transition-all hover:border-white/30 hover:bg-white/[0.05] rounded-none">
-          <HUDCorner /><Plus size={36} className="text-amber-400 mb-6" strokeWidth={1} />
-          <h3 className="font-mono font-light text-xl text-white mb-2">카드 슬롯 확장</h3>
-          <p className="text-base font-sans text-white/50 mb-6 flex-1">보유 가능한 카드의 최대 개수를 1칸 늘립니다.</p>
-          <div className="flex justify-between items-center mt-auto border-t border-white/10 pt-4">
-            <span className="font-mono text-white/40 text-sm">현재: {userData?.maxSlots || 3} / 10</span>
-            <button onClick={wrapClick(()=>handleBuyItem('slot', 50000, '카드 슬롯 확장'))} disabled={isProcessing || (userData?.maxSlots >= 10)} className="bg-white/10 text-white font-mono text-xs tracking-widest px-4 py-2 hover:bg-white hover:text-black disabled:opacity-30 rounded-none">50,000 G</button>
-          </div>
+        <h3 className="text-xl font-mono font-light text-white tracking-widest mb-6 uppercase border-b border-white/10 pb-2">프레임 스킨 (상세 정보에서 장착)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {FRAMES_DATA.map(f => (
+            <div key={f.id} className="bg-white/[0.02] border border-white/10 p-5 flex items-center justify-between transition-colors hover:bg-white/[0.05] rounded-none">
+              <div><div className={`${f.color} font-mono mb-1 text-sm font-bold`}>{f.name}</div><div className="text-xs text-white/50">{f.desc}</div></div>
+              {userData?.frames?.includes(f.id) ? <button disabled className="px-4 py-2 bg-white/20 text-white/50 font-mono text-[10px] whitespace-nowrap rounded-none">보유 중</button> : <button onClick={()=>handleBuyItem(f.id, f.price, f.name)} className="px-4 py-2 bg-white/10 hover:bg-white hover:text-black font-mono text-[10px] whitespace-nowrap rounded-none">{formatMoney(f.price)} G</button>}
+            </div>
+          ))}
         </div>
       </div>
-      <h3 className="text-xl font-mono font-light text-white tracking-widest mb-6 uppercase border-b border-white/10 pb-2">프레임 스킨 (상세 정보에서 장착)</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {FRAMES_DATA.map(f => (
-          <div key={f.id} className="bg-white/[0.02] border border-white/10 p-5 flex items-center justify-between transition-colors hover:bg-white/[0.05] rounded-none">
-            <div><div className={`${f.color} font-mono mb-1 text-sm font-bold`}>{f.name}</div><div className="text-xs text-white/50">{f.desc}</div></div>
-            {userData?.frames?.includes(f.id) ? <button disabled className="px-4 py-2 bg-white/20 text-white/50 font-mono text-[10px] whitespace-nowrap rounded-none">보유 중</button> : <button onClick={()=>handleBuyItem(f.id, f.price, f.name)} className="px-4 py-2 bg-white/10 hover:bg-white hover:text-black font-mono text-[10px] whitespace-nowrap rounded-none">{formatMoney(f.price)} G</button>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    );
+  }
 
-  const renderDeck = () => {
+  function renderChargeModal() {
+    const PACKS = [
+      { gold: 1000000, price: '10,000원' },
+      { gold: 3000000, price: '30,000원' },
+      { gold: 5000000, price: '50,000원' },
+      { gold: 10000000, price: '100,000원' },
+      { gold: 20000000, price: '5,000원', isHotDeal: true }
+    ];
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
+        <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-lg relative transition-all duration-300 rounded-none shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+          <HUDCorner />
+          <h3 className="font-mono font-light text-2xl text-white mb-8 tracking-widest uppercase text-center border-b border-white/10 pb-4">자산 충전소</h3>
+          
+          {chargeStep === 1 ? (
+            <div className="flex flex-col gap-4 mb-8">
+              {PACKS.map((p, i) => (
+                <button key={i} onClick={wrapClick(() => { setSelectedChargePack(p); setChargeStep(2); })} className={`flex justify-between items-center p-5 border ${p.isHotDeal ? 'border-red-500/80 bg-red-900/30' : 'border-white/10 bg-black/40 hover:bg-white/10 hover:border-amber-500/50'} transition-all group rounded-none relative overflow-hidden`}>
+                  {p.isHotDeal && <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 tracking-widest">HOT DEAL</div>}
+                  <span className={`font-mono font-bold text-lg group-hover:scale-105 transition-transform ${p.isHotDeal ? 'text-red-400 mt-3' : 'text-amber-400'}`}>{formatMoney(p.gold)} GOLD</span>
+                  <span className={`font-sans text-sm border rounded-none ${p.isHotDeal ? 'text-white bg-red-600/80 px-5 py-2 border-red-400' : 'text-white/70 bg-white/5 px-4 py-2 border-white/10 group-hover:text-white group-hover:bg-white/20'}`}>{p.price}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center mb-8 bg-black/40 border border-white/10 p-8 text-center gap-6 rounded-none">
+              <div className="w-16 h-16 bg-amber-500/20 flex items-center justify-center rounded-full mb-2">
+                <Banknote size={32} className="text-amber-400" />
+              </div>
+              <h4 className="text-xl font-bold text-white tracking-widest">입금 안내</h4>
+              <div className="text-amber-400 font-mono text-xl md:text-2xl font-black bg-amber-900/30 px-6 py-3 border border-amber-500/50 rounded-none whitespace-nowrap">
+                토스뱅크 1000-0052-1555
+              </div>
+              <div className="text-white/60 font-sans text-sm leading-relaxed">
+                선택하신 상품: <span className="text-white font-bold">{formatMoney(selectedChargePack?.gold)} GOLD ({selectedChargePack?.price})</span><br/><br/>
+                위 계좌로 입금해 주시기 바랍니다.<br/>
+                <span className="text-emerald-400 font-bold mt-2 block">"입금 확인이 완료되면 자동으로 충전됩니다"</span>
+              </div>
+            </div>
+          )}
+
+          <button onClick={wrapClick(() => setShowChargeModal(false))} className="w-full py-4 bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black transition-all duration-300 font-mono text-sm tracking-widest uppercase rounded-none">
+            닫기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderDeck() {
     const maxSlots = userData?.maxSlots || 3;
     const availableCards = myCards.filter(c => !c.isSelling);
     const renderSlots = Array.from({ length: maxSlots });
@@ -1847,7 +1906,7 @@ export default function RogCard() {
               if (!card) return (<div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] rounded-none flex flex-col items-center justify-center text-white/20 font-mono text-sm"><Plus size={24} className="mb-2 opacity-50"/><span>EMPTY SLOT</span></div>);
               return (
                 <div key={card.id} className="relative group">
-                  <CardItem card={card} />
+                  <CardItem card={card} hideDetails={false} />
                   <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5 rounded-none">
                     <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none"><Info size={14} className="inline mr-1"/> 상세 정보</button>
                     {card.level < 21 && <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105 rounded-none">카드 강화</button>}
@@ -1883,9 +1942,9 @@ export default function RogCard() {
         )}
       </div>
     );
-  };
+  }
 
-  const renderCardDetails = () => {
+  function renderCardDetails() {
     if (!selectedCard) return null;
     return (
       <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
@@ -1944,9 +2003,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderEnhancement = () => {
+  function renderEnhancement() {
     if (!selectedCard) return null;
     const isMax = selectedCard.level >= 20;
     const nextRule = !isMax ? ENHANCEMENT_RULES[selectedCard.level + 1] : null;
@@ -2004,9 +2063,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderTranscend = () => {
+  function renderTranscend() {
     const availableCards = myCards.filter(c => c.level === 20 && !c.isSelling);
     
     return (
@@ -2052,9 +2111,9 @@ export default function RogCard() {
         </button>
       </div>
     );
-  };
+  }
 
-  const renderBattleSelect = () => {
+  function renderBattleSelect() {
     const availableToPlay = myCards.filter(c => !c.isSelling);
     return (
       <div className="p-4 md:p-10 max-w-5xl mx-auto animate-fade-in relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
@@ -2074,9 +2133,9 @@ export default function RogCard() {
         <button onClick={wrapClick(() => setCurrentView('lobby'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
       </div>
     );
-  };
+  }
 
-  const renderPvPSetup = () => {
+  function renderPvPSetup() {
     const availableToPlay = myCards.filter(c => !c.isSelling);
     return (
       <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
@@ -2115,9 +2174,9 @@ export default function RogCard() {
         <button onClick={wrapClick(() => setCurrentView('battle_select'))} className="mt-16 text-white/30 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors">뒤로 가기</button>
       </div>
     );
-  };
+  }
 
-  const renderPvPRoom = () => {
+  function renderPvPRoom() {
     if (!pvpRoomData) return null;
     const isHost = pvpRoomData.host.uid === user.uid;
     const opponent = isHost ? pvpRoomData.guest : pvpRoomData.host;
@@ -2150,9 +2209,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderBattleAISetup = () => {
+  function renderBattleAISetup() {
     const availableToPlay = myCards.filter(c => !c.isSelling);
     if (!selectedCard || selectedCard.isSelling || !aiOpponent) { 
       return (
@@ -2184,9 +2243,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderBattle = () => {
+  function renderBattle() {
     if (!liveState) return null;
     const p1HpPercent = Math.max(0, (liveState.p1Hp / liveState.p1Max) * 100);
     const p2HpPercent = Math.max(0, (liveState.p2Hp / liveState.p2Max) * 100);
@@ -2267,9 +2326,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderQuests = () => {
+  function renderQuests() {
     const today = new Date().toISOString().split('T')[0];
     const qData = userData?.quests?.date === today ? userData.quests : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
 
@@ -2311,9 +2370,9 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
+  }
 
-  const renderMarket = () => {
+  function renderMarket() {
     const marketCards = allCards.filter(c => c.isSelling);
     const displayCards = marketTab === 'all' ? marketCards : marketCards.filter(c => c.ownerId === user?.uid);
     const availableToSell = myCards.filter(c => !c.isSelling);
@@ -2343,7 +2402,7 @@ export default function RogCard() {
                   return (
                     <div key={card.id} className="relative group bg-white/[0.02] border border-white/10 p-4 rounded-none hover:border-white/30 transition-all flex flex-col">
                       <HUDCorner />
-                      <div className="mb-4" onClick={wrapClick(() => setPreviewCard(card))}><CardItem card={card} className="cursor-pointer" /></div>
+                      <div className="mb-4" onClick={wrapClick(() => setPreviewCard(card))}><CardItem card={card} hideDetails={true} className="cursor-pointer" /></div>
                       <div className="text-center font-mono text-[10px] text-white/50 mb-2 truncate">Seller: {seller?.nickname || 'Unknown'}</div>
                       <div className="text-center font-mono text-amber-400 font-bold text-lg mb-4 bg-black/40 border border-amber-500/20 py-1">{formatMoney(card.price)} G</div>
                       {marketTab === 'all' ? (
@@ -2404,55 +2463,7 @@ export default function RogCard() {
         </div>
       </div>
     );
-  };
-
-  const renderChargeModal = () => {
-    const PACKS = [
-      { gold: 1000000, price: '10,000원' },
-      { gold: 3000000, price: '30,000원' },
-      { gold: 5000000, price: '50,000원' },
-      { gold: 10000000, price: '100,000원' },
-    ];
-
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
-        <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-lg relative transition-all duration-300 rounded-none shadow-[0_0_50px_rgba(245,158,11,0.1)]">
-          <HUDCorner />
-          <h3 className="font-mono font-light text-2xl text-white mb-8 tracking-widest uppercase text-center border-b border-white/10 pb-4">자산 충전소</h3>
-          
-          {chargeStep === 1 ? (
-            <div className="flex flex-col gap-4 mb-8">
-              {PACKS.map((p, i) => (
-                <button key={i} onClick={wrapClick(() => { setSelectedChargePack(p); setChargeStep(2); })} className="flex justify-between items-center p-5 border border-white/10 bg-black/40 hover:bg-white/10 hover:border-amber-500/50 transition-all group rounded-none">
-                  <span className="font-mono text-amber-400 font-bold text-lg group-hover:scale-105 transition-transform">{formatMoney(p.gold)} GOLD</span>
-                  <span className="font-sans text-white/70 bg-white/5 px-4 py-2 text-sm border border-white/10 group-hover:text-white group-hover:bg-white/20 rounded-none">{p.price}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center mb-8 bg-black/40 border border-white/10 p-8 text-center gap-6 rounded-none">
-              <div className="w-16 h-16 bg-amber-500/20 flex items-center justify-center rounded-full mb-2">
-                <Banknote size={32} className="text-amber-400" />
-              </div>
-              <h4 className="text-xl font-bold text-white tracking-widest">입금 안내</h4>
-              <div className="text-amber-400 font-mono text-xl md:text-2xl font-black bg-amber-900/30 px-6 py-3 border border-amber-500/50 rounded-none whitespace-nowrap">
-                토스뱅크 1000-0052-1555
-              </div>
-              <div className="text-white/60 font-sans text-sm leading-relaxed">
-                선택하신 상품: <span className="text-white font-bold">{formatMoney(selectedChargePack?.gold)} GOLD ({selectedChargePack?.price})</span><br/><br/>
-                위 계좌로 입금해 주시기 바랍니다.<br/>
-                <span className="text-emerald-400 font-bold mt-2 block">"입금 확인이 완료되면 자동으로 충전됩니다"</span>
-              </div>
-            </div>
-          )}
-
-          <button onClick={wrapClick(() => setShowChargeModal(false))} className="w-full py-4 bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black transition-all duration-300 font-mono text-sm tracking-widest uppercase rounded-none">
-            닫기
-          </button>
-        </div>
-      </div>
-    );
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden">
@@ -2466,52 +2477,14 @@ export default function RogCard() {
         .font-logo { font-family: 'SlowGothic', sans-serif !important; }
         .bg-obsidian { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 50%, #202025 0%, #050505 80%); filter: blur(40px); opacity: 0.9; }
 
-        @keyframes god-ray {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes mythic-glow {
-            0% { box-shadow: 0 0 25px rgba(255,0,0,0.6); }
-            15% { box-shadow: 0 0 25px rgba(255,127,0,0.6); }
-            30% { box-shadow: 0 0 25px rgba(255,255,0,0.6); }
-            45% { box-shadow: 0 0 25px rgba(0,255,0,0.6); }
-            60% { box-shadow: 0 0 25px rgba(0,0,255,0.6); }
-            75% { box-shadow: 0 0 25px rgba(75,0,130,0.6); }
-            90% { box-shadow: 0 0 25px rgba(148,0,211,0.6); }
-            100% { box-shadow: 0 0 25px rgba(255,0,0,0.6); }
-        }
-        @keyframes hue-shift {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
-        @keyframes cosmic-swirl {
-            0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-            50% { background-position: 100% 50%; filter: hue-rotate(180deg); }
-            100% { background-position: 0% 50%; filter: hue-rotate(360deg); }
-        }
-
+        @keyframes god-ray { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes mythic-glow { 0% { box-shadow: 0 0 25px rgba(255,0,0,0.6); } 15% { box-shadow: 0 0 25px rgba(255,127,0,0.6); } 30% { box-shadow: 0 0 25px rgba(255,255,0,0.6); } 45% { box-shadow: 0 0 25px rgba(0,255,0,0.6); } 60% { box-shadow: 0 0 25px rgba(0,0,255,0.6); } 75% { box-shadow: 0 0 25px rgba(75,0,130,0.6); } 90% { box-shadow: 0 0 25px rgba(148,0,211,0.6); } 100% { box-shadow: 0 0 25px rgba(255,0,0,0.6); } }
+        @keyframes hue-shift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        @keyframes cosmic-swirl { 0% { background-position: 0% 50%; filter: hue-rotate(0deg); } 50% { background-position: 100% 50%; filter: hue-rotate(180deg); } 100% { background-position: 0% 50%; filter: hue-rotate(360deg); } }
         .animate-hue-shift { animation: hue-shift 3s linear infinite; }
-
-        .max-level-card {
-            background: linear-gradient(45deg, #FFD700, #FFF8DC, #FFA500, #FF8C00, #FFD700);
-            background-size: 300% 300%;
-            animation: god-ray 2s ease infinite;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 255, 255, 0.8);
-            border: 2px solid #FFD700;
-        }
-        .mythic-card {
-            background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff00ff, #ff0000);
-            background-size: 300% 300%;
-            animation: god-ray 3s linear infinite, mythic-glow 3s linear infinite;
-        }
-        .transcendent-card {
-            background: linear-gradient(135deg, #000, #0ff, #f0f, #000);
-            background-size: 400% 400%;
-            animation: cosmic-swirl 3s infinite linear;
-            box-shadow: 0 0 50px #0ff, inset 0 0 30px #f0f;
-        }
-
+        .max-level-card { background: linear-gradient(45deg, #FFD700, #FFF8DC, #FFA500, #FF8C00, #FFD700); background-size: 300% 300%; animation: god-ray 2s ease infinite; box-shadow: 0 0 30px rgba(255, 215, 0, 1), inset 0 0 20px rgba(255, 255, 255, 0.8); border: 2px solid #FFD700; }
+        .mythic-card { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff00ff, #ff0000); background-size: 300% 300%; animation: god-ray 3s linear infinite, mythic-glow 3s linear infinite; }
+        .transcendent-card { background: linear-gradient(135deg, #000, #0ff, #f0f, #000); background-size: 400% 400%; animation: cosmic-swirl 3s infinite linear; box-shadow: 0 0 50px #0ff, inset 0 0 30px #f0f; }
         @keyframes slide-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-3px);} 75% {transform: translateX(3px);} }
@@ -2526,13 +2499,7 @@ export default function RogCard() {
         @keyframes scanline { 0% { top: -30%; } 100% { top: 110%; } }
         @keyframes blood-pulse { 0%, 100% { box-shadow: inset 0 0 30px rgba(220,38,38,0.4); border-color: rgba(185,28,28,0.5); } 50% { box-shadow: inset 0 0 80px rgba(220,38,38,0.9); border-color: rgba(239,68,68,1); } }
         @keyframes obsidian-shine { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        
-        @keyframes continuous-glow {
-            0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
-            50% { filter: drop-shadow(0 0 15px currentColor); }
-        }
-        
-        /* Dynamic Battle Animations */
+        @keyframes continuous-glow { 0%, 100% { filter: drop-shadow(0 0 5px currentColor); } 50% { filter: drop-shadow(0 0 15px currentColor); } }
         @keyframes attack-right { 0% { transform: translateX(0) scale(1); z-index: 30;} 20% { transform: translateX(-15px) scale(1.05); } 40% { transform: translateX(100px) scale(1.15); z-index: 50;} 100% { transform: translateX(0) scale(1); z-index: 10;} }
         @keyframes attack-left { 0% { transform: translateX(0) scale(1); z-index: 30;} 20% { transform: translateX(15px) scale(1.05); } 40% { transform: translateX(-100px) scale(1.15); z-index: 50;} 100% { transform: translateX(0) scale(1); z-index: 10;} }
         @keyframes dodge-left { 0% { transform: translateX(0); } 30% { transform: translateX(-50px) skewX(-10deg); opacity: 0.3; } 100% { transform: translateX(0) skewX(0); opacity: 1; } }
@@ -2567,17 +2534,16 @@ export default function RogCard() {
         .animate-floating-dmg { animation: floating-dmg 0.8s ease-out forwards; }
         .animate-floating-crit-dmg { animation: floating-crit-dmg 1.2s ease-out forwards; }
         .animate-skill-text { animation: skill-text 1.2s ease-out forwards; }
-
         .custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px;}
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-
       `}</style>
       <audio ref={bgmRef} src="https://res.cloudinary.com/dkotceims/video/upload/v1777608697/%EB%A9%94%EC%9D%B4%ED%94%8C%EC%8A%A4%ED%86%A0%EB%A6%AC_BGM_-_%EB%A0%88%EC%A7%80%EC%8A%A4%ED%83%95%EC%8A%A4_%EB%B3%B8%EB%B6%80_w7ucsi.mp3" loop preload="auto" />
+      
       {currentView === 'login' ? renderLogin() : (
         <div className="relative z-10 flex flex-col min-h-screen">
-          <Header />
+          {renderHeader()}
           <main className="flex-1 flex flex-col items-center justify-center w-full">
             {currentView === 'lobby' && renderLobby()}
             {currentView === 'profile' && renderProfile()}
@@ -2597,8 +2563,7 @@ export default function RogCard() {
           </main>
         </div>
       )}
-
-      {/* 전역 오버레이 컴포넌트들 */}
+      
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
       {showChargeModal && renderChargeModal()}
@@ -2615,11 +2580,12 @@ export default function RogCard() {
       {previewCard && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in" onClick={() => setPreviewCard(null)}>
           <div className="relative w-full max-w-sm flex flex-col items-center animate-slide-up transform scale-110 md:scale-125" onClick={e => e.stopPropagation()}>
-            <CardItem card={previewCard} className="w-full pointer-events-none" />
+            <CardItem card={previewCard} hideDetails={false} className="w-full pointer-events-none" />
             <button onClick={wrapClick(() => setPreviewCard(null))} onMouseEnter={handleHover} className="mt-8 px-8 py-3 bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black font-mono text-sm tracking-widest uppercase transition-colors duration-300 rounded-none">닫기</button>
           </div>
         </div>
       )}
+
       {confirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
           <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-sm relative transition-all duration-300 rounded-none">
@@ -2634,17 +2600,5 @@ export default function RogCard() {
         </div>
       )}
     </div>
-  );
-}
-
-// ============================================================
-// App (default export): GameProvider로 감싸는 최상위 컴포넌트
-// Provider를 최상위에 두어야 AppContent 내 모든 컴포넌트가 context에 접근 가능
-// ============================================================
-export default function App() {
-  return (
-    <GameProvider>
-      <AppContent />
-    </GameProvider>
   );
 }
