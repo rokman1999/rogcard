@@ -651,7 +651,8 @@ export function GameProvider({ children }) {
       level: aiLevel, stats: nerfedStats,
       unlockedSkills: getUnlockedSkills(aiLevel),
       description: `네트워크를 떠도는 위협 수준 ${aiLevel}의 개체. (너프됨)`,
-      imageUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${Math.random()}&backgroundColor=0a0a0a`
+      imageUrl: 'https://res.cloudinary.com/dkotceims/image/upload/v1777958854/%EB%B0%94%EB%82%98%EB%82%98%EB%A1%9C%EB%B4%87_lr12qg.png',
+      uniqueTrait: null
     });
     setSelectedCard(myCard);
     setBattleReward(aiLevel * 2000 + 5000);
