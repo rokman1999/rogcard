@@ -31,6 +31,7 @@ export function GameProvider({ children }) {
   const [allUsers, setAllUsers] = useState([]);
   const [allCards, setAllCards] = useState([]);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   // --- 화면 라우팅 ---
   const [currentView, setCurrentView] = useState('login');
@@ -283,11 +284,24 @@ export function GameProvider({ children }) {
     });
     const usersUnsub = onSnapshot(collection(db, USERS_PATH), (snapshot) => {
       const usersData = snapshot.docs.map(d => d.data());
+      const now = Date.now();
+      const online = usersData.filter(u => now - (u.lastActive || 0) < 300000);
       setAllUsers(usersData);
-      setOnlineCount(usersData.filter(u => Date.now() - (u.lastActive || 0) < 300000).length);
+      setOnlineCount(online.length);
+      setOnlineUsers(online.filter(u => u.userId !== user.uid));
     });
     const globalChatUnsub = onSnapshot(collection(db, GLOBAL_CHAT_PATH), (snapshot) => {
-      const chats = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const oneDayAgo = Date.now() - 86400000;
+      const chats = [];
+      snapshot.docs.forEach(d => {
+        const data = d.data();
+        const ts = typeof data.timestamp === 'number' ? data.timestamp : Number(data.timestamp) || 0;
+        if (ts < oneDayAgo) {
+          deleteDoc(doc(db, GLOBAL_CHAT_PATH, d.id)).catch(() => {});
+        } else {
+          chats.push({ id: d.id, ...data });
+        }
+      });
       const sorted = chats.sort((a, b) => {
         const tA = typeof a.timestamp === 'number' ? a.timestamp : Number(a.timestamp) || 0;
         const tB = typeof b.timestamp === 'number' ? b.timestamp : Number(b.timestamp) || 0;
@@ -1050,7 +1064,7 @@ export function GameProvider({ children }) {
   // ============================================================
   const contextValue = {
     // 상태
-    user, userData, myCards, allUsers, allCards, onlineCount,
+    user, userData, myCards, allUsers, allCards, onlineCount, onlineUsers,
     currentView, setCurrentView,
     selectedCard, setSelectedCard,
     toast, setToast,

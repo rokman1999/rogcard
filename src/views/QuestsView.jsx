@@ -2,12 +2,14 @@
 // 날짜 기반으로 진행도를 초기화하고, 목표 달성 시 보상 수령 버튼 활성화
 // 수령 완료된 퀘스트는 disabled 처리하여 중복 수령 방지
 
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
 import { QUESTS } from '../constants/gameData';
 import { formatMoney } from '../utils/formatUtils';
+
+const PAGE_SIZE = 4;
 
 const QuestsView = () => {
   const {
@@ -17,10 +19,15 @@ const QuestsView = () => {
     handleClaimQuest,
   } = useGame();
 
+  const [page, setPage] = useState(0);
+
   const today = new Date().toISOString().split('T')[0];
   const qData = userData?.quests?.date === today
     ? userData.quests
     : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, win_pvp: 0, chat: 0, market: 0, buy_market: 0, create_card: 0, sell: 0, login: 0, guestbook: 0, challenge_sent: 0, claimed: [] };
+
+  const totalPages = Math.ceil(QUESTS.length / PAGE_SIZE);
+  const pageQuests = QUESTS.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="p-4 md:p-10 max-w-4xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col w-full">
@@ -30,8 +37,8 @@ const QuestsView = () => {
           <ArrowRight className="rotate-180" size={14} /> 뒤로 가기
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {QUESTS.map(q => {
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+        {pageQuests.map(q => {
           const currentCount = qData[q.type] || 0;
           const isCompleted = currentCount >= q.target;
           const isClaimed = qData.claimed?.includes(q.id);
@@ -65,6 +72,27 @@ const QuestsView = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* 페이지네이션 */}
+      <div className="flex items-center justify-center gap-6 mt-10">
+        <button
+          onClick={() => setPage(p => Math.max(0, p - 1))}
+          disabled={page === 0}
+          className="p-2 border border-white/20 text-white/50 hover:text-white hover:border-white/50 disabled:opacity-20 transition-colors"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <span className="font-mono text-sm text-white/50 tracking-widest">
+          {page + 1} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+          disabled={page === totalPages - 1}
+          className="p-2 border border-white/20 text-white/50 hover:text-white hover:border-white/50 disabled:opacity-20 transition-colors"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );

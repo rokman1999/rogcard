@@ -215,18 +215,15 @@ function ChargeModal() {
 // ============================================================
 function OnlineUsersModal() {
   const {
-    user, userData, allUsers, onlineCount,
+    userData, onlineCount, onlineUsers,
     showOnlineModal, setShowOnlineModal,
     challengeBetInput, setChallengeBetInput,
     isProcessing,
     handleSendChallenge, wrapClick, handleHover
   } = useGame();
   const [selectedTarget, setSelectedTarget] = useState(null);
-  const [now] = useState(() => Date.now());
 
   if (!showOnlineModal) return null;
-
-  const onlineUsers = allUsers.filter(u => now - (u.lastActive || 0) < 300000 && u.userId !== user?.uid);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in" onClick={() => { setShowOnlineModal(false); setSelectedTarget(null); setChallengeBetInput(''); }}>

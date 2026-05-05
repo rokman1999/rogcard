@@ -1,7 +1,6 @@
 // ProfileView: 유저 프로필 화면
 // 보유 카드 목록, 승패 통계, 프로필 설명 편집, 방명록, 업적 확인 및 칭호 장착
 
-import React from 'react';
 import { ArrowRight, Edit3, MessageSquare, Send, Hexagon } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
@@ -19,7 +18,6 @@ const ProfileView = () => {
     isEditingGold, setIsEditingGold,
     editGoldValue, setEditGoldValue,
     guestbookInput, setGuestbookInput,
-    isProcessing,
     viewingProfileUserId,
     setPreviewCard,
     wrapClick,
