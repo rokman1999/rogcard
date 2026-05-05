@@ -2,7 +2,7 @@
 // 보유 카드(거래소 등록 중 제외)를 그리드로 표시하고 호버 시 액션 버튼 노출
 // 초월 합성 버튼: LV.20 카드 2장 이상 보유 시 활성화 유도
 
-import React from 'react';
+import { useState } from 'react';
 import { Plus, Info, ArrowRight, Sparkles } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
@@ -17,11 +17,13 @@ const DeckView = () => {
     showCreateModal, setShowCreateModal,
     cropImage, setCropImage, imgLoaded, setImgLoaded,
     cropZoom, cropPan, setCropPan, imgRef,
-    wrapClick, handleHover,
+    wrapClick,
     handleCreateCard, handleSellCard, startAIBattleSetup,
     handleFileChange, handleCropPointerDown, handleCropPointerMove,
     handleCropPointerUp, handleZoomChange
   } = useGame();
+
+  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 });
 
   const maxSlots = userData?.maxSlots || 3;
   // 거래소 등록 중인 카드는 덱에서 제외
@@ -113,13 +115,17 @@ const DeckView = () => {
                   <img
                     ref={imgRef} src={cropImage} alt="crop"
                     className="absolute max-w-none pointer-events-none"
-                    onLoad={() => { setImgLoaded(true); setCropPan({ x: 0, y: 0 }); }}
-                    style={{
-                      width: imgLoaded && imgRef.current ? `${imgRef.current.naturalWidth * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom}px` : 'auto',
-                      height: imgLoaded && imgRef.current ? `${imgRef.current.naturalHeight * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom}px` : 'auto',
-                      left: imgLoaded && imgRef.current ? `${100 - (imgRef.current.naturalWidth * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom) / 2 + cropPan.x}px` : '0px',
-                      top: imgLoaded && imgRef.current ? `${155 - (imgRef.current.naturalHeight * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom) / 2 + cropPan.y}px` : '0px'
-                    }}
+                    onLoad={(e) => { setImgLoaded(true); setCropPan({ x: 0, y: 0 }); setImgNatural({ w: e.target.naturalWidth, h: e.target.naturalHeight }); }}
+                    style={(() => {
+                      if (!imgLoaded || !imgNatural.w) return { width: 'auto', height: 'auto', left: '0px', top: '0px' };
+                      const scale = Math.max(200 / imgNatural.w, 310 / imgNatural.h) * cropZoom;
+                      return {
+                        width: `${imgNatural.w * scale}px`,
+                        height: `${imgNatural.h * scale}px`,
+                        left: `${100 - (imgNatural.w * scale) / 2 + cropPan.x}px`,
+                        top: `${155 - (imgNatural.h * scale) / 2 + cropPan.y}px`,
+                      };
+                    })()}
                   />
                 </div>
                 <input type="range" min="1" max="3" step="0.1" value={cropZoom} onChange={handleZoomChange} className="w-[200px] accent-emerald-400 h-1 bg-white/20 appearance-none cursor-pointer mt-2" />
