@@ -114,6 +114,9 @@ export function GameProvider({ children }) {
   const [marketTab, setMarketTab] = useState('all');
   const [marketSelectedCardId, setMarketSelectedCardId] = useState('');
 
+  // --- PvP 멀티카드 선택 (최대 3장, 순서 유지) ---
+  const [selectedCards, setSelectedCards] = useState([]);
+
   // ============================================================
   // showToast / playSfx: 여러 useEffect와 핸들러에서 사용되므로
   // 모든 useEffect 선언 이전에 배치
@@ -285,7 +288,9 @@ export function GameProvider({ children }) {
         setPvpRoomData(data);
         if (data.status === 'battling' && currentView === 'pvp_room') {
           setBattleLog(data.battleLog);
-          setLiveState({ p1Hp: data.hostCard.stats.hp, p2Hp: data.guestCard.stats.hp, p1Max: data.hostCard.stats.hp, p2Max: data.guestCard.stats.hp, currentAction: null });
+          const hc = (data.hostCards || [data.hostCard])[0];
+          const gc = (data.guestCards || [data.guestCard])[0];
+          setLiveState({ p1Hp: hc.stats.hp, p2Hp: gc.stats.hp, p1Max: hc.stats.hp, p2Max: gc.stats.hp, p1CardIdx: 0, p2CardIdx: 0, currentAction: null });
           setBattleStep(0); setBattleResult(null); setCurrentView('battle_pvp_play');
         }
       } else {
@@ -327,6 +332,7 @@ export function GameProvider({ children }) {
       else if (stepData.type === 'skill') delay = 1200;
       else if (stepData.type === 'dodge' || stepData.type === 'attack') delay = 800;
       else if (stepData.type === 'heal') delay = 1000;
+      else if (stepData.type === 'switch') delay = 1800;
       else if (stepData.type === 'end') delay = 1000;
 
       setLiveState(prev => ({ ...prev, currentAction: stepData }));
@@ -336,10 +342,19 @@ export function GameProvider({ children }) {
       else if (stepData.type === 'dodge') playSfx('dodge');
       else if (stepData.type === 'attack') playSfx('hit');
       else if (stepData.type === 'heal') playSfx('heal');
+      else if (stepData.type === 'switch') playSfx('success');
 
       const hpDelay = ['attack', 'critical', 'skill', 'revive', 'heal'].includes(stepData.type) ? 300 : 0;
       const hpTimer = setTimeout(() => {
-        setLiveState(prev => ({ ...prev, p1Hp: stepData.state.p1Hp, p2Hp: stepData.state.p2Hp }));
+        setLiveState(prev => ({
+          ...prev,
+          p1Hp: stepData.state.p1Hp,
+          p2Hp: stepData.state.p2Hp,
+          p1CardIdx: stepData.state.p1CardIdx ?? prev.p1CardIdx ?? 0,
+          p2CardIdx: stepData.state.p2CardIdx ?? prev.p2CardIdx ?? 0,
+          p1Max: stepData.state.p1MaxHp ?? prev.p1Max,
+          p2Max: stepData.state.p2MaxHp ?? prev.p2Max,
+        }));
       }, hpDelay);
 
       const nextTimer = setTimeout(() => {
@@ -715,7 +730,7 @@ export function GameProvider({ children }) {
   const executeAIBattle = async () => {
     const simLog = simulateBattleLog(selectedCard, aiOpponent);
     setBattleLog(simLog);
-    setLiveState({ p1Hp: selectedCard.stats.hp, p2Hp: aiOpponent.stats.hp, p1Max: selectedCard.stats.hp, p2Max: aiOpponent.stats.hp, currentAction: null });
+    setLiveState({ p1Hp: selectedCard.stats.hp, p2Hp: aiOpponent.stats.hp, p1Max: selectedCard.stats.hp, p2Max: aiOpponent.stats.hp, p1CardIdx: 0, p2CardIdx: 0, currentAction: null });
     setBattleStep(0); setBattleResult(null); setCurrentView('battle');
   };
 
@@ -728,10 +743,11 @@ export function GameProvider({ children }) {
     setIsProcessing(true);
     try {
       const code = generateRoomCode();
+      if (selectedCards.length === 0) { showToast("출전 카드를 1장 이상 선택하세요.", "warning"); setIsProcessing(false); return; }
       await setDoc(doc(db, MATCHES_PATH, code), {
         id: code, roomName: pvpRoomName.trim(),
         host: { uid: user.uid, nickname: userData.nickname },
-        hostCard: selectedCard, guest: null, guestCard: null,
+        hostCards: selectedCards, guest: null, guestCards: null,
         bet: battleBet, status: 'waiting', chat: [], battleLog: null, createdAt: Date.now()
       });
       setPvpRoomId(code); setBattleType('PvP'); setCurrentView('pvp_room');
@@ -739,9 +755,9 @@ export function GameProvider({ children }) {
     setIsProcessing(false);
   };
 
-  const handleJoinPvPRoom = async (roomId, cardOverride = null) => {
+  const handleJoinPvPRoom = async (roomId) => {
+    if (selectedCards.length === 0) { showToast("출전 카드를 1장 이상 선택하세요.", "warning"); return; }
     setIsProcessing(true);
-    const targetCard = cardOverride || selectedCard;
     try {
       const matchRef = doc(db, MATCHES_PATH, roomId);
       const snap = await getDoc(matchRef);
@@ -750,7 +766,7 @@ export function GameProvider({ children }) {
         if (data.status !== 'waiting') showToast("이미 게임이 시작되었거나 가득 찬 방입니다.", "warning");
         else if (userData.money < data.bet) showToast(`입장 자금이 부족합니다. (필요: ${formatMoney(data.bet)} GOLD)`, "error");
         else {
-          await updateDoc(matchRef, { guest: { uid: user.uid, nickname: userData.nickname }, guestCard: targetCard, status: 'ready' });
+          await updateDoc(matchRef, { guest: { uid: user.uid, nickname: userData.nickname }, guestCards: selectedCards, status: 'ready' });
           setBattleBet(data.bet); setPvpRoomId(roomId); setBattleType('PvP'); setCurrentView('pvp_room');
         }
       } else { showToast("존재하지 않는 방입니다.", "error"); }
@@ -771,10 +787,12 @@ export function GameProvider({ children }) {
 
   const handleStartPvPBattle = async () => {
     if (!pvpRoomData || pvpRoomData.host.uid !== user.uid || pvpRoomData.status !== 'ready') return;
+    const hostCards = pvpRoomData.hostCards || [pvpRoomData.hostCard];
+    const guestCards = pvpRoomData.guestCards || [pvpRoomData.guestCard];
     await updateDoc(doc(db, USERS_PATH, pvpRoomData.host.uid), { money: increment(-pvpRoomData.bet) });
     await updateDoc(doc(db, MATCHES_PATH, pvpRoomId), {
       status: 'battling',
-      battleLog: simulateBattleLog(pvpRoomData.hostCard, pvpRoomData.guestCard)
+      battleLog: simulateBattleLog(hostCards, guestCards)
     });
   };
 
@@ -943,6 +961,7 @@ export function GameProvider({ children }) {
     sellPriceInput, setSellPriceInput,
     marketTab, setMarketTab,
     marketSelectedCardId, setMarketSelectedCardId,
+    selectedCards, setSelectedCards,
     // 핸들러
     playSfx, showToast, wrapClick, handleHover,
     handleLogin, handleAttendance,

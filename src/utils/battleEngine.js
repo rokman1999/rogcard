@@ -1,51 +1,62 @@
 // 전투 시뮬레이션 엔진 - 완전한 순수 함수
-// React 상태/효과/Firebase와 분리된 이유:
+// 단일 카드 또는 카드 배열(최대 3장)을 받아 순차 전투 로그를 생성.
 // 동일 입력 → 동일 출력이 보장되어야 PvP에서 호스트/게스트가 같은 결과를 재현할 수 있음.
 
 import { SKILL_GROUPS } from '../constants/gameData';
 
 /**
- * 두 카드 데이터를 받아 전투 로그 배열을 반환하는 순수 함수.
- * @param {object} c1 - 플레이어1 카드 (stats, unlockedSkills, uniqueTrait, name 포함)
- * @param {object} c2 - 플레이어2 카드
- * @returns {Array} battleLog - 전투 이벤트 배열
+ * 카드(또는 카드 배열)를 받아 전투 로그 배열을 반환하는 순수 함수.
+ * 배열 전달 시 순서대로 출전 → 쓰러지면 다음 카드 출격 (팀전 모드).
+ * @param {object|Array} p1CardsInput - 플레이어1 카드 또는 카드 배열
+ * @param {object|Array} p2CardsInput - 플레이어2 카드 또는 카드 배열
+ * @returns {Array} battleLog
  */
-export const simulateBattleLog = (c1, c2) => {
-  const p1 = {
-    ...c1.stats,
-    name: c1.name,
-    skills: c1.unlockedSkills || [],
-    trait: c1.uniqueTrait,
+export const simulateBattleLog = (p1CardsInput, p2CardsInput) => {
+  const p1Cards = Array.isArray(p1CardsInput) ? p1CardsInput : [p1CardsInput];
+  const p2Cards = Array.isArray(p2CardsInput) ? p2CardsInput : [p2CardsInput];
+
+  let p1CardIdx = 0;
+  let p2CardIdx = 0;
+
+  const makeP = (c, key) => ({
+    ...c.stats,
+    name: c.name,
+    skills: c.unlockedSkills || [],
+    trait: c.uniqueTrait,
     attackCount: 0,
     revived: false,
     damageTaken: 0,
-    key: 'p1',
-    originalHp: c1.stats.hp
-  };
-  const p2 = {
-    ...c2.stats,
-    name: c2.name,
-    skills: c2.unlockedSkills || [],
-    trait: c2.uniqueTrait,
-    attackCount: 0,
-    revived: false,
-    damageTaken: 0,
-    key: 'p2',
-    originalHp: c2.stats.hp
-  };
+    key,
+    originalHp: c.stats.hp
+  });
+
+  const p1 = makeP(p1Cards[0], 'p1');
+  const p2 = makeP(p2Cards[0], 'p2');
 
   // 구/신 특성명 모두 호환하는 헬퍼
   const hasTrait = (p, newName, oldName) => p.trait?.name === newName || p.trait?.name === oldName;
   const hasSkillInGroup = (p, groupName) => p.skills.some(s => SKILL_GROUPS[groupName]?.includes(s));
   const getActiveSkillInGroup = (p, groupName) => p.skills.find(s => SKILL_GROUPS[groupName]?.includes(s));
 
-  // 고유 특성 초기 반영
-  if (hasTrait(p1, '키보드 워리어', '암살자')) p1.crit += 25;
-  if (hasTrait(p2, '키보드 워리어', '암살자')) p2.crit += 25;
-  if (hasTrait(p1, '탈주 닌자', '바람돌이')) p1.dodgeRate = 15;
-  if (hasTrait(p2, '탈주 닌자', '바람돌이')) p2.dodgeRate = 15;
+  // 카드 전환 시 특성 재적용
+  const applyTraits = (p) => {
+    if (hasTrait(p, '키보드 워리어', '암살자')) p.crit += 25;
+  };
 
-  const log = [{ type: 'start', text: `교전 개시: [${p1.name}] VS [${p2.name}]`, state: { p1Hp: p1.hp, p2Hp: p2.hp } }];
+  applyTraits(p1);
+  applyTraits(p2);
+
+  // 모든 로그 항목에 포함할 상태 스냅샷 헬퍼
+  const mkState = () => ({
+    p1Hp: Math.max(0, p1.hp),
+    p2Hp: Math.max(0, p2.hp),
+    p1CardIdx,
+    p2CardIdx,
+    p1MaxHp: p1.originalHp,
+    p2MaxHp: p2.originalHp
+  });
+
+  const log = [{ type: 'start', text: `교전 개시: [${p1.name}] VS [${p2.name}]`, state: mkState() }];
 
   // 선공 판정 + 선공 스킬 알림
   let p1First = p1.spd >= p2.spd;
@@ -55,16 +66,20 @@ export const simulateBattleLog = (c1, c2) => {
   if (!p1Preemptive && p2Preemptive) p1First = false;
 
   if (p1First && p1Preemptive) {
-    log.push({ type: 'skill', text: `✨ [${p1.name}]의 <${p1Preemptive}> 발동! 무조건 선공!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: p1.key, skill: p1Preemptive });
+    log.push({ type: 'skill', text: `✨ [${p1.name}]의 <${p1Preemptive}> 발동! 무조건 선공!`, state: mkState(), actor: p1.key, skill: p1Preemptive });
   } else if (!p1First && p2Preemptive) {
-    log.push({ type: 'skill', text: `✨ [${p2.name}]의 <${p2Preemptive}> 발동! 무조건 선공!`, state: { p1Hp: p1.hp, p2Hp: p2.hp }, actor: p2.key, skill: p2Preemptive });
+    log.push({ type: 'skill', text: `✨ [${p2.name}]의 <${p2Preemptive}> 발동! 무조건 선공!`, state: mkState(), actor: p2.key, skill: p2Preemptive });
   }
 
   let turn = 0;
-  while (p1.hp > 0 && p2.hp > 0 && turn < 100) {
+  let battleOver = false;
+
+  while (!battleOver && p1.hp > 0 && p2.hp > 0 && turn < 200) {
     turn++;
+    let switchOccurred = false;
 
     for (const attacker of p1First ? [p1, p2] : [p2, p1]) {
+      if (switchOccurred || battleOver) break;
       if (attacker.hp <= 0) continue;
       const defender = attacker.key === 'p1' ? p2 : p1;
       if (defender.hp <= 0) continue;
@@ -79,11 +94,8 @@ export const simulateBattleLog = (c1, c2) => {
       if (hasTrait(defender, '탈주 닌자', '바람돌이')) dodgeChance += 15;
       if (transcendSkill) dodgeChance = 0; // 초월은 회피 무시
 
-      let oldP1Hp = p1.hp;
-      let oldP2Hp = p2.hp;
-
       if (Math.random() * 100 < dodgeChance) {
-        log.push({ type: 'dodge', text: `슈슉! [${defender.name}]의 신들린 무빙!`, state: { p1Hp: oldP1Hp, p2Hp: oldP2Hp }, actor: defender.key });
+        log.push({ type: 'dodge', text: `슈슉! [${defender.name}]의 신들린 무빙!`, state: mkState(), actor: defender.key });
         continue;
       }
 
@@ -133,9 +145,9 @@ export const simulateBattleLog = (c1, c2) => {
 
       if (isCrit) damage *= 2;
 
-      // 스킬 로그 (복수 스킬 각각 기록)
+      // 스킬 로그
       for (const s of activatedSkills) {
-        log.push({ type: 'skill', text: `✨ [${attacker.name}]의 특수 프로토콜 <${s}> 발동!`, state: { p1Hp: oldP1Hp, p2Hp: oldP2Hp }, actor: attacker.key, skill: s });
+        log.push({ type: 'skill', text: `✨ [${attacker.name}]의 특수 프로토콜 <${s}> 발동!`, state: mkState(), actor: attacker.key, skill: s });
       }
 
       // 방어력 계산
@@ -143,7 +155,7 @@ export const simulateBattleLog = (c1, c2) => {
         + (hasSkillInGroup(defender, 'DEFENSE') ? 10 : 0)
         + (hasTrait(defender, '무쇠뚝배기', '강철 바디') ? 15 : 0)
         + (hasTrait(defender, '월급 루팡', null) ? 10 : 0);
-      if (transcendSkill) finalDef = 0; // 초월은 방어 무시
+      if (transcendSkill) finalDef = 0;
 
       damage = Math.max(1, Math.floor(damage * (1 - Math.min(90, finalDef) / 100)));
       defender.hp -= damage;
@@ -152,7 +164,7 @@ export const simulateBattleLog = (c1, c2) => {
       log.push({
         type: isCrit ? 'critical' : 'attack',
         text: `[${attacker.name}] ${isCrit ? "뼈와 살이 분리되는 일격!!" : "퍼억! 데미지가 들어갑니다."} (-${Math.floor(damage)})`,
-        state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) },
+        state: mkState(),
         damage: Math.floor(damage),
         attacker: attacker.key,
         defender: defender.key
@@ -175,7 +187,7 @@ export const simulateBattleLog = (c1, c2) => {
           log.push({
             type: 'heal',
             text: `🩸 [${attacker.name}]의 <${lsSkill}>! 체력을 ${Math.floor(healAmount)} 회복합니다.`,
-            state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) },
+            state: mkState(),
             actor: attacker.key,
             heal: Math.floor(healAmount),
             skill: lsSkill
@@ -191,9 +203,30 @@ export const simulateBattleLog = (c1, c2) => {
         log.push({
           type: 'revive',
           text: `🧟 [${defender.name}] : 기적처럼 <${reviveSkill}>로 부활합니다!`,
-          state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) },
+          state: mkState(),
           actor: defender.key
         });
+      }
+
+      // ── 카드 교체 처리 ──────────────────────────────────────────
+      if (defender.hp <= 0) {
+        if (defender.key === 'p1' && p1CardIdx + 1 < p1Cards.length) {
+          p1CardIdx++;
+          const newCard = makeP(p1Cards[p1CardIdx], 'p1');
+          applyTraits(newCard);
+          Object.assign(p1, newCard);
+          log.push({ type: 'switch', text: `⚡ [${p1.name}] 출격!`, state: mkState(), actor: 'p1', cardIdx: p1CardIdx });
+          switchOccurred = true;
+        } else if (defender.key === 'p2' && p2CardIdx + 1 < p2Cards.length) {
+          p2CardIdx++;
+          const newCard = makeP(p2Cards[p2CardIdx], 'p2');
+          applyTraits(newCard);
+          Object.assign(p2, newCard);
+          log.push({ type: 'switch', text: `⚡ [${p2.name}] 출격!`, state: mkState(), actor: 'p2', cardIdx: p2CardIdx });
+          switchOccurred = true;
+        } else {
+          battleOver = true;
+        }
       }
     }
   }
@@ -202,7 +235,7 @@ export const simulateBattleLog = (c1, c2) => {
   log.push({
     type: 'end',
     text: `🏁 교전 종료! 승리: [${isP1Win ? p1.name : p2.name}]`,
-    state: { p1Hp: Math.max(0, p1.hp), p2Hp: Math.max(0, p2.hp) },
+    state: mkState(),
     winner: isP1Win ? 'p1' : 'p2'
   });
 
