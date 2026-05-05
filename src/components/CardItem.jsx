@@ -27,6 +27,7 @@ const CardItem = ({ card, onClick, onHover, className = "" }) => {
         <img
           src={card.imageUrl}
           alt={card.name}
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
         />
         {/* 노이즈 텍스처 오버레이: 디지털 카드 특유의 질감 표현 */}

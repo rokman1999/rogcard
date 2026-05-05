@@ -49,6 +49,9 @@ export function GameProvider({ children }) {
 
   const bgmRef = useRef(null);
 
+  // 이미지 프리로드 캐시 - ref로 보관해야 GC(가비지 컬렉션)되지 않고 브라우저 캐시 유지
+  const imgPreloadCache = useRef({});
+
   // --- 강화 관련 ---
   const [useBoost, setUseBoost] = useState(false);
   const [useProtect, setUseProtect] = useState(false);
@@ -196,6 +199,16 @@ export function GameProvider({ children }) {
     let manifestLink = document.querySelector('link[rel="manifest"]');
     if (!manifestLink) { manifestLink = document.createElement('link'); manifestLink.rel = 'manifest'; document.head.appendChild(manifestLink); }
     manifestLink.href = manifestURL;
+
+    // AI 봇 이미지는 고정 URL → 앱 시작 시 한 번만 프리로드
+    const AI_IMG = 'https://res.cloudinary.com/dkotceims/image/upload/v1777958854/%EB%B0%94%EB%82%98%EB%82%98%EB%A1%9C%EB%B4%87_lr12qg.png';
+    if (!imgPreloadCache.current['__ai_bot__']) {
+      const img = new Image();
+      img.src = AI_IMG;
+      img.decode?.().catch(() => {});
+      imgPreloadCache.current['__ai_bot__'] = img;
+    }
+
     return () => URL.revokeObjectURL(manifestURL);
   }, []);
 
@@ -251,9 +264,14 @@ export function GameProvider({ children }) {
       const cards = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setAllCards(cards);
       setMyCards(cards.filter(c => c.ownerId === user.uid).sort((a, b) => b.level - a.level));
-      // 카드 이미지 프리로드
+      // 카드 이미지 프리로드: ref에 저장해야 GC 방지 + decode()로 즉시 디코딩
       cards.forEach(card => {
-        if (card.imageUrl) { const img = new Image(); img.src = card.imageUrl; }
+        if (card.imageUrl && !imgPreloadCache.current[card.id]) {
+          const img = new Image();
+          img.src = card.imageUrl;
+          img.decode?.().catch(() => {});
+          imgPreloadCache.current[card.id] = img;
+        }
       });
     });
     const usersUnsub = onSnapshot(collection(db, USERS_PATH), (snapshot) => {
