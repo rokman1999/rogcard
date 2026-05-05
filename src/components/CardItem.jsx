@@ -20,9 +20,9 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
     <div
       onClick={onClick}
       onMouseEnter={onHover}
-      className={`relative w-full aspect-[2/3.1] rounded-[10px] transition-all duration-500 group ${foilBg} ${className}`}
+      className={`relative w-full aspect-[2/3.1] transition-all duration-500 group ${foilBg} ${className}`}
     >
-      <div className="w-full h-full relative z-10 rounded-[8px] overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
+      <div className="w-full h-full relative z-10 overflow-hidden bg-black flex flex-col shadow-[inset_0_0_20px_rgba(0,0,0,1)]">
         <img
           src={card.imageUrl}
           alt={card.name}

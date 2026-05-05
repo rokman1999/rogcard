@@ -97,6 +97,28 @@ const BattleView = () => {
         <div key={`flash-${battleStep}`} className="absolute inset-0 bg-red-600/40 animate-flash-red pointer-events-none z-0 mix-blend-color-burn"></div>
       )}
 
+      {/* 스킬 발동 시 사이안 플래시 + 스킬 배너 */}
+      {action?.type === 'skill' && (
+        <>
+          <div key={`flash-skill-${battleStep}`} className="absolute inset-0 animate-flash-cyan pointer-events-none z-30"></div>
+          <div key={`skill-banner-${battleStep}`} className="absolute left-1/2 top-1/3 -translate-y-1/2 pointer-events-none z-40 text-center w-full">
+            <div className="animate-skill-banner inline-block origin-left">
+              <div className="bg-black/80 border-l-4 border-r-4 border-cyan-400 px-8 py-3 backdrop-blur-sm" style={{ clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)' }}>
+                <div className="text-2xl md:text-4xl font-black text-cyan-300 tracking-[0.15em] drop-shadow-[0_0_20px_rgba(0,255,255,0.9)] uppercase whitespace-nowrap">
+                  ✨ {action.skill}
+                </div>
+                <div className="text-cyan-500/80 font-mono text-xs tracking-[0.4em] mt-1 uppercase">SKILL ACTIVATED</div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 회복 시 에메랄드 플래시 */}
+      {action?.type === 'heal' && (
+        <div key={`flash-heal-${battleStep}`} className="absolute inset-0 animate-flash-heal pointer-events-none z-0"></div>
+      )}
+
       {/* 카드 교체 시 사이안 플래시 */}
       {action?.type === 'switch' && (
         <div key={`switch-${battleStep}`} className="absolute inset-0 bg-cyan-400/20 animate-flash-red pointer-events-none z-0"></div>

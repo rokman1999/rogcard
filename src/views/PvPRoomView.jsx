@@ -12,20 +12,29 @@ const CardStack = ({ cards, label, isOpponent }) => (
   <div className="flex flex-col items-center">
     <span className="text-white/70 font-mono text-sm mb-4">{label}</span>
     {cards && cards.length > 0 ? (
-      <div className="flex gap-2 items-end justify-center">
-        {cards.map((card, i) => (
-          <div key={card.id || i} className="flex flex-col items-center gap-1">
-            <span className={`font-mono text-[10px] ${i === 0 ? 'text-amber-400' : 'text-white/30'}`}>
-              {i === 0 ? '선봉' : i === 1 ? '중간' : '마지막'}
-            </span>
-            <div className={`transition-all ${i === 0 ? 'w-40' : 'w-28 opacity-60'}`}>
-              <CardItem card={card} compact />
+      <div className="relative" style={{ width: '130px', height: '200px' }}>
+        {[...cards].reverse().map((card, ri) => {
+          const i = cards.length - 1 - ri;
+          const offset = i * 12;
+          const rotate = (i - Math.floor(cards.length / 2)) * 6;
+          return (
+            <div
+              key={card.id || i}
+              className="absolute transition-all"
+              style={{ left: `${offset}px`, top: `${offset * 0.4}px`, zIndex: i + 1, transform: `rotate(${rotate}deg)`, transformOrigin: 'bottom center' }}
+            >
+              <div className="w-24">
+                <CardItem card={card} compact />
+              </div>
+              {i === 0 && (
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 font-mono text-[10px] text-amber-400 whitespace-nowrap">선봉</span>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     ) : (
-      <div className={`w-40 h-56 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
+      <div className={`w-32 h-48 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
         <span className="text-white/20 font-mono text-xs">{isOpponent ? '대기 중...' : '없음'}</span>
       </div>
     )}

@@ -50,6 +50,7 @@ export const USERS_PATH = `artifacts/${appId}/public/data/users`;
 export const CARDS_PATH = `artifacts/${appId}/public/data/cards`;
 export const MATCHES_PATH = `artifacts/${appId}/public/data/matches`;
 export const GLOBAL_CHAT_PATH = `artifacts/${appId}/public/data/globalChat`;
+export const CHALLENGES_PATH = `artifacts/${appId}/public/data/challenges`;
 
 // Firebase 관련 함수들을 재-export해서 사용처에서 firebase/firestore를 직접 import하지 않아도 되게 함
 export {

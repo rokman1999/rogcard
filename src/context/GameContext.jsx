@@ -5,7 +5,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   auth, db,
-  USERS_PATH, CARDS_PATH, MATCHES_PATH, GLOBAL_CHAT_PATH,
+  USERS_PATH, CARDS_PATH, MATCHES_PATH, GLOBAL_CHAT_PATH, CHALLENGES_PATH,
   collection, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc,
   arrayUnion, addDoc, query, where, getDocs, increment,
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword
@@ -96,6 +96,11 @@ export function GameProvider({ children }) {
   const [pvpRoomData, setPvpRoomData] = useState(null);
   const [pvpRoomName, setPvpRoomName] = useState('');
   const [activeRooms, setActiveRooms] = useState([]);
+
+  // --- 챌린지 (온라인 유저 도전) ---
+  const [showOnlineModal, setShowOnlineModal] = useState(false);
+  const [incomingChallenge, setIncomingChallenge] = useState(null);
+  const [challengeBetInput, setChallengeBetInput] = useState('');
 
   // --- 채팅 ---
   const [chatInput, setChatInput] = useState('');
@@ -292,7 +297,28 @@ export function GameProvider({ children }) {
       const matches = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setActiveRooms(matches.filter(m => m.status === 'waiting').sort((a, b) => b.createdAt - a.createdAt));
     });
-    return () => { userUnsub(); cardsUnsub(); usersUnsub(); globalChatUnsub(); matchesUnsub(); };
+    // 내게 온 챌린지 수신
+    const challengesInQ = query(collection(db, CHALLENGES_PATH), where('toUid', '==', user.uid), where('status', '==', 'pending'));
+    const challengesInUnsub = onSnapshot(challengesInQ, (snapshot) => {
+      if (!snapshot.empty) {
+        const ch = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        setIncomingChallenge(ch);
+      } else {
+        setIncomingChallenge(null);
+      }
+    });
+    // 내가 보낸 챌린지가 수락됨 → pvp_setup으로 이동 (카드 선택 후 방 개설)
+    const challengesOutQ = query(collection(db, CHALLENGES_PATH), where('fromUid', '==', user.uid), where('status', '==', 'accepted'));
+    const challengesOutUnsub = onSnapshot(challengesOutQ, (snapshot) => {
+      if (!snapshot.empty) {
+        const ch = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        deleteDoc(doc(db, CHALLENGES_PATH, ch.id)).catch(() => { /* no-op */ });
+        setBattleBet(ch.bet);
+        setCurrentView('pvp_setup');
+        showToast('도전 수락! 카드를 선택하고 방을 개설하세요.', 'success');
+      }
+    });
+    return () => { userUnsub(); cardsUnsub(); usersUnsub(); globalChatUnsub(); matchesUnsub(); challengesInUnsub(); challengesOutUnsub(); };
   }, [user]);
 
   // ============================================================
@@ -896,13 +922,69 @@ export function GameProvider({ children }) {
           await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-card.price) });
           await updateDoc(doc(db, CARDS_PATH, card.id), { ownerId: user.uid, isSelling: false, price: null, equippedFrame: null });
           updateQuestProgress('buy_market');
-          await addDoc(collection(db, GLOBAL_CHAT_PATH), { sender: 'SYSTEM', text: `🛒 [${userData.nickname}]님이 [${card.name}] 카드를 구매하였습니다.`, timestamp: Date.now() });
+          await addDoc(collection(db, GLOBAL_CHAT_PATH), { sender: 'SYSTEM', text: `🛒 [${userData.nickname}]님이 [${card.name}] 카드를 ${formatMoney(card.price)} GOLD에 구매 완료하였습니다!`, timestamp: Date.now() });
           playSfx('success'); showToast("성공적으로 거래되었습니다!", "success");
         } catch (_) { showToast("거래 실패", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null);
       },
       onCancel: () => setConfirmModal(null)
     });
+  };
+
+  const handleSendChallenge = async (targetUser, bet) => {
+    if (!userData || !user) return;
+    if (targetUser.userId === user.uid) return showToast("자기 자신에게는 도전할 수 없습니다.", "warning");
+    const betNum = Number(bet);
+    if (!betNum || betNum <= 0) return showToast("올바른 배팅금을 입력하세요.", "warning");
+    if (userData.money < betNum) return showToast("자금이 부족합니다.", "error");
+    setIsProcessing(true);
+    try {
+      // 기존 챌린지 정리
+      const existingQ = query(collection(db, CHALLENGES_PATH), where('fromUid', '==', user.uid), where('status', '==', 'pending'));
+      const existingSnap = await getDocs(existingQ);
+      await Promise.all(existingSnap.docs.map(d => deleteDoc(doc(db, CHALLENGES_PATH, d.id))));
+      await addDoc(collection(db, CHALLENGES_PATH), {
+        fromUid: user.uid,
+        fromNickname: userData.nickname,
+        toUid: targetUser.userId,
+        toNickname: targetUser.nickname,
+        bet: betNum,
+        status: 'pending',
+        createdAt: Date.now()
+      });
+      setShowOnlineModal(false);
+      setChallengeBetInput('');
+      showToast(`[${targetUser.nickname}]님에게 도전장을 보냈습니다!`, "success");
+    } catch (_) { showToast("전송 실패", "error"); playSfx('error'); }
+    setIsProcessing(false);
+  };
+
+  const handleAcceptChallenge = async (challenge) => {
+    setIsProcessing(true);
+    try {
+      // 원본 챌린지 삭제 후 accepted 신호 생성 (도전자가 리스너로 감지)
+      await deleteDoc(doc(db, CHALLENGES_PATH, challenge.id));
+      await addDoc(collection(db, CHALLENGES_PATH), {
+        fromUid: challenge.fromUid,
+        toUid: challenge.toUid,
+        bet: challenge.bet,
+        status: 'accepted',
+        createdAt: Date.now()
+      });
+      setIncomingChallenge(null);
+      setBattleBet(challenge.bet);
+      setCurrentView('pvp_setup');
+      playSfx('success');
+      showToast(`[${challenge.fromNickname}]님의 도전을 수락했습니다! 방에 참가하세요.`, "success");
+    } catch (_) { showToast("수락 실패", "error"); playSfx('error'); }
+    setIsProcessing(false);
+  };
+
+  const handleRejectChallenge = async (challengeId) => {
+    try {
+      await deleteDoc(doc(db, CHALLENGES_PATH, challengeId));
+      setIncomingChallenge(null);
+    } catch (_) { /* no-op */ }
   };
 
   const handleEquipTitle = async (title) => {
@@ -969,6 +1051,9 @@ export function GameProvider({ children }) {
     pvpRoomData, setPvpRoomData,
     pvpRoomName, setPvpRoomName,
     activeRooms,
+    showOnlineModal, setShowOnlineModal,
+    incomingChallenge,
+    challengeBetInput, setChallengeBetInput,
     chatInput, setChatInput,
     globalChats,
     globalChatInput, setGlobalChatInput,
@@ -1000,6 +1085,7 @@ export function GameProvider({ children }) {
     updateQuestProgress, handleClaimQuest,
     handleListMarket, handleCancelMarket, handleBuyMarket,
     handleEquipTitle, handleAdminSetGold,
+    handleSendChallenge, handleAcceptChallenge, handleRejectChallenge,
   };
 
   return (

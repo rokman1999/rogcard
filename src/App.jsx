@@ -2,8 +2,8 @@
 // 역할: GameProvider로 전체 앱 감싸기 + 뷰 라우팅 + 전역 오버레이(Toast, Modal) 렌더링
 // 상태/핸들러는 모두 GameContext에 있으므로 이 파일은 구조(structure)만 담당
 
-import { lazy, Suspense } from 'react';
-import { ShoppingCart, Users, Banknote, Volume2, VolumeX } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { ShoppingCart, Users, Banknote, Volume2, VolumeX, Swords } from 'lucide-react';
 import { GameProvider, useGame } from './context/GameContext';
 
 // 뷰 컴포넌트: lazy import로 코드 스플리팅 → 초기 번들 크기 감소
@@ -41,6 +41,7 @@ function Header() {
     soundEnabled, setSoundEnabled,
     setCurrentView, setViewingProfileUserId,
     setShowChargeModal, setChargeStep,
+    setShowOnlineModal,
     wrapClick, handleHover
   } = useGame();
 
@@ -52,9 +53,13 @@ function Header() {
           onMouseEnter={handleHover}
           className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]"
         >ROG CARD</h2>
-        <span className="hidden md:flex text-white/30 text-xs font-mono items-center gap-1">
+        <button
+          onClick={wrapClick(() => setShowOnlineModal(true))}
+          onMouseEnter={handleHover}
+          className="hidden md:flex text-white/30 hover:text-white/70 text-xs font-mono items-center gap-1 transition-colors"
+        >
           <Users size={12} /> 접속 중: {onlineCount}명
-        </span>
+        </button>
       </div>
       <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
@@ -213,6 +218,128 @@ function ChargeModal() {
 }
 
 // ============================================================
+// OnlineUsersModal: 접속중인 유저 목록 + 도전장 전송
+// ============================================================
+function OnlineUsersModal() {
+  const {
+    user, userData, allUsers, onlineCount,
+    showOnlineModal, setShowOnlineModal,
+    challengeBetInput, setChallengeBetInput,
+    isProcessing,
+    handleSendChallenge, wrapClick, handleHover
+  } = useGame();
+  const [selectedTarget, setSelectedTarget] = useState(null);
+  const [now] = useState(() => Date.now());
+
+  if (!showOnlineModal) return null;
+
+  const onlineUsers = allUsers.filter(u => now - (u.lastActive || 0) < 300000 && u.userId !== user?.uid);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in" onClick={() => { setShowOnlineModal(false); setSelectedTarget(null); setChallengeBetInput(''); }}>
+      <div className="bg-white/[0.02] border border-white/10 p-8 w-full max-w-md relative" onClick={e => e.stopPropagation()}>
+        <HUDCorner />
+        <h3 className="font-mono font-light text-xl text-white mb-2 tracking-widest uppercase text-center">접속 중인 플레이어</h3>
+        <p className="text-white/30 font-mono text-xs text-center mb-6 tracking-widest">{onlineCount}명 접속 중</p>
+
+        {onlineUsers.length === 0 ? (
+          <div className="text-white/30 font-mono text-sm text-center py-8">현재 다른 접속자가 없습니다.</div>
+        ) : (
+          <div className="flex flex-col gap-2 max-h-64 overflow-y-auto custom-scrollbar mb-4">
+            {onlineUsers.map((u, i) => (
+              <button
+                key={i}
+                onClick={() => { setSelectedTarget(u); setChallengeBetInput(''); }}
+                onMouseEnter={handleHover}
+                className={`flex items-center justify-between p-3 border transition-all ${selectedTarget?.userId === u.userId ? 'border-cyan-400/70 bg-cyan-900/20' : 'border-white/10 hover:border-white/30 hover:bg-white/5'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <span className="font-mono text-sm text-white">{u.nickname}</span>
+                </div>
+                <span className="font-mono text-xs text-white/40">{u.wins || 0}승 {u.losses || 0}패</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {selectedTarget && (
+          <div className="border border-cyan-400/30 bg-cyan-900/10 p-4 mb-4 animate-fade-in">
+            <p className="font-mono text-sm text-cyan-300 mb-3 tracking-wider">
+              <Swords size={14} className="inline mr-2" />
+              [{selectedTarget.nickname}]님에게 도전
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="number"
+                value={challengeBetInput}
+                onChange={e => setChallengeBetInput(e.target.value)}
+                placeholder="배팅 GOLD"
+                className="flex-1 bg-transparent border-b border-white/30 px-2 py-1 text-white font-mono text-sm focus:outline-none focus:border-cyan-400 placeholder-white/20"
+              />
+              <button
+                onClick={wrapClick(() => handleSendChallenge(selectedTarget, challengeBetInput))}
+                disabled={isProcessing}
+                className="px-4 py-1 bg-cyan-900/40 border border-cyan-400/50 text-cyan-300 font-mono text-xs hover:bg-cyan-400 hover:text-black transition-all disabled:opacity-30 tracking-widest"
+              >도전!</button>
+            </div>
+            {userData && <p className="text-white/30 font-mono text-[10px] mt-2">보유: {formatMoney(userData.money)} GOLD</p>}
+          </div>
+        )}
+
+        <button
+          onClick={wrapClick(() => { setShowOnlineModal(false); setSelectedTarget(null); setChallengeBetInput(''); })}
+          className="w-full py-3 border border-white/20 text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase transition-colors"
+        >닫기</button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// IncomingChallengeModal: 상대방 도전장 수신 모달
+// ============================================================
+function IncomingChallengeModal() {
+  const {
+    incomingChallenge, isProcessing,
+    handleAcceptChallenge, handleRejectChallenge,
+    wrapClick
+  } = useGame();
+
+  if (!incomingChallenge) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
+      <div className="bg-white/[0.02] border border-amber-500/40 p-8 w-full max-w-sm relative shadow-[0_0_40px_rgba(245,158,11,0.15)] animate-slide-up">
+        <HUDCorner />
+        <div className="text-center mb-6">
+          <div className="text-amber-400 text-4xl mb-3">⚔️</div>
+          <h3 className="font-mono font-bold text-xl text-white tracking-widest">도전장!</h3>
+          <p className="text-white/50 font-mono text-sm mt-2">
+            <span className="text-amber-300 font-bold">[{incomingChallenge.fromNickname}]</span>님이 결투를 신청했습니다
+          </p>
+          <div className="mt-4 text-amber-400 font-mono font-bold text-2xl bg-amber-900/20 border border-amber-500/30 py-2">
+            {formatMoney(incomingChallenge.bet)} GOLD
+          </div>
+          <p className="text-white/30 font-mono text-xs mt-2">배팅금</p>
+        </div>
+        <div className="flex gap-4">
+          <button
+            onClick={wrapClick(() => handleRejectChallenge(incomingChallenge.id))}
+            className="flex-1 py-3 border border-white/20 text-white/50 hover:text-white font-mono text-sm tracking-widest uppercase transition-colors"
+          >거절</button>
+          <button
+            onClick={wrapClick(() => handleAcceptChallenge(incomingChallenge))}
+            disabled={isProcessing}
+            className="flex-1 py-3 bg-amber-500/20 border border-amber-500/60 text-amber-300 hover:bg-amber-500 hover:text-black font-mono text-sm tracking-widest uppercase transition-all disabled:opacity-30 font-bold"
+          >{isProcessing ? '처리 중...' : '수락!'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // AppContent: Provider 안에서 context를 소비하는 실제 앱 UI
 // bgmRef는 context에서 가져와 <audio> 엘리먼트에 연결
 // ============================================================
@@ -221,6 +348,7 @@ function AppContent() {
     currentView,
     toast, setToast,
     previewCard, confirmModal, showChargeModal,
+    showOnlineModal, incomingChallenge,
     bgmRef
   } = useGame();
 
@@ -265,6 +393,8 @@ function AppContent() {
       {previewCard && <PreviewModal />}
       {confirmModal && <ConfirmModal />}
       {showChargeModal && <ChargeModal />}
+      {showOnlineModal && <OnlineUsersModal />}
+      {incomingChallenge && <IncomingChallengeModal />}
     </div>
   );
 }
