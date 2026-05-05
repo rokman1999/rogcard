@@ -856,6 +856,7 @@ export function GameProvider({ children }) {
           await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-card.price) });
           await updateDoc(doc(db, CARDS_PATH, card.id), { ownerId: user.uid, isSelling: false, price: null, equippedFrame: null });
           updateQuestProgress('buy_market');
+          await addDoc(collection(db, GLOBAL_CHAT_PATH), { sender: 'SYSTEM', text: `🛒 [${userData.nickname}]님이 [${card.name}] 카드를 구매하였습니다.`, timestamp: Date.now() });
           playSfx('success'); showToast("성공적으로 거래되었습니다!", "success");
         } catch (_) { showToast("거래 실패", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null);
