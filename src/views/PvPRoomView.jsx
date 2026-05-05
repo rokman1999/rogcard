@@ -12,18 +12,18 @@ const CardStack = ({ cards, label, isOpponent }) => (
   <div className="flex flex-col items-center">
     <span className="text-white/70 font-mono text-sm mb-4">{label}</span>
     {cards && cards.length > 0 ? (
-      <div className="relative" style={{ width: '130px', height: '200px' }}>
+      <div className="relative" style={{ width: '200px', height: '280px' }}>
         {[...cards].reverse().map((card, ri) => {
           const i = cards.length - 1 - ri;
-          const offset = i * 12;
-          const rotate = (i - Math.floor(cards.length / 2)) * 6;
+          const offset = i * 18;
+          const rotate = (i - Math.floor(cards.length / 2)) * 7;
           return (
             <div
               key={card.id || i}
               className="absolute transition-all"
               style={{ left: `${offset}px`, top: `${offset * 0.4}px`, zIndex: i + 1, transform: `rotate(${rotate}deg)`, transformOrigin: 'bottom center' }}
             >
-              <div className="w-24">
+              <div className="w-36">
                 <CardItem card={card} compact />
               </div>
               {i === 0 && (
@@ -34,7 +34,7 @@ const CardStack = ({ cards, label, isOpponent }) => (
         })}
       </div>
     ) : (
-      <div className={`w-32 h-48 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
+      <div className={`w-36 h-52 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
         <span className="text-white/20 font-mono text-xs">{isOpponent ? '대기 중...' : '없음'}</span>
       </div>
     )}

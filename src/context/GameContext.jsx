@@ -341,7 +341,7 @@ export function GameProvider({ children }) {
           const hc = (data.hostCards || [data.hostCard])[0];
           const gc = (data.guestCards || [data.guestCard])[0];
           setLiveState({ p1Hp: hc.stats.hp, p2Hp: gc.stats.hp, p1Max: hc.stats.hp, p2Max: gc.stats.hp, p1CardIdx: 0, p2CardIdx: 0, currentAction: null });
-          setBattleStep(0); setBattleResult(null); setCurrentView('battle_pvp_play');
+          setBattleStep(0); setBattleResult(null); setBattleType('PvP'); setCurrentView('battle_pvp_play');
         }
       } else {
         showToast("방이 파괴되었습니다.", "error");
