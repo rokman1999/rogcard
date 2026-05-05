@@ -1,5 +1,7 @@
+// 이 파일은 순수 게임 기획 데이터만 담는다.
+// 로직/UI와 분리해야 기획자가 수치 조정 시 코드 실수 위험이 없기 때문.
 export const CREATE_CARD_COST = 5000;
-export const STARTING_GOLD = 500000;
+export const STARTING_GOLD = 1000000; // 초기 자금: 신규 유저 진입 장벽을 낮추기 위해 100만 골드
 
 export const STATS_BY_LEVEL = [
   null,

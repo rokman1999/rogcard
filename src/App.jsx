@@ -473,7 +473,7 @@ const MiniCard = ({ card, onClick }) => {
           <span className={`text-xs font-mono font-black ${getTierTextColor(card.level)}`}>LV.{card.level}</span>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
@@ -549,7 +549,7 @@ const CardItem = ({ card, onClick, onHover, className="" }) => {
       </div>
     </div>
   );
-};
+}
 
 // ==========================================
 // 5. 메인 앱 컴포넌트
@@ -2577,7 +2577,7 @@ export default function RogCard() {
       <audio ref={bgmRef} src="https://res.cloudinary.com/dkotceims/video/upload/v1777608697/%EB%A9%94%EC%9D%B4%ED%94%8C%EC%8A%A4%ED%86%A0%EB%A6%AC_BGM_-_%EB%A0%88%EC%A7%80%EC%8A%A4%ED%83%95%EC%8A%A4_%EB%B3%B8%EB%B6%80_w7ucsi.mp3" loop preload="auto" />
       {currentView === 'login' ? renderLogin() : (
         <div className="relative z-10 flex flex-col min-h-screen">
-          {renderHeader()}
+          <Header />
           <main className="flex-1 flex flex-col items-center justify-center w-full">
             {currentView === 'lobby' && renderLobby()}
             {currentView === 'profile' && renderProfile()}
@@ -2597,6 +2597,8 @@ export default function RogCard() {
           </main>
         </div>
       )}
+
+      {/* 전역 오버레이 컴포넌트들 */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
       {showChargeModal && renderChargeModal()}
@@ -2632,5 +2634,17 @@ export default function RogCard() {
         </div>
       )}
     </div>
+  );
+}
+
+// ============================================================
+// App (default export): GameProvider로 감싸는 최상위 컴포넌트
+// Provider를 최상위에 두어야 AppContent 내 모든 컴포넌트가 context에 접근 가능
+// ============================================================
+export default function App() {
+  return (
+    <GameProvider>
+      <AppContent />
+    </GameProvider>
   );
 }
