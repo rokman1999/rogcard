@@ -2,21 +2,44 @@
 // 호스트/게스트 모두 선택한 카드 배열 표시 (최대 3장)
 // 호스트는 상대방이 참가하면 "전투 시작" 버튼 활성화
 
-import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
 import CardItem from '../components/CardItem';
 import { formatMoney } from '../utils/formatUtils';
 
+const CardStack = ({ cards, label, isOpponent }) => (
+  <div className="flex flex-col items-center">
+    <span className="text-white/70 font-mono text-sm mb-4">{label}</span>
+    {cards && cards.length > 0 ? (
+      <div className="flex gap-2 items-end justify-center">
+        {cards.map((card, i) => (
+          <div key={card.id || i} className="flex flex-col items-center gap-1">
+            <span className={`font-mono text-[10px] ${i === 0 ? 'text-amber-400' : 'text-white/30'}`}>
+              {i === 0 ? '선봉' : i === 1 ? '중간' : '마지막'}
+            </span>
+            <div className={`transition-all ${i === 0 ? 'w-40' : 'w-28 opacity-60'}`}>
+              <CardItem card={card} />
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className={`w-40 h-56 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
+        <span className="text-white/20 font-mono text-xs">{isOpponent ? '대기 중...' : '없음'}</span>
+      </div>
+    )}
+  </div>
+);
+
 const PvPRoomView = () => {
   const {
     user, userData,
     pvpRoomId, pvpRoomData,
-    chatInput, setChatInput,
+    globalChats, globalChatInput, setGlobalChatInput,
     isProcessing,
     wrapClick,
-    handleSendChat, handleStartPvPBattle, handleLeaveRoom
+    handleSendGlobalChat, handleStartPvPBattle, handleLeaveRoom
   } = useGame();
 
   if (!pvpRoomData) return null;
@@ -30,30 +53,6 @@ const PvPRoomView = () => {
     ? (pvpRoomData.guestCards || [pvpRoomData.guestCard].filter(Boolean))
     : (pvpRoomData.hostCards || [pvpRoomData.hostCard].filter(Boolean));
   const isReady = pvpRoomData.status === 'ready';
-
-  const CardStack = ({ cards, label, isOpponent }) => (
-    <div className="flex flex-col items-center">
-      <span className="text-white/70 font-mono text-sm mb-4">{label}</span>
-      {cards && cards.length > 0 ? (
-        <div className="flex gap-2 items-end justify-center">
-          {cards.map((card, i) => (
-            <div key={card.id || i} className="flex flex-col items-center gap-1">
-              <span className={`font-mono text-[10px] ${i === 0 ? 'text-amber-400' : 'text-white/30'}`}>
-                {i === 0 ? '선봉' : i === 1 ? '중간' : '마지막'}
-              </span>
-              <div className={`transition-all ${i === 0 ? 'w-40' : 'w-28 opacity-60'}`}>
-                <CardItem card={card} />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={`w-40 h-56 border border-white/10 flex items-center justify-center ${isOpponent ? 'animate-pulse' : ''}`}>
-          <span className="text-white/20 font-mono text-xs">{isOpponent ? '대기 중...' : '없음'}</span>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 animate-fade-in relative z-10 w-full max-w-[1400px] mx-auto">
@@ -97,25 +96,24 @@ const PvPRoomView = () => {
           <button onClick={wrapClick(handleLeaveRoom)} className="mt-8 text-white/30 hover:text-white text-xs font-mono tracking-widest uppercase transition-colors">방 나가기</button>
         </div>
 
-        {/* 실시간 채팅 패널 */}
+        {/* 전체 채팅 패널 */}
         <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden min-h-[400px]">
           <HUDCorner />
           <div className="p-5 border-b border-white/10 font-mono font-light text-sm text-white/50 tracking-widest uppercase flex justify-center gap-2">
-            <MessageSquare size={16} /> 통신 채널
+            <MessageSquare size={16} /> 전체 채팅
           </div>
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 font-mono text-xs custom-scrollbar">
-            {pvpRoomData.chat.map((msg, i) => (
-              <div key={i} className={`flex flex-col ${msg.sender === userData.nickname ? 'items-end' : 'items-start'} animate-slide-up`}>
-                <span className="text-[10px] text-white/30 mb-1">{msg.sender}</span>
-                <div className={`px-4 py-2 ${msg.sender === userData.nickname ? 'bg-white/10 text-white' : 'border border-white/10 text-white/70'} max-w-[90%] break-words rounded-md`}>
-                  {msg.text}
-                </div>
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 font-mono text-xs custom-scrollbar">
+            {globalChats.map((msg, i) => (
+              <div key={i} className="flex flex-col animate-slide-up">
+                {msg.sender !== 'SYSTEM' && <span className="mb-0.5 text-[10px] text-white/30">{msg.sender}</span>}
+                <span className={`break-words ${msg.sender === 'SYSTEM' ? 'text-amber-300 font-bold' : msg.sender === userData?.nickname ? 'text-emerald-300' : 'text-white/80'}`}>{msg.text}</span>
               </div>
             ))}
+            <div ref={el => el && el.scrollIntoView()} />
           </div>
-          <form onSubmit={handleSendChat} className="p-4 border-t border-white/10 flex gap-3">
+          <form onSubmit={handleSendGlobalChat} className="p-4 border-t border-white/10 flex gap-3">
             <input
-              type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
+              type="text" value={globalChatInput} onChange={e => setGlobalChatInput(e.target.value)}
               className="flex-1 bg-transparent border-b border-white/20 px-2 py-2 text-white font-mono text-sm focus:outline-none focus:border-white transition-colors placeholder-white/20"
               placeholder="메시지 입력"
             />

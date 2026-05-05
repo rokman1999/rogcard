@@ -1,7 +1,6 @@
 // PvPSetupView: PvP 방 목록 조회 + 새 방 개설 화면
 // 최대 3장의 카드를 선택 순서대로 출전 (선택 번호 배지 표시)
 
-import React from 'react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
 import CardItem from '../components/CardItem';
