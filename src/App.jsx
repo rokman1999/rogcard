@@ -2,22 +2,27 @@
 // 역할: GameProvider로 전체 앱 감싸기 + 뷰 라우팅 + 전역 오버레이(Toast, Modal) 렌더링
 // 상태/핸들러는 모두 GameContext에 있으므로 이 파일은 구조(structure)만 담당
 
-import React from 'react';
-import { ShoppingCart, Volume2, VolumeX } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { ShoppingCart, Users, Banknote } from 'lucide-react';
 import { GameProvider, useGame } from './context/GameContext';
 
-// 뷰 컴포넌트 임포트 - 각 화면은 독립 파일로 분리됨
-import LoginView from './views/LoginView';
-import LobbyView from './views/LobbyView';
-import ShopView from './views/ShopView';
-import DeckView from './views/DeckView';
-import CardDetailsView from './views/CardDetailsView';
-import EnhancementView from './views/EnhancementView';
-import BattleSelectView from './views/BattleSelectView';
-import BattleAISetupView from './views/BattleAISetupView';
-import PvPSetupView from './views/PvPSetupView';
-import PvPRoomView from './views/PvPRoomView';
-import BattleView from './views/BattleView';
+// 뷰 컴포넌트: lazy import로 코드 스플리팅 → 초기 번들 크기 감소
+// 각 뷰는 해당 route에 진입할 때만 로드됨
+const LoginView       = lazy(() => import('./views/LoginView'));
+const LobbyView       = lazy(() => import('./views/LobbyView'));
+const ShopView        = lazy(() => import('./views/ShopView'));
+const DeckView        = lazy(() => import('./views/DeckView'));
+const CardDetailsView = lazy(() => import('./views/CardDetailsView'));
+const EnhancementView = lazy(() => import('./views/EnhancementView'));
+const BattleSelectView  = lazy(() => import('./views/BattleSelectView'));
+const BattleAISetupView = lazy(() => import('./views/BattleAISetupView'));
+const PvPSetupView    = lazy(() => import('./views/PvPSetupView'));
+const PvPRoomView     = lazy(() => import('./views/PvPRoomView'));
+const BattleView      = lazy(() => import('./views/BattleView'));
+const ProfileView     = lazy(() => import('./views/ProfileView'));
+const TranscendView   = lazy(() => import('./views/TranscendView'));
+const QuestsView      = lazy(() => import('./views/QuestsView'));
+const MarketView      = lazy(() => import('./views/MarketView'));
 
 // 공용 컴포넌트
 import Toast from './components/Toast';
@@ -28,36 +33,47 @@ import { getIcon, formatMoney } from './utils/formatUtils';
 // ============================================================
 // Header: 앱 상단 고정 네비게이션 바
 // 로비로 돌아가기, 상점 이동, 사운드 토글, 유저 정보 표시
+// 닉네임 클릭 시 내 프로필로 이동
 // ============================================================
 function Header() {
   const {
-    userData, soundEnabled, setSoundEnabled,
-    setCurrentView, wrapClick, handleHover
+    user, userData, onlineCount,
+    setCurrentView, setViewingProfileUserId,
+    setShowChargeModal, setChargeStep,
+    wrapClick, handleHover
   } = useGame();
 
   return (
     <header className="sticky top-0 z-40 bg-white/[0.01] backdrop-blur-3xl border-b border-white/10 p-5 px-8 flex justify-between items-center transition-all hover:bg-white/[0.03]">
-      <h2
-        onClick={wrapClick(() => setCurrentView('lobby'))}
-        onMouseEnter={handleHover}
-        className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]"
-      >ROG CARD</h2>
+      <div className="flex items-center gap-6">
+        <h2
+          onClick={wrapClick(() => setCurrentView('lobby'))}
+          onMouseEnter={handleHover}
+          className="text-3xl font-black text-white cursor-pointer hover:opacity-70 transition-all font-logo tracking-[0.1em]"
+        >ROG CARD</h2>
+        <span className="hidden md:flex text-white/30 text-xs font-mono items-center gap-1">
+          <Users size={12} /> 접속 중: {onlineCount}명
+        </span>
+      </div>
       <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
           <ShoppingCart size={16} /> 상점
         </button>
-        <button onClick={wrapClick(() => setSoundEnabled(!soundEnabled))} className="text-white/50 hover:text-white transition-colors">
-          {soundEnabled
-            ? <span className="flex items-center gap-1"><Volume2 size={14} /> SOUND ON</span>
-            : <span className="flex items-center gap-1"><VolumeX size={14} /> SOUND OFF</span>
-          }
-        </button>
         {userData && (
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-white/70">
-              {getIcon(userData.icon)} <span>{userData.nickname}</span>
+            <button
+              onClick={wrapClick(() => { setChargeStep(1); setShowChargeModal(true); })}
+              className="text-amber-400 border border-amber-500/30 bg-amber-900/20 px-3 py-1.5 text-xs hover:bg-amber-500 hover:text-white transition-colors tracking-widest font-bold hidden sm:block shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+            >충전하기</button>
+            <div
+              className="flex items-center gap-6 cursor-pointer hover:opacity-80"
+              onClick={wrapClick(() => { setViewingProfileUserId(user?.uid); setCurrentView('profile'); })}
+            >
+              <div className="flex items-center gap-2 text-white/70">
+                {getIcon(userData.icon)} <span>{userData.nickname}</span>
+              </div>
+              <div className="text-white opacity-90 font-bold text-sm hidden sm:block">{formatMoney(userData.money)} GOLD</div>
             </div>
-            <div className="text-white opacity-90 font-bold text-sm">{formatMoney(userData.money)} GOLD</div>
           </div>
         )}
       </div>
@@ -67,7 +83,6 @@ function Header() {
 
 // ============================================================
 // PreviewModal: 카드 미리보기 전체화면 모달
-// 랭킹 화면 등에서 카드를 클릭하면 크게 볼 수 있는 기능
 // ============================================================
 function PreviewModal() {
   const { previewCard, setPreviewCard, wrapClick, handleHover } = useGame();
@@ -94,7 +109,6 @@ function PreviewModal() {
 
 // ============================================================
 // ConfirmModal: 파괴적 행동(카드 판매 등) 전 확인 모달
-// setConfirmModal(null)로 닫기, onConfirm/onCancel 콜백으로 처리
 // ============================================================
 function ConfirmModal() {
   const { confirmModal, setConfirmModal, isProcessing, wrapClick, handleHover } = useGame();
@@ -125,6 +139,73 @@ function ConfirmModal() {
 }
 
 // ============================================================
+// ChargeModal: 골드 충전 모달 (계좌 이체 안내)
+// ============================================================
+function ChargeModal() {
+  const {
+    showChargeModal, setShowChargeModal,
+    chargeStep, setChargeStep,
+    selectedChargePack, setSelectedChargePack,
+    wrapClick
+  } = useGame();
+
+  if (!showChargeModal) return null;
+
+  const PACKS = [
+    { gold: 1000000, price: '10,000원' },
+    { gold: 3000000, price: '30,000원' },
+    { gold: 5000000, price: '50,000원' },
+    { gold: 10000000, price: '100,000원' },
+    { gold: 20000000, price: '5,000원', isHotDeal: true }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-3xl p-4 animate-fade-in">
+      <div className="bg-white/[0.02] border border-white/10 p-10 w-full max-w-lg relative transition-all duration-300 shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+        <HUDCorner />
+        <h3 className="font-mono font-light text-2xl text-white mb-8 tracking-widest uppercase text-center border-b border-white/10 pb-4">자산 충전소</h3>
+
+        {chargeStep === 1 ? (
+          <div className="flex flex-col gap-4 mb-8">
+            {PACKS.map((p, i) => (
+              <button
+                key={i}
+                onClick={wrapClick(() => { setSelectedChargePack(p); setChargeStep(2); })}
+                className={`flex justify-between items-center p-5 border ${p.isHotDeal ? 'border-red-500/80 bg-red-900/30' : 'border-white/10 bg-black/40 hover:bg-white/10 hover:border-amber-500/50'} transition-all group relative overflow-hidden`}
+              >
+                {p.isHotDeal && <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 tracking-widest">HOT DEAL</div>}
+                <span className={`font-mono font-bold text-lg group-hover:scale-105 transition-transform ${p.isHotDeal ? 'text-red-400 mt-3' : 'text-amber-400'}`}>{formatMoney(p.gold)} GOLD</span>
+                <span className={`font-sans text-sm border ${p.isHotDeal ? 'text-white bg-red-600/80 px-5 py-2 border-red-400' : 'text-white/70 bg-white/5 px-4 py-2 border-white/10 group-hover:text-white group-hover:bg-white/20'}`}>{p.price}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center mb-8 bg-black/40 border border-white/10 p-8 text-center gap-6">
+            <div className="w-16 h-16 bg-amber-500/20 flex items-center justify-center rounded-full mb-2">
+              <Banknote size={32} className="text-amber-400" />
+            </div>
+            <h4 className="text-xl font-bold text-white tracking-widest">입금 안내</h4>
+            <div className="text-amber-400 font-mono text-xl md:text-2xl font-black bg-amber-900/30 px-6 py-3 border border-amber-500/50 whitespace-nowrap">
+              토스뱅크 1000-0052-1555
+            </div>
+            <div className="text-white/60 font-sans text-sm leading-relaxed">
+              선택하신 상품: <span className="text-white font-bold">{formatMoney(selectedChargePack?.gold)} GOLD ({selectedChargePack?.price})</span><br /><br />
+              위 계좌로 입금해 주시기 바랍니다.<br />
+              <span className="text-emerald-400 font-bold mt-2 block">"입금 확인이 완료되면 자동으로 충전됩니다"</span>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={wrapClick(() => setShowChargeModal(false))}
+          className="w-full py-4 bg-white/10 text-white border border-white/20 hover:bg-white hover:text-black transition-all duration-300 font-mono text-sm tracking-widest uppercase"
+        >닫기</button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // AppContent: Provider 안에서 context를 소비하는 실제 앱 UI
 // bgmRef는 context에서 가져와 <audio> 엘리먼트에 연결
 // ============================================================
@@ -132,7 +213,7 @@ function AppContent() {
   const {
     currentView,
     toast, setToast,
-    previewCard, confirmModal,
+    previewCard, confirmModal, showChargeModal,
     bgmRef
   } = useGame();
 
@@ -146,29 +227,37 @@ function AppContent() {
       />
 
       {/* 로그인 화면은 헤더 없이 전체화면 */}
-      {currentView === 'login' ? <LoginView /> : (
-        <div className="relative z-10 flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 flex flex-col items-center justify-center w-full">
-            {currentView === 'lobby' && <LobbyView />}
-            {currentView === 'shop' && <ShopView />}
-            {currentView === 'deck' && <DeckView />}
-            {currentView === 'card_details' && <CardDetailsView />}
-            {currentView === 'enhance' && <EnhancementView />}
-            {currentView === 'battle_select' && <BattleSelectView />}
-            {currentView === 'battle_ai_setup' && <BattleAISetupView />}
-            {currentView === 'pvp_setup' && <PvPSetupView />}
-            {currentView === 'pvp_room' && <PvPRoomView />}
-            {currentView === 'battle' && <BattleView />}
-            {currentView === 'battle_pvp_play' && <BattleView />}
-          </main>
-        </div>
-      )}
+      {/* Suspense fallback: lazy 뷰 로딩 중 빈 화면 방지 */}
+      <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
+        {currentView === 'login' ? <LoginView /> : (
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1 flex flex-col items-center justify-center w-full">
+              {currentView === 'lobby' && <LobbyView />}
+              {currentView === 'shop' && <ShopView />}
+              {currentView === 'deck' && <DeckView />}
+              {currentView === 'card_details' && <CardDetailsView />}
+              {currentView === 'enhance' && <EnhancementView />}
+              {currentView === 'transcend' && <TranscendView />}
+              {currentView === 'battle_select' && <BattleSelectView />}
+              {currentView === 'battle_ai_setup' && <BattleAISetupView />}
+              {currentView === 'pvp_setup' && <PvPSetupView />}
+              {currentView === 'pvp_room' && <PvPRoomView />}
+              {currentView === 'battle' && <BattleView />}
+              {currentView === 'battle_pvp_play' && <BattleView />}
+              {currentView === 'profile' && <ProfileView />}
+              {currentView === 'quests' && <QuestsView />}
+              {currentView === 'market' && <MarketView />}
+            </main>
+          </div>
+        )}
+      </Suspense>
 
       {/* 전역 오버레이 컴포넌트들 */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {previewCard && <PreviewModal />}
       {confirmModal && <ConfirmModal />}
+      {showChargeModal && <ChargeModal />}
     </div>
   );
 }

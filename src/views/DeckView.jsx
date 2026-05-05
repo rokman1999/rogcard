@@ -1,12 +1,13 @@
 // DeckView: 카드 관리 화면 + 신규 카드 생성 모달
-// 보유 카드를 그리드로 표시하고 호버 시 액션 버튼 노출
-// 이미지 크롭 기능을 내장하여 카드 사진을 카드 비율(2:3.1)에 맞게 편집
+// 보유 카드(거래소 등록 중 제외)를 그리드로 표시하고 호버 시 액션 버튼 노출
+// 초월 합성 버튼: LV.20 카드 2장 이상 보유 시 활성화 유도
 
 import React from 'react';
-import { Plus, Info, ArrowRight } from 'lucide-react';
+import { Plus, Info, ArrowRight, Sparkles } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HUDCorner from '../components/HUDCorner';
 import CardItem from '../components/CardItem';
+import { CREATE_CARD_COST } from '../constants/gameData';
 import { formatMoney } from '../utils/formatUtils';
 
 const DeckView = () => {
@@ -15,7 +16,7 @@ const DeckView = () => {
     setCurrentView, setSelectedCard,
     showCreateModal, setShowCreateModal,
     cropImage, setCropImage, imgLoaded, setImgLoaded,
-    cropZoom, cropPan, imgRef,
+    cropZoom, cropPan, setCropPan, imgRef,
     wrapClick, handleHover,
     handleCreateCard, handleSellCard, startAIBattleSetup,
     handleFileChange, handleCropPointerDown, handleCropPointerMove,
@@ -23,33 +24,49 @@ const DeckView = () => {
   } = useGame();
 
   const maxSlots = userData?.maxSlots || 3;
+  // 거래소 등록 중인 카드는 덱에서 제외
+  const availableCards = myCards.filter(c => !c.isSelling);
   const renderSlots = Array.from({ length: maxSlots });
 
   return (
     <div className="p-4 md:p-10 max-w-[1400px] mx-auto animate-fade-in min-h-[80vh] relative z-10 flex flex-col">
+      <div className="w-full flex justify-start mb-6">
+        <button onClick={wrapClick(() => setCurrentView('lobby'))} className="text-white/40 hover:text-white flex items-center gap-2 font-mono text-sm uppercase">
+          <ArrowRight className="rotate-180" size={14} /> 뒤로 가기
+        </button>
+      </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 pb-6 border-b border-white/20">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-mono font-light text-white tracking-[0.2em] uppercase">카드 관리</h2>
-          <span className="font-mono text-sm text-white/40 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">보유량: {myCards.length}/{maxSlots}</span>
+          <span className="font-mono text-sm text-white/40 tracking-widest bg-white/5 px-3 py-1 border border-white/10">보유량: {availableCards.length}/{maxSlots}</span>
         </div>
-        <div className="relative">
-          <button onClick={wrapClick(() => setShowCreateModal(true))} className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black">
-            <Plus size={14} /> 신규 카드 생성 [-{formatMoney(5000)} G]
+        <div className="flex items-center gap-3">
+          <button
+            onClick={wrapClick(() => setCurrentView('transcend'))}
+            className="flex items-center gap-3 px-6 py-3 text-cyan-300 font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+          >
+            <Sparkles size={14} /> 초월 합성
+          </button>
+          <button
+            onClick={wrapClick(() => setShowCreateModal(true))}
+            className="flex items-center gap-3 px-6 py-3 text-white font-mono font-light text-sm transition-all uppercase hover:scale-105 bg-white/10 border border-white/20 hover:bg-white hover:text-black"
+          >
+            <Plus size={14} /> 신규 카드 생성 [-{formatMoney(CREATE_CARD_COST)} G]
           </button>
         </div>
       </div>
 
-      {myCards.length === 0 ? (
+      {availableCards.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-xl text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md">
-          <span className="mb-2">보유 중인 카드가 없습니다.</span>
-          <span>신규 카드를 생성하여 시작하세요.</span>
+          <span className="mb-2">사용 가능한 카드가 없습니다.</span>
+          <span className="text-sm">거래소에 판매 중이거나, 신규 카드를 생성하세요.</span>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {renderSlots.map((_, i) => {
-            const card = myCards[i];
+            const card = availableCards[i];
             if (!card) return (
-              <div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] rounded-[10px] flex flex-col items-center justify-center text-white/20 font-mono text-sm">
+              <div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] flex flex-col items-center justify-center text-white/20 font-mono text-sm">
                 <Plus size={24} className="mb-2 opacity-50" />
                 <span>EMPTY SLOT</span>
               </div>
@@ -58,13 +75,15 @@ const DeckView = () => {
               <div key={card.id} className="relative group">
                 <CardItem card={card} />
                 {/* 호버 시 카드 위에 액션 버튼 오버레이 표시 */}
-                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5 rounded-[12px]">
-                  <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105">
+                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5">
+                  <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">
                     <Info size={14} className="inline mr-1" /> 상세 정보
                   </button>
-                  <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105">카드 강화</button>
-                  <button onClick={wrapClick(() => startAIBattleSetup(card))} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-xs uppercase hover:bg-white hover:text-black hover:scale-105">전투 참가</button>
-                  <button onClick={wrapClick(() => handleSellCard(card))} className="w-full py-2 mt-2 text-white/50 bg-transparent font-mono text-xs underline hover:text-white hover:scale-105">카드 판매</button>
+                  {card.level < 21 && (
+                    <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('enhance'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">카드 강화</button>
+                  )}
+                  <button onClick={wrapClick(() => startAIBattleSetup(card))} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">전투 참가</button>
+                  <button onClick={wrapClick(() => handleSellCard(card))} className="w-full py-2 mt-2 text-white/50 bg-transparent font-mono text-[10px] underline hover:text-white hover:scale-105">카드 시스템 판매</button>
                 </div>
               </div>
             );
@@ -94,7 +113,7 @@ const DeckView = () => {
                   <img
                     ref={imgRef} src={cropImage} alt="crop"
                     className="absolute max-w-none pointer-events-none"
-                    onLoad={() => { setImgLoaded(true); }}
+                    onLoad={() => { setImgLoaded(true); setCropPan({ x: 0, y: 0 }); }}
                     style={{
                       width: imgLoaded && imgRef.current ? `${imgRef.current.naturalWidth * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom}px` : 'auto',
                       height: imgLoaded && imgRef.current ? `${imgRef.current.naturalHeight * Math.max(200 / imgRef.current.naturalWidth, 310 / imgRef.current.naturalHeight) * cropZoom}px` : 'auto',

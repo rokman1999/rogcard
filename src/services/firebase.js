@@ -23,7 +23,8 @@ import {
   addDoc,
   query,
   where,
-  getDocs
+  getDocs,
+  increment
 } from 'firebase/firestore';
 
 // Vite 환경변수 우선, 없으면 하드코딩된 기본값 사용 (로컬 개발 편의성)
@@ -53,6 +54,6 @@ export const GLOBAL_CHAT_PATH = `artifacts/${appId}/public/data/globalChat`;
 // Firebase 관련 함수들을 재-export해서 사용처에서 firebase/firestore를 직접 import하지 않아도 되게 함
 export {
   collection, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc,
-  arrayUnion, addDoc, query, where, getDocs,
+  arrayUnion, addDoc, query, where, getDocs, increment,
   signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword
 };

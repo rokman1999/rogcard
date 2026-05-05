@@ -1,7 +1,7 @@
 // 카드 관련 순수 유틸 함수 모음
 // 컴포넌트/상태와 무관한 순수 함수여야 테스트가 쉽고 재사용성이 높음
 
-import { COST_BY_LEVEL, UNIQUE_TRAITS, SKILL_UNLOCKS } from '../constants/gameData';
+import { COST_BY_LEVEL, UNIQUE_TRAITS } from '../constants/gameData';
 
 // 판매 가격 = 누적 강화 비용의 80% + 레벨 제곱 보너스
 // 강화 비용을 전액 돌려주지 않는 이유: 경제 밸런스 유지
@@ -13,16 +13,6 @@ export const getSellPrice = (level) => {
 
 // 카드 생성 시 랜덤 고유 특성 부여 - 게임의 다양성과 재미를 위한 요소
 export const getRandomTrait = () => UNIQUE_TRAITS[Math.floor(Math.random() * UNIQUE_TRAITS.length)];
-
-// 주어진 레벨까지 해금된 스킬 목록 반환
-// 레벨업 시마다 호출하여 unlockedSkills 배열을 갱신함
-export const getUnlockedSkills = (level) => {
-  const skills = [];
-  for (let i = 1; i <= level; i++) {
-    if (SKILL_UNLOCKS[i]) skills.push(SKILL_UNLOCKS[i]);
-  }
-  return skills;
-};
 
 // 레벨에 따라 카드 테두리 스타일(홀로그램 등급) 클래스를 반환
 // 높은 레벨일수록 화려한 효과로 성취감과 희귀감 부여
