@@ -5,7 +5,7 @@
 import FrameOverlay from './FrameOverlay';
 import { getFoilClass, getTierTextColor } from '../utils/cardUtils';
 
-const CardItem = ({ card, onClick, onHover, className = "", compact = false }) => {
+const CardItem = ({ card, onClick, onHover, className = "", compact = false, hideSkills = false }) => {
   // 카드 데이터가 없으면 빈 슬롯 표시 (덱 관리 화면에서 빈 슬롯 시각화)
   if (!card) return (
     <div className={`w-full aspect-[2/3.1] border border-white/10 bg-white/[0.02] backdrop-blur-2xl rounded-[10px] flex items-center justify-center text-white/30 font-mono text-sm transition-all duration-500 ${className}`}>
@@ -66,7 +66,7 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false }) =
                 "{card.description}"
               </div>
             )}
-            {!compact && (
+            {!compact && !hideSkills && (
               <div className="flex flex-wrap gap-1 w-full">
                 {card.unlockedSkills.map((s, i) => (
                   <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-sm border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">

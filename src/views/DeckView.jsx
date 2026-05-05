@@ -73,7 +73,7 @@ const DeckView = () => {
             );
             return (
               <div key={card.id} className="relative group">
-                <CardItem card={card} />
+                <CardItem card={card} hideSkills />
                 {/* 호버 시 카드 위에 액션 버튼 오버레이 표시 */}
                 <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-md z-20 p-5">
                   <button onClick={wrapClick(() => { setSelectedCard(card); setCurrentView('card_details'); })} className="w-full py-2 bg-white/10 text-white border border-white/20 font-mono text-[10px] uppercase hover:bg-white hover:text-black hover:scale-105">
