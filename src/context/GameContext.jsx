@@ -628,7 +628,7 @@ export function GameProvider({ children }) {
 
   const handleEnhance = async (card) => {
     const nextLevel = card.level + 1;
-    if (nextLevel > 20) return;
+    if (nextLevel > 30) return;
     const cost = COST_BY_LEVEL[nextLevel];
     if (userData.money < cost) { showToast("자금이 부족합니다", "error"); playSfx('error'); return; }
 
@@ -685,7 +685,7 @@ export function GameProvider({ children }) {
 
   const handleTranscend = async () => {
     if (!tCard1 || !tCard2 || tCard1.id === tCard2.id) { showToast("합성할 LV.20 카드 두 장을 선택해주세요.", "warning"); return; }
-    if (userData.money < 5000000) { showToast("자금이 부족합니다. (5,000,000 G 필요)", "error"); return; }
+    if (userData.money < 2000000) { showToast("자금이 부족합니다. (2,000,000 G 필요)", "error"); return; }
 
     setIsProcessing(true);
     setTranscendState('merging');
@@ -693,7 +693,7 @@ export function GameProvider({ children }) {
 
     setTimeout(async () => {
       try {
-        await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-5000000) });
+        await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(-2000000) });
 
         const newStats = STATS_BY_LEVEL[21];
         const newSkills = [...tCard1.unlockedSkills];

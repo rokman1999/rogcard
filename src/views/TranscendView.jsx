@@ -31,7 +31,7 @@ const TranscendView = () => {
       <h2 className="text-4xl font-mono font-light text-cyan-300 mb-4 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]">초월 합성</h2>
       <p className="text-white/60 font-sans mb-12 text-center">
         LV.20 최고 레벨 카드 두 장을 희생하여 <span className="text-cyan-300 font-bold">LV.21 초월자</span>를 탄생시킵니다.<br />
-        합성 시 우측 제물 카드는 소멸하며 5,000,000 GOLD가 소모됩니다.
+        합성 시 우측 제물 카드는 소멸하며 2,000,000 GOLD가 소모됩니다.
       </p>
 
       <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 w-full max-w-5xl mb-12">
@@ -85,7 +85,7 @@ const TranscendView = () => {
       >
         {tCard1 && tCard2 && tCard1.id === tCard2.id
           ? '같은 카드를 선택할 수 없습니다'
-          : '초월 합성 [ -5,000,000 G ]'
+          : '초월 합성 [ -2,000,000 G ]'
         }
       </button>
     </div>

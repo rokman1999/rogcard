@@ -17,6 +17,9 @@ export const getRandomTrait = () => UNIQUE_TRAITS[Math.floor(Math.random() * UNI
 // 레벨에 따라 카드 테두리 스타일(홀로그램 등급) 클래스를 반환
 // 높은 레벨일수록 화려한 효과로 성취감과 희귀감 부여
 export const getFoilClass = (level) => {
+  if (level >= 28) return 'bg-[length:200%_200%] bg-gradient-to-tr from-white via-cyan-300 to-yellow-300 animate-foil-shift p-[3px] shadow-[0_0_40px_rgba(255,255,255,0.7),0_0_80px_rgba(0,255,255,0.4)]';
+  if (level >= 25) return 'bg-[length:200%_200%] bg-gradient-to-tr from-cyan-200 via-white to-cyan-400 animate-foil-shift p-[3px] shadow-[0_0_30px_rgba(0,255,255,0.6),0_0_60px_rgba(255,255,255,0.3)]';
+  if (level >= 21) return 'bg-[length:200%_200%] bg-gradient-to-tr from-cyan-400 via-white to-cyan-600 animate-foil-shift p-[2px] shadow-[0_0_25px_rgba(0,255,255,0.5)]';
   if (level >= 20) return 'bg-[length:200%_200%] bg-gradient-to-tr from-cyan-400 via-purple-500 to-yellow-400 animate-foil-shift p-[2px] shadow-[0_0_20px_rgba(0,255,255,0.4)]';
   if (level >= 18) return 'bg-[length:200%_200%] bg-gradient-to-tr from-pink-500 via-fuchsia-600 to-purple-800 animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,0,255,0.3)]';
   if (level >= 15) return 'bg-[length:200%_200%] bg-gradient-to-tr from-red-600 via-red-900 to-black animate-foil-shift p-[2px] shadow-[0_0_15px_rgba(255,51,0,0.3)]';
@@ -28,6 +31,9 @@ export const getFoilClass = (level) => {
 
 // 레벨에 따라 카드 레벨 텍스트 색상 클래스 반환 (글로우 효과 포함)
 export const getTierTextColor = (level) => {
+  if (level >= 28) return 'text-white drop-shadow-[0_0_12px_#ffffff]';
+  if (level >= 25) return 'text-cyan-100 drop-shadow-[0_0_10px_#cffafe]';
+  if (level >= 21) return 'text-cyan-300 drop-shadow-[0_0_10px_#67e8f9]';
   if (level >= 20) return 'text-cyan-300 drop-shadow-[0_0_8px_#67e8f9]';
   if (level >= 18) return 'text-fuchsia-400 drop-shadow-[0_0_8px_#e879f9]';
   if (level >= 15) return 'text-red-400 drop-shadow-[0_0_8px_#f87171]';

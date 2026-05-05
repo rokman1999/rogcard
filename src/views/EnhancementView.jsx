@@ -23,7 +23,7 @@ const EnhancementView = () => {
 
   if (!selectedCard) return null;
 
-  const isMax = selectedCard.level >= 20;
+  const isMax = selectedCard.level >= 30;
   const nextRule = !isMax ? ENHANCEMENT_RULES[selectedCard.level + 1] : null;
   const cost = !isMax ? COST_BY_LEVEL[selectedCard.level + 1] : 0;
 

@@ -44,8 +44,12 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
         {card.level >= 11 && card.level < 15 && (
           <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>
         )}
-        {card.level >= 15 && (
+        {card.level >= 15 && card.level < 21 && (
           <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>
+        )}
+        {/* 초월 티어: 시안 화이트 펄스 */}
+        {card.level >= 21 && (
+          <div className="absolute inset-0 bg-cyan-300/10 mix-blend-screen animate-pulse z-20 pointer-events-none"></div>
         )}
 
         <div className="relative z-30 flex flex-col h-full p-3 transition-transform duration-500">

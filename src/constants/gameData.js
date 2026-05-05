@@ -27,12 +27,22 @@ export const STATS_BY_LEVEL = [
   { hp: 1080, atk: 255, def: 47, spd: 141, crit: 52, luck: 33 },
   { hp: 1200, atk: 280, def: 50, spd: 150, crit: 55, luck: 35 },
   { hp: 3500, atk: 800, def: 80, spd: 300, crit: 100, luck: 100 }, // LV.21 초월
+  { hp: 3850, atk: 870, def: 87, spd: 315, crit: 105, luck: 105 }, // LV.22
+  { hp: 4200, atk: 950, def: 94, spd: 332, crit: 110, luck: 110 }, // LV.23
+  { hp: 4600, atk: 1040, def: 102, spd: 350, crit: 116, luck: 116 }, // LV.24
+  { hp: 5100, atk: 1150, def: 112, spd: 370, crit: 123, luck: 123 }, // LV.25
+  { hp: 5700, atk: 1280, def: 122, spd: 392, crit: 131, luck: 131 }, // LV.26
+  { hp: 6400, atk: 1430, def: 134, spd: 416, crit: 140, luck: 140 }, // LV.27
+  { hp: 7200, atk: 1600, def: 148, spd: 442, crit: 150, luck: 150 }, // LV.28
+  { hp: 8100, atk: 1800, def: 163, spd: 470, crit: 162, luck: 161 }, // LV.29
+  { hp: 9000, atk: 2000, def: 180, spd: 500, crit: 175, luck: 175 }, // LV.30
 ];
 
 export const COST_BY_LEVEL = [
   null, 100, 200, 300, 500, 800, 1200, 2000, 3500, 5000,
   8000, 15000, 25000, 40000, 60000, 90000, 140000, 200000, 300000, 500000,
-  1500000, null
+  1500000, null,
+  3000000, 5000000, 8000000, 12000000, 18000000, 25000000, 35000000, 50000000, 75000000
 ];
 
 export const getSellPrice = (level) => {
@@ -63,7 +73,16 @@ export const ENHANCEMENT_RULES = [
   { successRate: 15,  onFail: 'mixed', destroyChance: 10, levelDownOnFail: 2 },
   { successRate: 10,  onFail: 'mixed', destroyChance: 20, levelDownOnFail: 3 },
   { successRate: 5,   onFail: 'mixed', destroyChance: 50, levelDownOnFail: 4 },
-  null
+  null, // LV.21 초월 (강화 불가, 초월 합성으로만 달성)
+  { successRate: 70, onFail: 'keep',  destroyChance: 0,  levelDownOnFail: 0 }, // LV.22
+  { successRate: 60, onFail: 'keep',  destroyChance: 0,  levelDownOnFail: 0 }, // LV.23
+  { successRate: 50, onFail: 'down',  destroyChance: 0,  levelDownOnFail: 1 }, // LV.24
+  { successRate: 40, onFail: 'down',  destroyChance: 5,  levelDownOnFail: 1 }, // LV.25
+  { successRate: 30, onFail: 'down',  destroyChance: 10, levelDownOnFail: 2 }, // LV.26
+  { successRate: 20, onFail: 'mixed', destroyChance: 15, levelDownOnFail: 2 }, // LV.27
+  { successRate: 15, onFail: 'mixed', destroyChance: 20, levelDownOnFail: 3 }, // LV.28
+  { successRate: 10, onFail: 'mixed', destroyChance: 30, levelDownOnFail: 3 }, // LV.29
+  { successRate: 5,  onFail: 'mixed', destroyChance: 50, levelDownOnFail: 4 }, // LV.30
 ];
 
 export const UNIQUE_TRAITS = [
@@ -143,7 +162,7 @@ export const SKILL_GROUPS = {
 
 // 강화 레벨업 시 랜덤 스킬 획득 (App2 방식: 마일스톤마다 랜덤 배정)
 export const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
-  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
+  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20, 24, 28];
   let newSkills = [...(currentSkills || [])];
   if (SKILL_MILESTONES.includes(newLevel)) {
     const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
@@ -158,7 +177,7 @@ export const acquireRandomSkillsForLevelUp = (currentSkills, newLevel) => {
 
 // AI 생성 및 초기 스킬 계산용 (고정 배정)
 export const getUnlockedSkills = (level) => {
-  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20];
+  const SKILL_MILESTONES = [3, 5, 8, 10, 13, 15, 18, 20, 24, 28];
   const allSkillKeys = Object.keys(SKILLS_DATA).filter(k => k !== '초월의 힘');
   let skills = [];
   for (let i = 1; i <= level; i++) {
