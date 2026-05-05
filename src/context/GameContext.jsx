@@ -505,6 +505,8 @@ export function GameProvider({ children }) {
           setUserData(newUserData);
         }
       }
+      // 로그인 시 lastActive 즉시 갱신 → 접속중인 유저 목록에 즉시 반영
+      await updateDoc(doc(db, USERS_PATH, currentUser.uid), { lastActive: Date.now() });
       playSfx('login'); setCurrentView('lobby');
     } catch (_) {
       showToast("접근이 거부되었습니다.", "error"); playSfx('error');
