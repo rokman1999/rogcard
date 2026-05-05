@@ -97,7 +97,7 @@ const PvPRoomView = () => {
         </div>
 
         {/* 전체 채팅 패널 */}
-        <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden max-h-[600px] lg:max-h-none lg:self-stretch">
+        <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden max-h-[600px] lg:max-h-[664px] lg:self-stretch">
           <HUDCorner />
           <div className="p-5 border-b border-white/10 font-mono font-light text-sm text-white/50 tracking-widest uppercase flex justify-center gap-2">
             <MessageSquare size={16} /> 전체 채팅
