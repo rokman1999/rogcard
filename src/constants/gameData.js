@@ -282,23 +282,52 @@ export const FRAMES_DATA = [
 ];
 
 export const QUESTS = [
-  { id: 'q1', type: 'ai', title: '워밍업', desc: 'AI 대전 1회 참여', target: 1, reward: 50000 },
-  { id: 'q2', type: 'ai', title: '가상 훈련', desc: 'AI 대전 5회 참여', target: 5, reward: 300000 },
-  { id: 'q3', type: 'ai', title: '전투광', desc: 'AI 대전 10회 참여', target: 10, reward: 800000 },
-  { id: 'q4', type: 'win_ai', title: '인공지능 정복 I', desc: 'AI 대전 3회 승리', target: 3, reward: 200000 },
-  { id: 'q5', type: 'win_ai', title: '인공지능 정복 II', desc: 'AI 대전 7회 승리', target: 7, reward: 600000 },
-  { id: 'q6', type: 'enhance', title: '한계 돌파 I', desc: '카드 강화 3회 시도', target: 3, reward: 100000 },
-  { id: 'q7', type: 'enhance', title: '한계 돌파 II', desc: '카드 강화 7회 시도', target: 7, reward: 300000 },
-  { id: 'q8', type: 'pvp', title: '첫 실전', desc: '유저 1:1 대결 1회 참여', target: 1, reward: 150000 },
-  { id: 'q9', type: 'pvp', title: '아레나의 투사', desc: '유저 1:1 대결 5회 참여', target: 5, reward: 500000 },
-  { id: 'q10', type: 'chat', title: '소통의 장', desc: '전체 채팅 5회 입력', target: 5, reward: 50000 },
-  { id: 'q11', type: 'market', title: '거상', desc: '거래소에 자산 1회 등록', target: 1, reward: 100000 },
-  { id: 'q12', type: 'buy_market', title: '쇼핑 매니아', desc: '거래소에서 아이템 1회 구매', target: 1, reward: 150000 },
-  { id: 'q13', type: 'ai', title: '베테랑의 길', desc: 'AI 대전 20회 참여', target: 20, reward: 1500000 },
-  { id: 'q14', type: 'win_ai', title: '인공지능 정복 III', desc: 'AI 대전 15회 승리', target: 15, reward: 1500000 },
-  { id: 'q15', type: 'enhance', title: '한계 돌파 III', desc: '카드 강화 15회 시도', target: 15, reward: 1000000 },
-  { id: 'q16', type: 'pvp', title: '아레나 마스터', desc: '유저 1:1 대결 10회 참여', target: 10, reward: 1200000 },
-  { id: 'q17', type: 'chat', title: '핵인싸', desc: '전체 채팅 20회 입력', target: 20, reward: 200000 },
-  { id: 'q18', type: 'market', title: '대거상', desc: '거래소에 자산 5회 등록', target: 5, reward: 500000 },
-  { id: 'q19', type: 'buy_market', title: 'VIP 고객', desc: '거래소에서 아이템 5회 구매', target: 5, reward: 1000000 }
+  // AI 대전
+  { id: 'q1',  type: 'ai',             title: '워밍업',           desc: 'AI 대전 1회 참여',              target: 1,  reward: 50000 },
+  { id: 'q2',  type: 'ai',             title: '가상 훈련',         desc: 'AI 대전 5회 참여',              target: 5,  reward: 300000 },
+  { id: 'q3',  type: 'ai',             title: '전투광',            desc: 'AI 대전 10회 참여',             target: 10, reward: 800000 },
+  { id: 'q13', type: 'ai',             title: '베테랑의 길',       desc: 'AI 대전 20회 참여',             target: 20, reward: 1500000 },
+  // AI 승리
+  { id: 'q4',  type: 'win_ai',         title: '인공지능 정복 I',   desc: 'AI 대전 3회 승리',              target: 3,  reward: 200000 },
+  { id: 'q5',  type: 'win_ai',         title: '인공지능 정복 II',  desc: 'AI 대전 7회 승리',              target: 7,  reward: 600000 },
+  { id: 'q14', type: 'win_ai',         title: '인공지능 토사구팽', desc: 'AI 대전 15회 승리. 다 써먹고 버린다.',   target: 15, reward: 1500000 },
+  // PvP 참여
+  { id: 'q8',  type: 'pvp',            title: '첫 실전',           desc: '유저 1:1 대결 1회 참여',        target: 1,  reward: 150000 },
+  { id: 'q9',  type: 'pvp',            title: '아레나의 투사',     desc: '유저 1:1 대결 5회 참여',        target: 5,  reward: 500000 },
+  { id: 'q16', type: 'pvp',            title: '아레나 마스터',     desc: '유저 1:1 대결 10회 참여',       target: 10, reward: 1200000 },
+  // PvP 승리
+  { id: 'q20', type: 'win_pvp',        title: '실전 고수',         desc: 'PvP 대전 1회 승리',             target: 1,  reward: 300000 },
+  { id: 'q21', type: 'win_pvp',        title: '인간계 정복',       desc: 'PvP 대전 3회 승리. 이제 AI는 시시하다.',  target: 3,  reward: 800000 },
+  { id: 'q22', type: 'win_pvp',        title: '무패 전설',         desc: 'PvP 대전 5회 승리',             target: 5,  reward: 1800000 },
+  // 강화
+  { id: 'q6',  type: 'enhance',        title: '한계 돌파 I',       desc: '카드 강화 3회 시도',            target: 3,  reward: 100000 },
+  { id: 'q7',  type: 'enhance',        title: '한계 돌파 II',      desc: '카드 강화 7회 시도',            target: 7,  reward: 300000 },
+  { id: 'q15', type: 'enhance',        title: '한계 돌파 III',     desc: '카드 강화 15회 시도. 확률은 믿는 자의 것.',  target: 15, reward: 1000000 },
+  { id: 'q23', type: 'enhance',        title: '도박의 신',         desc: '카드 강화 30회 시도',           target: 30, reward: 2000000 },
+  // 채팅
+  { id: 'q10', type: 'chat',           title: '소통의 장',         desc: '전체 채팅 5회 입력',            target: 5,  reward: 50000 },
+  { id: 'q17', type: 'chat',           title: '핵인싸',            desc: '전체 채팅 20회 입력',           target: 20, reward: 200000 },
+  { id: 'q24', type: 'chat',           title: '채팅 세포 폭주',    desc: '전체 채팅 50회. 할 말이 많은 사람.',    target: 50, reward: 500000 },
+  // 거래소 등록
+  { id: 'q11', type: 'market',         title: '거상',              desc: '거래소에 카드 1회 등록',        target: 1,  reward: 100000 },
+  { id: 'q18', type: 'market',         title: '대거상',            desc: '거래소에 카드 5회 등록',        target: 5,  reward: 500000 },
+  { id: 'q25', type: 'market',         title: '거래소 점령자',     desc: '거래소에 카드 10회 등록',       target: 10, reward: 1000000 },
+  // 거래소 구매
+  { id: 'q12', type: 'buy_market',     title: '쇼핑 매니아',       desc: '거래소에서 카드 1회 구매',      target: 1,  reward: 150000 },
+  { id: 'q19', type: 'buy_market',     title: 'VIP 고객',          desc: '거래소에서 카드 5회 구매',      target: 5,  reward: 1000000 },
+  { id: 'q26', type: 'buy_market',     title: '사재기의 달인',     desc: '거래소에서 카드 10회 구매. 사두면 오르겠지.',  target: 10, reward: 2000000 },
+  // 카드 생성
+  { id: 'q27', type: 'create_card',    title: '창조의 손길',       desc: '카드 1장 생성',                 target: 1,  reward: 50000 },
+  { id: 'q28', type: 'create_card',    title: '카드 공장',         desc: '카드 3장 생성. 양산형 입문.',   target: 3,  reward: 300000 },
+  // 카드 판매 (시스템)
+  { id: 'q29', type: 'sell',           title: '재고 정리',         desc: '카드 1장 시스템 판매',          target: 1,  reward: 80000 },
+  { id: 'q30', type: 'sell',           title: '대청소',            desc: '카드 3장 시스템 판매. 버릴 줄도 알아야 한다.', target: 3,  reward: 350000 },
+  // 출석
+  { id: 'q31', type: 'login',          title: '오늘도 출첵',       desc: '일일 출석 체크 1회',            target: 1,  reward: 100000 },
+  // 방명록
+  { id: 'q32', type: 'guestbook',      title: '사교의 고수',       desc: '타 유저 방명록 1회 작성',       target: 1,  reward: 50000 },
+  { id: 'q33', type: 'guestbook',      title: '전설의 댓글러',     desc: '타 유저 방명록 5회 작성',       target: 5,  reward: 300000 },
+  // 도전장 발송
+  { id: 'q34', type: 'challenge_sent', title: '도전자 정신',       desc: '다른 유저에게 도전장 1회 발송', target: 1,  reward: 100000 },
+  { id: 'q35', type: 'challenge_sent', title: '싸움꾼',            desc: '도전장 3회 발송. 눈에 보이면 일단 건다.', target: 3,  reward: 400000 },
 ];

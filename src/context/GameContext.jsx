@@ -142,8 +142,9 @@ export function GameProvider({ children }) {
   const updateQuestProgress = async (type) => {
     if (!user || !userData) return;
     const today = new Date().toISOString().split('T')[0];
-    let q = userData.quests || { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
-    if (q.date !== today) q = { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+    const emptyQ = { date: today, ai: 0, win_ai: 0, enhance: 0, pvp: 0, win_pvp: 0, chat: 0, market: 0, buy_market: 0, create_card: 0, sell: 0, login: 0, guestbook: 0, challenge_sent: 0, claimed: [] };
+    let q = userData.quests || emptyQ;
+    if (q.date !== today) q = { ...emptyQ };
     const newQ = { ...q, [type]: (q[type] || 0) + 1 };
     await updateDoc(doc(db, USERS_PATH, user.uid), { quests: newQ }).catch(() => { /* no-op */ });
   };
@@ -157,6 +158,7 @@ export function GameProvider({ children }) {
       if (isWin) updateQuestProgress('win_ai');
     } else if (battleType === 'PvP') {
       updateQuestProgress('pvp');
+      if (isWin) updateQuestProgress('win_pvp');
     }
 
     const userRef = doc(db, USERS_PATH, user.uid);
@@ -314,14 +316,10 @@ export function GameProvider({ children }) {
         const ch = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
         deleteDoc(doc(db, CHALLENGES_PATH, ch.id)).catch(() => {});
         setBattleBet(ch.bet);
-        if (ch.roomId) {
-          setPvpRoomId(ch.roomId);
-          setCurrentView('pvp_room');
-          showToast('도전 수락! 전투 대기실에 입장했습니다.', 'success');
-        } else {
-          setCurrentView('pvp_setup');
-          showToast('도전 수락! 카드를 선택하고 방을 개설하세요.', 'success');
-        }
+        setBattleType('PvP');
+        setPvpRoomId(ch.roomId);
+        setCurrentView('pvp_room');
+        showToast('도전 수락! 전투 대기실에 입장했습니다.', 'success');
       }
     });
     return () => { userUnsub(); cardsUnsub(); usersUnsub(); globalChatUnsub(); matchesUnsub(); challengesInUnsub(); challengesOutUnsub(); };
@@ -505,6 +503,7 @@ export function GameProvider({ children }) {
     setIsProcessing(true);
     try {
       await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(1000000), lastAttendance: today });
+      updateQuestProgress('login');
       playSfx('success'); showToast("일일 출석 보상: +1,000,000 GOLD", "success");
     } catch (_) { showToast("시스템 오류 발생", "error"); playSfx('error'); }
     setIsProcessing(false);
@@ -590,6 +589,7 @@ export function GameProvider({ children }) {
           uniqueTrait: getRandomTrait(), createdAt: new Date().toISOString()
         });
 
+        updateQuestProgress('create_card');
         playSfx('success'); showToast("카드 생성 완료", "success"); setShowCreateModal(false); setIsProcessing(false);
       } catch (_) {
         playSfx('error'); showToast("생성 실패", "error"); setIsProcessing(false); console.error(_);
@@ -610,6 +610,7 @@ export function GameProvider({ children }) {
         try {
           await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(sellPrice) });
           await deleteDoc(doc(db, CARDS_PATH, card.id));
+          updateQuestProgress('sell');
           playSfx('success'); showToast(`판매 완료: +${formatMoney(sellPrice)} GOLD`, "success");
         } catch (_) { showToast("오류 발생", "error"); playSfx('error'); }
         setIsProcessing(false); setConfirmModal(null); setCurrentView('deck');
@@ -865,6 +866,7 @@ export function GameProvider({ children }) {
         guestbook: arrayUnion({ writerId: user.uid, writerName: userData.nickname, text: guestbookInput.trim(), timestamp: Date.now() })
       });
       setGuestbookInput('');
+      updateQuestProgress('guestbook');
     } catch (_) { showToast("방명록 작성 실패", "error"); }
   };
 
@@ -881,7 +883,8 @@ export function GameProvider({ children }) {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      const q = userData.quests || { date: new Date().toISOString().split('T')[0], ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+      const today2 = new Date().toISOString().split('T')[0];
+      const q = userData.quests?.date === today2 ? userData.quests : { date: today2, ai: 0, win_ai: 0, enhance: 0, pvp: 0, win_pvp: 0, chat: 0, market: 0, buy_market: 0, create_card: 0, sell: 0, login: 0, guestbook: 0, challenge_sent: 0, claimed: [] };
       const newQ = { ...q, claimed: [...(q.claimed || []), questId] };
       await updateDoc(doc(db, USERS_PATH, user.uid), { money: increment(reward), quests: newQ });
       playSfx('success');
@@ -960,6 +963,7 @@ export function GameProvider({ children }) {
       });
       setShowOnlineModal(false);
       setChallengeBetInput('');
+      updateQuestProgress('challenge_sent');
       showToast(`[${targetUser.nickname}]님에게 도전장을 보냈습니다!`, "success");
     } catch (_) { showToast("전송 실패", "error"); playSfx('error'); }
     setIsProcessing(false);
@@ -968,29 +972,26 @@ export function GameProvider({ children }) {
   const handleAcceptChallenge = async (challenge) => {
     setIsProcessing(true);
     try {
-      // 등급(level) 내림차순으로 각자의 카드 자동 선택
-      const myBestCards = myCards
+      // 등급(level) 내림차순 상위 3장 자동 선택
+      const guestTopCards = myCards
         .filter(c => !c.isSelling)
-        .sort((a, b) => b.level - a.level);
-      const theirBestCards = allCards
+        .sort((a, b) => b.level - a.level)
+        .slice(0, 3);
+      const hostTopCards = allCards
         .filter(c => c.ownerId === challenge.fromUid && !c.isSelling)
-        .sort((a, b) => b.level - a.level);
+        .sort((a, b) => b.level - a.level)
+        .slice(0, 3);
 
-      if (myBestCards.length === 0) { showToast("전투 가능한 내 카드가 없습니다.", "error"); setIsProcessing(false); return; }
-      if (theirBestCards.length === 0) { showToast("도전자에게 전투 가능한 카드가 없습니다.", "error"); setIsProcessing(false); return; }
+      if (guestTopCards.length === 0) { showToast("전투 가능한 내 카드가 없습니다.", "error"); setIsProcessing(false); return; }
+      if (hostTopCards.length === 0) { showToast("도전자에게 전투 가능한 카드가 없습니다.", "error"); setIsProcessing(false); return; }
 
-      const myCard = myBestCards[0];
-      const theirCard = theirBestCards[0];
-
-      // 방을 'ready' 상태로 바로 생성 (양쪽 모두 입장 완료)
+      // 방을 'ready' 상태로 바로 생성 (양쪽 모두 카드 자동 배정)
       const roomRef = await addDoc(collection(db, MATCHES_PATH), {
         roomName: `${challenge.fromNickname} vs ${userData.nickname}`,
         host: { uid: challenge.fromUid, nickname: challenge.fromNickname },
-        hostCard: theirCard,
-        hostCards: [theirCard],
+        hostCards: hostTopCards,
         guest: { uid: user.uid, nickname: userData.nickname },
-        guestCard: myCard,
-        guestCards: [myCard],
+        guestCards: guestTopCards,
         bet: challenge.bet,
         status: 'ready',
         chat: [],
@@ -1010,6 +1011,7 @@ export function GameProvider({ children }) {
 
       setIncomingChallenge(null);
       setBattleBet(challenge.bet);
+      setBattleType('PvP');
       setPvpRoomId(roomRef.id);
       setCurrentView('pvp_room');
       playSfx('success');

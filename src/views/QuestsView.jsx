@@ -20,7 +20,7 @@ const QuestsView = () => {
   const today = new Date().toISOString().split('T')[0];
   const qData = userData?.quests?.date === today
     ? userData.quests
-    : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, chat: 0, market: 0, buy_market: 0, claimed: [] };
+    : { ai: 0, win_ai: 0, enhance: 0, pvp: 0, win_pvp: 0, chat: 0, market: 0, buy_market: 0, create_card: 0, sell: 0, login: 0, guestbook: 0, challenge_sent: 0, claimed: [] };
 
   return (
     <div className="p-4 md:p-10 max-w-4xl mx-auto animate-fade-in relative z-10 min-h-[80vh] flex flex-col w-full">
