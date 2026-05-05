@@ -26,8 +26,10 @@ const DeckView = () => {
   const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 });
 
   const maxSlots = userData?.maxSlots || 3;
-  // 거래소 등록 중인 카드는 덱에서 제외
   const availableCards = myCards.filter(c => !c.isSelling);
+  const sellingCards = myCards.filter(c => c.isSelling);
+  // 활성 카드 먼저, 거래소 등록 중인 카드 뒤에 표시
+  const displayCards = [...availableCards, ...sellingCards];
   const renderSlots = Array.from({ length: maxSlots });
 
   return (
@@ -58,21 +60,35 @@ const DeckView = () => {
         </div>
       </div>
 
-      {availableCards.length === 0 ? (
+      {myCards.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-32 font-sans font-light text-xl text-white/40 bg-white/[0.01] border border-white/5 backdrop-blur-md">
           <span className="mb-2">사용 가능한 카드가 없습니다.</span>
-          <span className="text-sm">거래소에 판매 중이거나, 신규 카드를 생성하세요.</span>
+          <span className="text-sm">신규 카드를 생성하세요.</span>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {renderSlots.map((_, i) => {
-            const card = availableCards[i];
+            const card = displayCards[i];
             if (!card) return (
               <div key={`empty-${i}`} className="w-full aspect-[2/3.1] border-2 border-dashed border-white/10 bg-white/[0.01] flex flex-col items-center justify-center text-white/20 font-mono text-sm">
                 <Plus size={24} className="mb-2 opacity-50" />
                 <span>EMPTY SLOT</span>
               </div>
             );
+
+            // 거래소 등록 중인 카드: 비활성화 + 띠배너 표시
+            if (card.isSelling) return (
+              <div key={card.id} className="relative opacity-50 grayscale pointer-events-none select-none">
+                <CardItem card={card} hideSkills />
+                {/* 거래소 등록 중 띠배너 */}
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center pointer-events-none">
+                  <div className="w-full bg-amber-500 text-black font-mono font-bold text-[10px] text-center py-2 px-2 tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.8)] border-y border-amber-300">
+                    거래소에 올라가있는 카드입니다
+                  </div>
+                </div>
+              </div>
+            );
+
             return (
               <div key={card.id} className="relative group">
                 <CardItem card={card} hideSkills />

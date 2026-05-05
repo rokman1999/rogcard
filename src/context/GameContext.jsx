@@ -554,7 +554,8 @@ export function GameProvider({ children }) {
 
   const handleCreateCard = async (e) => {
     e.preventDefault();
-    if (myCards.length >= (userData?.maxSlots || 3)) { showToast("보유 슬롯이 가득 찼습니다.", "error"); playSfx('error'); return; }
+    const activeCardCount = myCards.filter(c => !c.isSelling).length;
+    if (activeCardCount >= (userData?.maxSlots || 3)) { showToast("보유 슬롯이 가득 찼습니다.", "error"); playSfx('error'); return; }
     if (userData.money < CREATE_CARD_COST) { showToast("자금이 부족합니다.", "error"); playSfx('error'); return; }
     if (!cropImage || !imgRef.current) { showToast("이미지를 업로드해주세요.", "error"); playSfx('error'); return; }
 
