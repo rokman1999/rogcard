@@ -231,7 +231,7 @@ const BattleView = () => {
       )}
 
       {/* 전투 로그 텍스트 스크롤 */}
-      <div className="h-40 mt-10 overflow-y-auto flex flex-col justify-end font-mono text-[12px] tracking-widest text-white/40 border-t border-white/10 pt-4 custom-scrollbar z-10 bg-black/40 rounded-t-xl px-4 transition-all hover:bg-black/60">
+      <div className="h-40 mt-10 overflow-y-auto flex flex-col justify-end font-mono text-[12px] tracking-widest text-white/75 border-t border-white/10 pt-4 custom-scrollbar z-10 bg-black/40 rounded-t-xl px-4 transition-all hover:bg-black/60">
         {battleLog.slice(0, battleStep + 1).map((log, i) => (
           <div key={i} className={`py-1 animate-slide-up uppercase transition-colors
             ${log.type === 'critical' ? 'text-red-400 font-bold text-lg' : ''}

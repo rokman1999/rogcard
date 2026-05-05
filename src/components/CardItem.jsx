@@ -54,7 +54,7 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
 
         <div className="relative z-30 flex flex-col h-full p-3 transition-transform duration-500">
           <div className="flex justify-between items-start w-full drop-shadow-lg relative min-h-[30px]">
-            <div className="font-sans font-black text-[1em] sm:text-[1.1em] tracking-wider text-white break-words text-left leading-tight mt-1 group-hover:text-emerald-300 transition-colors duration-300 w-[70%]">
+            <div className="font-sans font-black text-[1em] sm:text-[1.1em] tracking-wider text-white break-words text-left leading-tight mt-1 transition-colors duration-300 w-[70%]">
               {card.name}
             </div>
             {card.uniqueTrait && (

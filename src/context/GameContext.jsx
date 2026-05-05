@@ -307,15 +307,21 @@ export function GameProvider({ children }) {
         setIncomingChallenge(null);
       }
     });
-    // 내가 보낸 챌린지가 수락됨 → pvp_setup으로 이동 (카드 선택 후 방 개설)
+    // 내가 보낸 챌린지가 수락됨 → roomId가 있으면 바로 pvp_room으로 입장
     const challengesOutQ = query(collection(db, CHALLENGES_PATH), where('fromUid', '==', user.uid), where('status', '==', 'accepted'));
     const challengesOutUnsub = onSnapshot(challengesOutQ, (snapshot) => {
       if (!snapshot.empty) {
         const ch = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-        deleteDoc(doc(db, CHALLENGES_PATH, ch.id)).catch(() => { /* no-op */ });
+        deleteDoc(doc(db, CHALLENGES_PATH, ch.id)).catch(() => {});
         setBattleBet(ch.bet);
-        setCurrentView('pvp_setup');
-        showToast('도전 수락! 카드를 선택하고 방을 개설하세요.', 'success');
+        if (ch.roomId) {
+          setPvpRoomId(ch.roomId);
+          setCurrentView('pvp_room');
+          showToast('도전 수락! 전투 대기실에 입장했습니다.', 'success');
+        } else {
+          setCurrentView('pvp_setup');
+          showToast('도전 수락! 카드를 선택하고 방을 개설하세요.', 'success');
+        }
       }
     });
     return () => { userUnsub(); cardsUnsub(); usersUnsub(); globalChatUnsub(); matchesUnsub(); challengesInUnsub(); challengesOutUnsub(); };
@@ -962,20 +968,52 @@ export function GameProvider({ children }) {
   const handleAcceptChallenge = async (challenge) => {
     setIsProcessing(true);
     try {
-      // 원본 챌린지 삭제 후 accepted 신호 생성 (도전자가 리스너로 감지)
+      // 등급(level) 내림차순으로 각자의 카드 자동 선택
+      const myBestCards = myCards
+        .filter(c => !c.isSelling)
+        .sort((a, b) => b.level - a.level);
+      const theirBestCards = allCards
+        .filter(c => c.ownerId === challenge.fromUid && !c.isSelling)
+        .sort((a, b) => b.level - a.level);
+
+      if (myBestCards.length === 0) { showToast("전투 가능한 내 카드가 없습니다.", "error"); setIsProcessing(false); return; }
+      if (theirBestCards.length === 0) { showToast("도전자에게 전투 가능한 카드가 없습니다.", "error"); setIsProcessing(false); return; }
+
+      const myCard = myBestCards[0];
+      const theirCard = theirBestCards[0];
+
+      // 방을 'ready' 상태로 바로 생성 (양쪽 모두 입장 완료)
+      const roomRef = await addDoc(collection(db, MATCHES_PATH), {
+        roomName: `${challenge.fromNickname} vs ${userData.nickname}`,
+        host: { uid: challenge.fromUid, nickname: challenge.fromNickname },
+        hostCard: theirCard,
+        hostCards: [theirCard],
+        guest: { uid: user.uid, nickname: userData.nickname },
+        guestCard: myCard,
+        guestCards: [myCard],
+        bet: challenge.bet,
+        status: 'ready',
+        chat: [],
+        createdAt: Date.now()
+      });
+
+      // 원본 챌린지 삭제 후, 도전자에게 roomId 포함 accepted 신호 전송
       await deleteDoc(doc(db, CHALLENGES_PATH, challenge.id));
       await addDoc(collection(db, CHALLENGES_PATH), {
         fromUid: challenge.fromUid,
         toUid: challenge.toUid,
         bet: challenge.bet,
+        roomId: roomRef.id,
         status: 'accepted',
         createdAt: Date.now()
       });
+
       setIncomingChallenge(null);
       setBattleBet(challenge.bet);
-      setCurrentView('pvp_setup');
+      setPvpRoomId(roomRef.id);
+      setCurrentView('pvp_room');
       playSfx('success');
-      showToast(`[${challenge.fromNickname}]님의 도전을 수락했습니다! 방에 참가하세요.`, "success");
+      showToast(`[${challenge.fromNickname}]님의 도전을 수락했습니다! 전투 대기실에 입장합니다.`, "success");
     } catch (_) { showToast("수락 실패", "error"); playSfx('error'); }
     setIsProcessing(false);
   };
