@@ -35,7 +35,7 @@ const LobbyView = () => {
   });
 
   const topLevelUsers = [...allUsers].sort((a, b) => (userMaxLevels[b.userId] || 0) - (userMaxLevels[a.userId] || 0)).slice(0, 50);
-  const topWins = [...allUsers].sort((a, b) => (Math.max(0, (b.wins || 0) - (b.aiWins || 0))) - (Math.max(0, (a.wins || 0) - (a.aiWins || 0)))).slice(0, 50);
+  const topWins = [...allUsers].sort((a, b) => (b.wins || 0) - (a.wins || 0)).slice(0, 50);
   const richUsers = [...allUsers].sort((a, b) => (b.money || 0) - (a.money || 0)).slice(0, 50);
 
   const isAttended = userData?.lastAttendance === new Date().toISOString().split('T')[0];
@@ -72,7 +72,7 @@ const LobbyView = () => {
           </div>
           <div className="font-mono text-sm tracking-wide overflow-y-auto pr-2 flex-1 space-y-3 custom-scrollbar">
             {currentList.map((u, i) => {
-              const realWins = Math.max(0, (u.wins || 0) - (u.aiWins || 0));
+              const realWins = u.wins || 0;
               return (
                 <div key={u.userId} className={`flex justify-between items-center pb-2 border-b border-white/5 ${u.userId === user?.uid ? 'text-white font-bold' : 'text-white/60'}`}>
                   <div className="flex items-center gap-3">

@@ -789,7 +789,11 @@ export function GameProvider({ children }) {
     if (!pvpRoomData || pvpRoomData.host.uid !== user.uid || pvpRoomData.status !== 'ready') return;
     const hostCards = pvpRoomData.hostCards || [pvpRoomData.hostCard];
     const guestCards = pvpRoomData.guestCards || [pvpRoomData.guestCard];
-    await updateDoc(doc(db, USERS_PATH, pvpRoomData.host.uid), { money: increment(-pvpRoomData.bet) });
+    // 호스트·게스트 양쪽 배팅금 동시 차감 (팟 = bet * 2, 승자가 전액 획득)
+    await Promise.all([
+      updateDoc(doc(db, USERS_PATH, pvpRoomData.host.uid), { money: increment(-pvpRoomData.bet) }),
+      updateDoc(doc(db, USERS_PATH, pvpRoomData.guest.uid), { money: increment(-pvpRoomData.bet) }),
+    ]);
     await updateDoc(doc(db, MATCHES_PATH, pvpRoomId), {
       status: 'battling',
       battleLog: simulateBattleLog(hostCards, guestCards)
