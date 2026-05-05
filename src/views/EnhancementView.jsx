@@ -23,8 +23,8 @@ const EnhancementView = () => {
 
   if (!selectedCard) return null;
 
-  const isMax = selectedCard.level >= 30;
-  const nextRule = !isMax ? ENHANCEMENT_RULES[selectedCard.level + 1] : null;
+  const nextRule = ENHANCEMENT_RULES[selectedCard.level + 1] || null;
+  const isMax = !nextRule;
   const cost = !isMax ? COST_BY_LEVEL[selectedCard.level + 1] : 0;
 
   // 강화 상태에 따른 카드 시각 효과 클래스 결정
@@ -47,6 +47,12 @@ const EnhancementView = () => {
 
   return (
     <div className="min-h-[85vh] flex flex-col items-center py-10 px-4 animate-fade-in relative overflow-hidden z-10 w-full max-w-[1400px] mx-auto">
+      {/* 배경 영상 */}
+      <video
+        autoPlay loop muted playsInline
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[-1] opacity-30"
+        src="https://res.cloudinary.com/dkotceims/video/upload/v1777967184/4990245-hd_1920_1080_30fps_bol5z0.mp4"
+      />
       {/* 8강 이상 성공 시 화면 전체 플래시 효과 */}
       {enhanceVisualState.startsWith('success') && parseInt(enhanceVisualState.split('_')[1]) >= 8 && (
         <div className="absolute inset-0 bg-white/20 animate-flash-white pointer-events-none z-0"></div>

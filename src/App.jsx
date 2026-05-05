@@ -65,12 +65,6 @@ function Header() {
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
           <ShoppingCart size={16} /> 상점
         </button>
-        <button
-          onClick={wrapClick(() => setSoundEnabled(!soundEnabled))}
-          className="text-white/50 hover:text-white transition-colors flex items-center gap-1 font-mono text-xs tracking-widest"
-        >
-          {soundEnabled ? <><Volume2 size={14} /> SOUND ON</> : <><VolumeX size={14} /> SOUND OFF</>}
-        </button>
         {userData && (
           <div className="flex items-center gap-6">
             <button
@@ -357,7 +351,7 @@ function AppContent() {
       {/* BGM 오디오 엘리먼트: bgmRef는 context에서 관리하여 soundEnabled 변화에 반응 */}
       <audio
         ref={bgmRef}
-        src="https://res.cloudinary.com/dkotceims/video/upload/v1777608697/%EB%A9%94%EC%9D%B4%ED%94%8C%EC%8A%A4%ED%86%A0%EB%A6%AC_BGM_-_%EB%A0%88%EC%A7%80%EC%8A%A4%ED%83%95%EC%8A%A4_%EB%B3%B8%EB%B6%80_w7ucsi.mp3"
+        src="https://res.cloudinary.com/dkotceims/video/upload/v1777981401/Mausio_-_Der_Pate_pcu3dg.mp3"
         loop preload="auto"
       />
 

@@ -43,6 +43,17 @@ body { margin:0; background-color: #050505; color: #fff; font-family: 'Pretendar
     50% { filter: drop-shadow(0 0 15px currentColor); }
 }
 
+@keyframes rainbow-text {
+    0%   { color: #f87171; }
+    16%  { color: #fb923c; }
+    33%  { color: #facc15; }
+    50%  { color: #4ade80; }
+    66%  { color: #60a5fa; }
+    83%  { color: #c084fc; }
+    100% { color: #f87171; }
+}
+.animate-rainbow-text { animation: rainbow-text 2.5s linear infinite; }
+
 /* Dynamic Battle Animations */
 @keyframes attack-right { 0% { transform: translateX(0) scale(1); z-index: 30;} 20% { transform: translateX(-15px) scale(1.05); } 40% { transform: translateX(100px) scale(1.15); z-index: 50;} 100% { transform: translateX(0) scale(1); z-index: 10;} }
 @keyframes attack-left { 0% { transform: translateX(0) scale(1); z-index: 30;} 20% { transform: translateX(15px) scale(1.05); } 40% { transform: translateX(-100px) scale(1.15); z-index: 50;} 100% { transform: translateX(0) scale(1); z-index: 10;} }

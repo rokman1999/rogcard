@@ -35,7 +35,7 @@ export const getTierTextColor = (level) => {
   if (level >= 28) return 'text-white drop-shadow-[0_0_12px_#ffffff]';
   if (level >= 25) return 'text-cyan-100 drop-shadow-[0_0_10px_#cffafe]';
   if (level >= 21) return 'text-cyan-300 drop-shadow-[0_0_10px_#67e8f9]';
-  if (level >= 20) return 'text-cyan-300 drop-shadow-[0_0_8px_#67e8f9]';
+  if (level >= 20) return 'animate-rainbow-text drop-shadow-[0_0_8px_currentColor]';
   if (level >= 18) return 'text-fuchsia-400 drop-shadow-[0_0_8px_#e879f9]';
   if (level >= 15) return 'text-red-400 drop-shadow-[0_0_8px_#f87171]';
   if (level >= 11) return 'text-yellow-400 drop-shadow-[0_0_5px_#facc15]';

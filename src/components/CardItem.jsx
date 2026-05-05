@@ -4,6 +4,7 @@
 
 import FrameOverlay from './FrameOverlay';
 import { getFoilClass, getTierTextColor } from '../utils/cardUtils';
+import { TRAIT_COLORS } from '../constants/gameData';
 
 const CardItem = ({ card, onClick, onHover, className = "", compact = false, hideSkills = false }) => {
   // 카드 데이터가 없으면 빈 슬롯 표시 (덱 관리 화면에서 빈 슬롯 시각화)
@@ -40,12 +41,14 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
         <FrameOverlay frame={card.equippedFrame} />
 
         {/* 고급 레벨 전용 홀로그래픽 오버레이 효과 */}
-        {/* level 15+ 빨간 포일 티어에서 color-dodge 와 color-burn 동시 적용 시 윈도우 GPU에서 초록 아티팩트 발생 → level 11-14에만 적용 */}
         {card.level >= 11 && card.level < 15 && (
-          <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-color-dodge z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>
+          <div className="absolute inset-0 pointer-events-none z-20 border-2 border-red-500/70" style={{ boxShadow: 'inset 0 0 25px rgba(239,68,68,0.5), 0 0 20px rgba(239,68,68,0.6)' }}></div>
         )}
-        {card.level >= 15 && card.level < 21 && (
-          <div className="absolute inset-0 bg-red-600/10 mix-blend-color-burn animate-pulse z-20 pointer-events-none"></div>
+        {card.level >= 15 && card.level < 20 && (
+          <div className="absolute inset-0 pointer-events-none z-20 border-2 border-yellow-400/80" style={{ boxShadow: 'inset 0 0 25px rgba(250,204,21,0.5), 0 0 20px rgba(250,204,21,0.6)' }}></div>
+        )}
+        {card.level >= 20 && (
+          <div className="absolute inset-0 holographic-overlay opacity-30 mix-blend-screen z-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-50"></div>
         )}
         {/* 초월 티어: 시안 화이트 펄스 */}
         {card.level >= 21 && (
@@ -58,7 +61,7 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
               {card.name}
             </div>
             {card.uniqueTrait && (
-              <div className="absolute right-0 top-0 px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/50 rounded text-[0.45em] sm:text-[0.5em] text-emerald-400 font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap">
+              <div className={`absolute right-0 top-0 px-1.5 py-0.5 border text-[0.45em] sm:text-[0.5em] font-bold mix-blend-normal drop-shadow-md z-40 whitespace-nowrap ${TRAIT_COLORS[card.uniqueTrait.name] || 'bg-white/10 border-white/30 text-white/70'}`}>
                 {card.uniqueTrait.name}
               </div>
             )}
@@ -66,14 +69,14 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
 
           <div className="mt-auto flex flex-col gap-2 w-full">
             {!compact && (
-              <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-sm border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
+              <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
                 "{card.description}"
               </div>
             )}
             {!compact && !hideSkills && (
               <div className="flex flex-wrap gap-1 w-full">
                 {card.unlockedSkills.map((s, i) => (
-                  <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-sm border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
+                  <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
                     <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
                   </div>
                 ))}
@@ -82,7 +85,7 @@ const CardItem = ({ card, onClick, onHover, className = "", compact = false, hid
 
             <div className="flex justify-between items-end gap-2 w-full mt-1">
               {!compact && (
-                <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-sm transition-all duration-300 group-hover:bg-black/80">
+                <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 transition-all duration-300 group-hover:bg-black/80">
                   <div className="flex flex-col items-center">
                     <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span>
                     <span className="text-[0.7em] font-bold text-white">{card.stats.atk}</span>
