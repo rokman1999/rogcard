@@ -19,7 +19,7 @@ const CardStack = ({ cards, label, isOpponent }) => (
               {i === 0 ? '선봉' : i === 1 ? '중간' : '마지막'}
             </span>
             <div className={`transition-all ${i === 0 ? 'w-40' : 'w-28 opacity-60'}`}>
-              <CardItem card={card} />
+              <CardItem card={card} compact />
             </div>
           </div>
         ))}
@@ -97,7 +97,7 @@ const PvPRoomView = () => {
         </div>
 
         {/* 전체 채팅 패널 */}
-        <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden min-h-[400px]">
+        <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 relative flex flex-col overflow-hidden max-h-[600px] lg:max-h-none lg:self-stretch">
           <HUDCorner />
           <div className="p-5 border-b border-white/10 font-mono font-light text-sm text-white/50 tracking-widest uppercase flex justify-center gap-2">
             <MessageSquare size={16} /> 전체 채팅

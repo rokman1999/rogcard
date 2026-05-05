@@ -56,7 +56,7 @@ const MarketView = () => {
                   <div key={card.id} className="relative group bg-white/[0.02] border border-white/10 p-4 hover:border-white/30 transition-all flex flex-col">
                     <HUDCorner />
                     <div className="mb-4" onClick={wrapClick(() => setPreviewCard(card))}>
-                      <CardItem card={card} hideDetails={true} className="cursor-pointer" />
+                      <CardItem card={card} compact className="cursor-pointer" />
                     </div>
                     <div className="text-center font-mono text-[10px] text-white/50 mb-2 truncate">
                       Seller: {seller?.nickname || 'Unknown'}

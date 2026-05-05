@@ -3,7 +3,7 @@
 // 상태/핸들러는 모두 GameContext에 있으므로 이 파일은 구조(structure)만 담당
 
 import { lazy, Suspense } from 'react';
-import { ShoppingCart, Users, Banknote } from 'lucide-react';
+import { ShoppingCart, Users, Banknote, Volume2, VolumeX } from 'lucide-react';
 import { GameProvider, useGame } from './context/GameContext';
 
 // 뷰 컴포넌트: lazy import로 코드 스플리팅 → 초기 번들 크기 감소
@@ -38,6 +38,7 @@ import { getIcon, formatMoney } from './utils/formatUtils';
 function Header() {
   const {
     user, userData, onlineCount,
+    soundEnabled, setSoundEnabled,
     setCurrentView, setViewingProfileUserId,
     setShowChargeModal, setChargeStep,
     wrapClick, handleHover
@@ -58,6 +59,12 @@ function Header() {
       <div className="flex items-center gap-8 font-mono text-sm tracking-widest font-light">
         <button onClick={wrapClick(() => setCurrentView('shop'))} onMouseEnter={handleHover} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1">
           <ShoppingCart size={16} /> 상점
+        </button>
+        <button
+          onClick={wrapClick(() => setSoundEnabled(!soundEnabled))}
+          className="text-white/50 hover:text-white transition-colors flex items-center gap-1 font-mono text-xs tracking-widest"
+        >
+          {soundEnabled ? <><Volume2 size={14} /> SOUND ON</> : <><VolumeX size={14} /> SOUND OFF</>}
         </button>
         {userData && (
           <div className="flex items-center gap-6">
