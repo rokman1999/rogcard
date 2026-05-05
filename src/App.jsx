@@ -3,7 +3,7 @@
 // 상태/핸들러는 모두 GameContext에 있으므로 이 파일은 구조(structure)만 담당
 
 import { lazy, Suspense, useState } from 'react';
-import { ShoppingCart, Users, Banknote, Swords } from 'lucide-react';
+import { ShoppingCart, Users, Banknote, Swords, Volume2, VolumeX } from 'lucide-react';
 import { GameProvider, useGame } from './context/GameContext';
 
 // 뷰 컴포넌트: lazy import로 코드 스플리팅 → 초기 번들 크기 감소
@@ -330,6 +330,32 @@ function IncomingChallengeModal() {
 }
 
 // ============================================================
+// SoundToggle: 좌측 하단 고정 사운드 on/off 버튼 (채널톡 스타일)
+// ============================================================
+function SoundToggle() {
+  const { soundEnabled, setSoundEnabled } = useGame();
+
+  return (
+    <button
+      onClick={() => setSoundEnabled(prev => !prev)}
+      title={soundEnabled ? '사운드 끄기' : '사운드 켜기'}
+      className={`
+        fixed bottom-6 left-6 z-50
+        w-12 h-12 rounded-full
+        flex items-center justify-center
+        border transition-all duration-300
+        shadow-[0_4px_24px_rgba(0,0,0,0.5)]
+        ${soundEnabled
+          ? 'bg-white/10 border-white/20 text-white hover:bg-white hover:text-black'
+          : 'bg-black/60 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/60'}
+      `}
+    >
+      {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+    </button>
+  );
+}
+
+// ============================================================
 // AppContent: Provider 안에서 context를 소비하는 실제 앱 UI
 // bgmRef는 context에서 가져와 <audio> 엘리먼트에 연결
 // ============================================================
@@ -385,6 +411,7 @@ function AppContent() {
       {showChargeModal && <ChargeModal />}
       {showOnlineModal && <OnlineUsersModal />}
       {incomingChallenge && <IncomingChallengeModal />}
+      <SoundToggle />
     </div>
   );
 }
