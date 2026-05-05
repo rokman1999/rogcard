@@ -198,7 +198,7 @@ const ProfileView = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {viewingUserCards.map(card => (
               <div key={card.id} className="cursor-pointer transition-transform hover:-translate-y-2" onClick={wrapClick(() => setPreviewCard(card))}>
-                <CardItem card={card} hideDetails={false} />
+                <CardItem card={card} hideSkills />
               </div>
             ))}
           </div>

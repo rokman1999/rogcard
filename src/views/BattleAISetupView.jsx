@@ -17,9 +17,11 @@ const BattleAISetupView = () => {
     startAIBattleSetup, executeAIBattle
   } = useGame();
 
+  const activeCards = myCards.filter(c => !c.isSelling);
+
   // aiOpponent가 없으면 첫 카드로 자동 셋업 후 로딩 반환
   if (!selectedCard || !aiOpponent) {
-    if (myCards.length > 0) startAIBattleSetup(myCards[0]);
+    if (activeCards.length > 0) startAIBattleSetup(activeCards[0]);
     return null;
   }
 
@@ -32,7 +34,7 @@ const BattleAISetupView = () => {
         <h3 className="text-white/50 font-mono text-xs tracking-widest mb-4 text-center uppercase">출전 카드 변경</h3>
         {/* pt-8을 추가하여 카드 확대 시 위쪽이 잘리지 않도록 수정 */}
         <div className="flex overflow-x-auto gap-4 pb-4 pt-8 px-2 custom-scrollbar">
-          {myCards.map(card => (
+          {activeCards.map(card => (
             <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}>
               <CardItem card={card} compact className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} />
             </div>
