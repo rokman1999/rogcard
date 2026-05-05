@@ -152,10 +152,10 @@ function ChargeModal() {
   if (!showChargeModal) return null;
 
   const PACKS = [
-    { gold: 1000000, price: '10,000원' },
-    { gold: 3000000, price: '30,000원' },
-    { gold: 5000000, price: '50,000원' },
-    { gold: 10000000, price: '100,000원' },
+    { gold: 1000000, price: '1,000원' },
+    { gold: 3000000, price: '3,000원' },
+    { gold: 5000000, price: '5,000원' },
+    { gold: 10000000, price: '8,000원' },
     { gold: 20000000, price: '5,000원', isHotDeal: true }
   ];
 
