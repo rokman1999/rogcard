@@ -34,7 +34,7 @@ const BattleAISetupView = () => {
         <div className="flex overflow-x-auto gap-4 pb-4 pt-8 px-2 custom-scrollbar">
           {myCards.map(card => (
             <div key={card.id} className="min-w-[140px] max-w-[140px] md:min-w-[160px] md:max-w-[160px] flex-shrink-0 cursor-pointer" onClick={wrapClick(() => startAIBattleSetup(card))}>
-              <CardItem card={card} className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} />
+              <CardItem card={card} compact className={`transition-all duration-300 ${selectedCard?.id === card.id ? 'ring-2 ring-white scale-105' : 'opacity-50 hover:opacity-100'}`} />
             </div>
           ))}
         </div>

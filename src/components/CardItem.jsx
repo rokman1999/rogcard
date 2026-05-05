@@ -5,7 +5,7 @@
 import FrameOverlay from './FrameOverlay';
 import { getFoilClass, getTierTextColor } from '../utils/cardUtils';
 
-const CardItem = ({ card, onClick, onHover, className = "" }) => {
+const CardItem = ({ card, onClick, onHover, className = "", compact = false }) => {
   // 카드 데이터가 없으면 빈 슬롯 표시 (덱 관리 화면에서 빈 슬롯 시각화)
   if (!card) return (
     <div className={`w-full aspect-[2/3.1] border border-white/10 bg-white/[0.02] backdrop-blur-2xl rounded-[10px] flex items-center justify-center text-white/30 font-mono text-sm transition-all duration-500 ${className}`}>
@@ -61,36 +61,42 @@ const CardItem = ({ card, onClick, onHover, className = "" }) => {
           </div>
 
           <div className="mt-auto flex flex-col gap-2 w-full">
-            <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-sm border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
-              "{card.description}"
-            </div>
-            <div className="flex flex-wrap gap-1 w-full">
-              {card.unlockedSkills.map((s, i) => (
-                <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-sm border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
-                  <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
-                </div>
-              ))}
-            </div>
+            {!compact && (
+              <div className="text-[0.7em] text-white/70 italic leading-snug line-clamp-2 break-words drop-shadow-md bg-black/40 p-1.5 rounded-sm border-l border-white/20 transition-all duration-300 group-hover:bg-black/60 group-hover:text-white">
+                "{card.description}"
+              </div>
+            )}
+            {!compact && (
+              <div className="flex flex-wrap gap-1 w-full">
+                {card.unlockedSkills.map((s, i) => (
+                  <div key={i} className="flex items-center bg-white/10 backdrop-blur-sm px-1.5 py-0.5 rounded-sm border-l-2 border-white/50 transition-all duration-300 group-hover:bg-white/20">
+                    <span className="text-[0.65em] font-bold text-white tracking-widest">{s}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex justify-between items-end gap-2 w-full mt-1">
-              <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-sm transition-all duration-300 group-hover:bg-black/80">
-                <div className="flex flex-col items-center">
-                  <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span>
-                  <span className="text-[0.7em] font-bold text-white">{card.stats.atk}</span>
+              {!compact && (
+                <div className="flex-1 grid grid-cols-4 gap-1 bg-black/60 backdrop-blur-md border border-white/20 p-1.5 rounded-sm transition-all duration-300 group-hover:bg-black/80">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">ATK</span>
+                    <span className="text-[0.7em] font-bold text-white">{card.stats.atk}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span>
+                    <span className="text-[0.7em] font-bold text-white">{card.stats.def}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span>
+                    <span className="text-[0.7em] font-bold text-white">{card.stats.spd}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span>
+                    <span className="text-[0.7em] font-bold text-white">{card.stats.crit}</span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">DEF</span>
-                  <span className="text-[0.7em] font-bold text-white">{card.stats.def}</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">SPD</span>
-                  <span className="text-[0.7em] font-bold text-white">{card.stats.spd}</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[0.55em] text-white/50 font-mono transition-colors duration-300 group-hover:text-white/80">CRT</span>
-                  <span className="text-[0.7em] font-bold text-white">{card.stats.crit}</span>
-                </div>
-              </div>
+              )}
 
               {/* 레벨 배지: 기울어진 형태로 강화 단계를 강조 표현 */}
               <div className={`w-[2.5em] h-[1.8em] bg-black border border-current flex items-center justify-center transform -skew-x-12 shadow-[0_0_10px_currentColor] transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor] group-hover:scale-110 ${textCol}`}>

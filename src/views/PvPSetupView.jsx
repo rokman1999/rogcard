@@ -56,7 +56,7 @@ const PvPSetupView = () => {
                   <div className="absolute -top-2 -left-2 z-10 w-5 h-5 bg-amber-400 text-black font-mono font-black text-xs flex items-center justify-center rounded-full">
                     {i + 1}
                   </div>
-                  <CardItem card={card} className="pointer-events-none" />
+                  <CardItem card={card} compact className="pointer-events-none" />
                 </div>
               </div>
             ))}
@@ -83,7 +83,7 @@ const PvPSetupView = () => {
                     <span className="font-mono text-xs text-white/50">MAX</span>
                   </div>
                 )}
-                <CardItem card={card} className={`transition-all duration-300 ${isSelected ? 'ring-2 ring-amber-400 scale-105' : 'opacity-50 hover:opacity-100'}`} />
+                <CardItem card={card} compact className={`transition-all duration-300 ${isSelected ? 'ring-2 ring-amber-400 scale-105' : 'opacity-50 hover:opacity-100'}`} />
               </div>
             );
           })}
