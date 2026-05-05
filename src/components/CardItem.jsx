@@ -2,7 +2,6 @@
 // 카드 레벨에 따라 홀로그램/글로우 효과가 달라지며, 호버 시 애니메이션 포함
 // CardItem은 전체 크기, MiniCard는 미니어처 버전 - 각각 다른 맥락에서 사용
 
-import React from 'react';
 import FrameOverlay from './FrameOverlay';
 import { getFoilClass, getTierTextColor } from '../utils/cardUtils';
 

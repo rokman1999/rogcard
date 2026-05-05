@@ -203,19 +203,19 @@ export const checkAchievements = (userData, userCards) => {
 };
 
 export const FRAMES_DATA = [
-  { id: 'frame_rust', name: '녹슨 고철', desc: '세월의 흔적이 묻은 앤틱 프레임', price: 10000, color: 'text-[#a1662f]' },
-  { id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이', price: 50000, color: 'text-cyan-300' },
-  { id: 'frame_blood', name: '블러드 펄스', desc: '핏빛 쉐도우 효과', price: 100000, color: 'text-red-500' },
-  { id: 'frame_obsidian', name: '옵시디언 엣지', desc: '고급스러운 다크 엣지 음영', price: 300000, color: 'text-gray-400' },
-  { id: 'frame_gold', name: '골든 아우라', desc: '황금빛 프레임 & 글로우', price: 500000, color: 'text-yellow-400' },
-  { id: 'frame_neon', name: '네온 사이버', desc: '시안/핑크 사이버펑크 네온', price: 1000000, color: 'text-pink-400' },
-  { id: 'frame_diamond', name: '다이아몬드 더스트', desc: '반짝이는 다이아몬드 결정', price: 2000000, color: 'text-blue-200' },
-  { id: 'frame_galaxy', name: '코스믹 갤럭시', desc: '우주의 심연을 담은 프레임', price: 3000000, color: 'text-indigo-400' },
-  { id: 'frame_fire', name: '지옥불 헬파이어', desc: '타오르는 화염 이펙트', price: 5000000, color: 'text-orange-500' },
-  { id: 'frame_ice', name: '절대 영도 빙결', desc: '얼어붙은 서리 효과', price: 5000000, color: 'text-cyan-200' },
-  { id: 'frame_toxic', name: '맹독성 늪', desc: '부식되는 맹독 프레임', price: 4000000, color: 'text-green-500' },
-  { id: 'frame_sakura', name: '흩날리는 벚꽃', desc: '아름다운 벚꽃잎 오버레이', price: 8000000, color: 'text-pink-300' },
-  { id: 'frame_matrix', name: '매트릭스 코드', desc: '디지털 비가 내리는 이펙트', price: 10000000, color: 'text-emerald-500' },
+  { id: 'frame_rust',     name: '녹슨 고철',       desc: '세월의 흔적이 묻은 앤틱 프레임',    price: 5000,    color: 'text-[#a1662f]' },
+  { id: 'frame_hologram', name: '홀로그램 스캔라인', desc: '화려한 스캔라인 오버레이',          price: 30000,   color: 'text-cyan-300' },
+  { id: 'frame_blood',    name: '블러드 펄스',       desc: '핏빛 쉐도우 효과',                price: 60000,   color: 'text-red-500' },
+  { id: 'frame_obsidian', name: '옵시디언 엣지',     desc: '고급스러운 다크 엣지 음영',         price: 200000,  color: 'text-gray-400' },
+  { id: 'frame_gold',     name: '골든 아우라',       desc: '황금빛 프레임 & 글로우',           price: 300000,  color: 'text-yellow-400' },
+  { id: 'frame_neon',     name: '네온 사이버',       desc: '시안/핑크 사이버펑크 네온',         price: 600000,  color: 'text-pink-400' },
+  { id: 'frame_diamond',  name: '다이아몬드 더스트', desc: '반짝이는 다이아몬드 결정',          price: 1200000, color: 'text-blue-200' },
+  { id: 'frame_galaxy',   name: '코스믹 갤럭시',     desc: '우주의 심연을 담은 프레임',         price: 1800000, color: 'text-indigo-400' },
+  { id: 'frame_toxic',    name: '맹독성 늪',         desc: '부식되는 맹독 프레임',             price: 2400000, color: 'text-green-500' },
+  { id: 'frame_fire',     name: '지옥불 헬파이어',   desc: '타오르는 화염 이펙트',             price: 3000000, color: 'text-orange-500' },
+  { id: 'frame_ice',      name: '절대 영도 빙결',    desc: '얼어붙은 서리 효과',              price: 3000000, color: 'text-cyan-200' },
+  { id: 'frame_sakura',   name: '흩날리는 벚꽃',     desc: '아름다운 벚꽃잎 오버레이',         price: 5000000, color: 'text-pink-300' },
+  { id: 'frame_matrix',   name: '매트릭스 코드',     desc: '디지털 비가 내리는 이펙트',        price: 6000000, color: 'text-emerald-500' },
 ];
 
 export const QUESTS = [

@@ -1,8 +1,6 @@
 // FrameOverlay: 카드 위에 overlay로 렌더링되는 프레임 스킨 컴포넌트
 // CardItem과 MiniCard 양쪽에서 사용되므로 별도 컴포넌트로 분리
 
-import React from 'react';
-
 const FrameOverlay = ({ frame }) => {
   if (!frame) return null;
 
@@ -31,6 +29,52 @@ const FrameOverlay = ({ frame }) => {
 
   if (frame === 'frame_obsidian')
     return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-gray-800 bg-[linear-gradient(105deg,transparent_20%,rgba(255,255,255,0.4)_25%,transparent_30%)]" style={{ backgroundSize: '200% 100%', animation: 'obsidian-shine 3s linear infinite', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.9)' }}></div>;
+
+  if (frame === 'frame_diamond')
+    return (
+      <>
+        <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-blue-100/70" style={{ boxShadow: 'inset 0 0 25px rgba(191,219,254,0.25)' }}></div>
+        <div className="absolute inset-0 pointer-events-none z-[41] mix-blend-screen" style={{ background: 'linear-gradient(115deg, transparent 20%, rgba(219,234,254,0.75) 25%, transparent 30%, transparent 60%, rgba(219,234,254,0.5) 65%, transparent 70%)', backgroundSize: '200% 100%', animation: 'obsidian-shine 2s linear infinite' }}></div>
+      </>
+    );
+
+  if (frame === 'frame_galaxy')
+    return (
+      <>
+        <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-indigo-400/50" style={{ background: 'radial-gradient(ellipse at 30% 30%, rgba(139,92,246,0.12) 0%, transparent 60%)', boxShadow: 'inset 0 0 50px rgba(67,56,202,0.5), 0 0 15px rgba(67,56,202,0.3)' }}></div>
+        <div className="absolute inset-0 pointer-events-none z-[41] mix-blend-screen" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '28px 28px, 18px 18px', backgroundPosition: '0 0, 14px 9px', animation: 'galaxy-twinkle 3s ease-in-out infinite' }}></div>
+      </>
+    );
+
+  if (frame === 'frame_fire')
+    return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-orange-500" style={{ animation: 'fire-pulse 1s ease-in-out infinite' }}></div>;
+
+  if (frame === 'frame_ice')
+    return (
+      <>
+        <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-cyan-100/80" style={{ animation: 'ice-glow 2s ease-in-out infinite' }}></div>
+        <div className="absolute inset-0 pointer-events-none z-[41] mix-blend-screen opacity-30" style={{ background: 'repeating-linear-gradient(135deg, transparent, transparent 6px, rgba(186,230,253,0.4) 7px, transparent 8px)' }}></div>
+      </>
+    );
+
+  if (frame === 'frame_toxic')
+    return <div className="absolute inset-0 pointer-events-none z-[40] border-[3px] border-green-500" style={{ animation: 'toxic-pulse 1.5s ease-in-out infinite' }}></div>;
+
+  if (frame === 'frame_sakura')
+    return (
+      <>
+        <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-pink-300/60" style={{ boxShadow: 'inset 0 0 30px rgba(249,168,212,0.2)', background: 'radial-gradient(ellipse at 20% 20%, rgba(249,168,212,0.1) 0%, transparent 50%)' }}></div>
+        <div className="absolute left-0 right-0 w-full h-[25%] pointer-events-none z-[41] mix-blend-screen" style={{ background: 'linear-gradient(to bottom, transparent, rgba(249,168,212,0.4), transparent)', animation: 'scanline 3.5s linear infinite', top: '-25%' }}></div>
+      </>
+    );
+
+  if (frame === 'frame_matrix')
+    return (
+      <>
+        <div className="absolute inset-0 pointer-events-none z-[40] border-[2px] border-emerald-500/70" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(16,185,129,0.08) 3px, transparent 4px)', boxShadow: 'inset 0 0 20px rgba(16,185,129,0.2), 0 0 10px rgba(16,185,129,0.3)' }}></div>
+        <div className="absolute left-0 right-0 w-full h-[18%] pointer-events-none z-[41] mix-blend-screen" style={{ background: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.55), transparent)', animation: 'scanline 1.5s linear infinite', top: '-18%' }}></div>
+      </>
+    );
 
   return null;
 };
